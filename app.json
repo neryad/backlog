@@ -1,46 +1,8 @@
-// {
-//   "expo": {
-//     "name": "Playlogged",
-//     "slug": "Playlogged",
-//     "scheme": "Playlogged",
-//     "main": "expo-router/entry",
-//     "version": "1.0.0",
-//     "orientation": "portrait",
-//     "icon": "./assets/icon.png",
-//     "userInterfaceStyle": "light",
-//     "splash": {
-//       "image": "./assets/icons/splash-icon-dark.png",
-//       "resizeMode": "contain",
-//       "backgroundColor": "#ffffff"
-//     },
-//     "ios": {
-//       "supportsTablet": true,
-//       "icon": {
-//         "dark": "./assets/icons/ios-dark.jpg",
-//         "light": "./assets/icons/ios-light.jpg",
-//         "tinted": "./assets/icons/ios-tinted.jpg"
-//       }
-//     },
-//     "android": {
-//       "adaptiveIcon": {
-//         "backgroundColor": "#E6F4FE",
-//         "foregroundImage": "./assets/icons/adaptive-icon.png",
-//         "backgroundImage": "./assets/icons/adaptive-icon.png"
-//       },
-//       "predictiveBackGestureEnabled": false
-//     },
-//     "web": {
-//       "favicon": "./assets/icons/adaptive-icon.png"
-//     },
-//     "plugins": ["expo-sqlite", "expo-router", "expo-image"]
-//   }
-// }
 {
   "expo": {
     "name": "Playlogged",
     "slug": "playlogged",
     "scheme": "playlogged",
-    "main": "expo-router/entry",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
