@@ -108,11 +108,13 @@ export default function BacklogScreen() {
         </View>
       ) : (
         <>
-          <FilterBar
-            active={activeFilter}
-            onChange={setFilter}
-            games={allGames}
-          />
+          {allGames.length > 0 && (
+            <FilterBar
+              active={activeFilter}
+              onChange={setFilter}
+              games={allGames}
+            />
+          )}
           <FlatList
             data={filteredGames}
             keyExtractor={(item) => item.id}
