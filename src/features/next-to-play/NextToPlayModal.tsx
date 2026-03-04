@@ -1,0 +1,314 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Animated,
+} from "react-native";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { GameEntry } from "../../types/game";
+import { pickNextGame, PickStrategy } from "./pickNextGame";
+
+import { colors, spacing, radius } from "../../constants/theme";
+import { updateEntryStatus } from "../../db/queries/game";
+
+const STRATEGIES: {
+  value: PickStrategy;
+  label: string;
+  description: string;
+}[] = [
+  { value: "random", label: "🎲 Random", description: "Surprise me" },
+  {
+    value: "oldest",
+    label: "📅 Oldest Added",
+    description: "Clear the backlog",
+  },
+  {
+    value: "highest-rated",
+    label: "⭐ Top Rated",
+    description: "Your highest wishlist",
+  },
+];
+
+type Props = {
+  visible: boolean;
+  games: GameEntry[];
+  onClose: () => void;
+  onStatusChange: () => void;
+};
+
+export default function NextToPlayModal({
+  visible,
+  games,
+  onClose,
+  onStatusChange,
+}: Props) {
+  const router = useRouter();
+  const [strategy, setStrategy] = useState<PickStrategy>("random");
+  const [picked, setPicked] = useState<GameEntry | null>(null);
+  const [phase, setPhase] = useState<"pick" | "result">("pick");
+
+  function handlePick() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const result = pickNextGame(games, strategy);
+    setPicked(result);
+    setPhase("result");
+  }
+
+  function handlePickAgain() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result = pickNextGame(games, strategy);
+    setPicked(result);
+  }
+
+  function handleLetsPlay() {
+    if (!picked) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    updateEntryStatus(picked.id, "playing");
+    onStatusChange();
+    onClose();
+    router.push(`/game/${picked.id}`);
+  }
+
+  function handleClose() {
+    setPhase("pick");
+    setPicked(null);
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.overlay}>
+        <View style={styles.sheet}>
+          {/* Handle */}
+          <View style={styles.handle} />
+
+          {phase === "pick" ? (
+            <>
+              <Text style={styles.title}>What should I play?</Text>
+              <Text style={styles.subtitle}>Choose a strategy</Text>
+
+              {/* Strategy picker */}
+              <View style={styles.strategies}>
+                {STRATEGIES.map((s) => (
+                  <TouchableOpacity
+                    key={s.value}
+                    style={[
+                      styles.strategyBtn,
+                      strategy === s.value && styles.strategyBtnActive,
+                    ]}
+                    onPress={() => setStrategy(s.value)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.strategyLabel,
+                        strategy === s.value && styles.strategyLabelActive,
+                      ]}
+                    >
+                      {s.label}
+                    </Text>
+                    <Text style={styles.strategyDesc}>{s.description}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity style={styles.pickBtn} onPress={handlePick}>
+                <Text style={styles.pickBtnText}>Pick a Game</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.cancelBtn} onPress={handleClose}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.title}>Tonight, play this:</Text>
+
+              {picked ? (
+                <View style={styles.result}>
+                  {picked.game?.coverUrl ? (
+                    <Image
+                      source={{ uri: picked.game.coverUrl }}
+                      style={styles.cover}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View style={styles.coverPlaceholder} />
+                  )}
+                  <Text style={styles.gameName}>{picked.game?.title}</Text>
+                  {picked.game?.releaseYear && (
+                    <Text style={styles.gameYear}>
+                      {picked.game.releaseYear}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.noGames}>
+                  <Text style={styles.noGamesText}>No games in backlog.</Text>
+                </View>
+              )}
+
+              {picked && (
+                <>
+                  <TouchableOpacity
+                    style={styles.letsPlayBtn}
+                    onPress={handleLetsPlay}
+                  >
+                    <Text style={styles.letsPlayText}>🎮 Let's Play!</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.pickBtn}
+                    onPress={handlePickAgain}
+                  >
+                    <Text style={styles.pickBtnText}>Pick Again</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <TouchableOpacity style={styles.cancelBtn} onPress={handleClose}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl * 2,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: spacing.lg,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: spacing.lg,
+  },
+  strategies: {
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  strategyBtn: {
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceHigh,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  strategyBtnActive: {
+    borderColor: colors.primary,
+    backgroundColor: "rgba(124,106,247,0.15)",
+  },
+  strategyLabel: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  strategyLabelActive: {
+    color: colors.text,
+  },
+  strategyDesc: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  result: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  cover: {
+    width: 140,
+    height: 190,
+    borderRadius: radius.md,
+  },
+  coverPlaceholder: {
+    width: 140,
+    height: 190,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceHigh,
+  },
+  gameName: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  gameYear: {
+    color: colors.textMuted,
+    fontSize: 14,
+  },
+  noGames: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.xl,
+  },
+  noGamesText: {
+    color: colors.textMuted,
+    fontSize: 16,
+  },
+  pickBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  pickBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  letsPlayBtn: {
+    backgroundColor: colors.success,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  letsPlayText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  cancelBtn: {
+    padding: spacing.md,
+    alignItems: "center",
+  },
+  cancelText: {
+    color: colors.textMuted,
+    fontSize: 15,
+  },
+});

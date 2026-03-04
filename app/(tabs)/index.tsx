@@ -1,19 +1,39 @@
-import React, { useCallback } from "react";
-import { View, FlatList, Text, StyleSheet, ListRenderItem } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  View,
+  FlatList,
+  Text,
+  StyleSheet,
+  ListRenderItem,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useBacklog } from "../../src/features/backlog/useBacklog";
 import { useUIStore } from "../../src/store/ui.store";
-import GameCard from "../../src/components/GameCard";
+import SwipeableGameCard from "../../src/components/SwipeableGameCard";
 import FilterBar from "../../src/components/FilterBar";
 import { GameEntry } from "../../src/types/game";
 import { colors, spacing } from "../../src/constants/theme";
+import { updateEntryStatus } from "../../src/db/queries/game";
+import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
 
-const CARD_HEIGHT = 95 + 16; // cover height + margins
+const CARD_HEIGHT = 95 + 16;
 
 export default function BacklogScreen() {
   const router = useRouter();
   const { activeFilter, setFilter } = useUIStore();
-  const { games } = useBacklog(activeFilter);
+
+  // Una sola instancia — siempre trae todos los juegos
+  const { games: allGames, reload } = useBacklog("all");
+
+  const [showNextToPlay, setShowNextToPlay] = useState(false);
+
+  // Filtra localmente, sin segundo hook
+  const filteredGames =
+    activeFilter === "all"
+      ? allGames
+      : allGames.filter((g) => g.status === activeFilter);
 
   const handlePress = useCallback(
     (item: GameEntry) => {
@@ -22,9 +42,32 @@ export default function BacklogScreen() {
     [router],
   );
 
+  const handleSwipeRight = useCallback(
+    (item: GameEntry) => {
+      updateEntryStatus(item.id, "playing");
+      reload(); // ← mismo reload de la única instancia
+    },
+    [reload],
+  );
+
+  const handleSwipeLeft = useCallback(
+    (item: GameEntry) => {
+      updateEntryStatus(item.id, "completed");
+      reload(); // ← mismo reload
+    },
+    [reload],
+  );
+
   const renderItem: ListRenderItem<GameEntry> = useCallback(
-    ({ item }) => <GameCard item={item} onPress={handlePress} />,
-    [handlePress],
+    ({ item }) => (
+      <SwipeableGameCard
+        item={item}
+        onPress={handlePress}
+        onSwipeLeft={handleSwipeLeft}
+        onSwipeRight={handleSwipeRight}
+      />
+    ),
+    [handlePress, handleSwipeLeft, handleSwipeRight],
   );
 
   const getItemLayout = useCallback(
@@ -37,10 +80,10 @@ export default function BacklogScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <FilterBar active={activeFilter} onChange={setFilter} />
+    <GestureHandlerRootView style={styles.container}>
+      <FilterBar active={activeFilter} onChange={setFilter} games={allGames} />
       <FlatList
-        data={games}
+        data={filteredGames}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         getItemLayout={getItemLayout}
@@ -49,18 +92,43 @@ export default function BacklogScreen() {
         windowSize={5}
         initialNumToRender={12}
         contentContainerStyle={
-          games.length === 0 ? styles.emptyContainer : styles.listContent
+          filteredGames.length === 0
+            ? styles.emptyContainer
+            : styles.listContent
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>Your backlog is empty.</Text>
+            <Text style={styles.emptyTitle}>
+              {activeFilter === "all"
+                ? "Your backlog is empty."
+                : `No games in ${activeFilter}.`}
+            </Text>
             <Text style={styles.emptySub}>
-              Go to Discover to add your first game.
+              {activeFilter === "all"
+                ? "Go to Discover to add your first game."
+                : "Change the filter above."}
             </Text>
           </View>
         }
       />
-    </View>
+
+      {/* FAB */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowNextToPlay(true)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabText}>🎮</Text>
+      </TouchableOpacity>
+
+      {/* Next To Play Modal */}
+      <NextToPlayModal
+        visible={showNextToPlay}
+        games={allGames}
+        onClose={() => setShowNextToPlay(false)}
+        onStatusChange={reload}
+      />
+    </GestureHandlerRootView>
   );
 }
 
@@ -91,5 +159,25 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 14,
     marginTop: 8,
+  },
+
+  fab: {
+    position: "absolute",
+    bottom: spacing.xl,
+    right: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  fabText: {
+    fontSize: 24,
   },
 });
