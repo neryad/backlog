@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   FlatList,
@@ -18,17 +18,37 @@ import { colors, radius, spacing } from "../../src/constants/theme";
 import { updateEntryStatus } from "../../src/db/queries/game";
 import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
 import { Ionicons } from "@expo/vector-icons";
+import AboutModal from "../../src/features/about/AboutModal";
+import { useNavigation } from "expo-router";
 
 const CARD_HEIGHT = 95 + 16;
 
 export default function BacklogScreen() {
   const router = useRouter();
   const { activeFilter, setFilter } = useUIStore();
-
+  const navigation = useNavigation();
+  const [showAbout, setShowAbout] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
   const { games: allGames, reload } = useBacklog("all");
 
   const [showNextToPlay, setShowNextToPlay] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setShowAbout(true)}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color={colors.textMuted}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   // Filtra localmente, sin segundo hook
   const filteredGames =
@@ -145,6 +165,7 @@ export default function BacklogScreen() {
         onClose={() => setShowNextToPlay(false)}
         onStatusChange={reload}
       />
+      <AboutModal visible={showAbout} onClose={() => setShowAbout(false)} />
     </GestureHandlerRootView>
   );
 }
