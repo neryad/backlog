@@ -1,5 +1,12 @@
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/constants/theme";
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
+function TabIcon({ name, color }: { name: IoniconsName; color: string }) {
+  return <Ionicons name={name} size={22} color={color} />;
+}
 
 export default function TabsLayout() {
   return (
@@ -8,6 +15,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          height: 60,
+          paddingBottom: 8,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -15,9 +24,29 @@ export default function TabsLayout() {
         headerTintColor: colors.text,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Backlog" }} />
-      <Tabs.Screen name="discover" options={{ title: "Discover" }} />
-      <Tabs.Screen name="stats" options={{ title: "Stats" }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Backlog",
+          tabBarIcon: ({ color }) => (
+            <TabIcon name="game-controller" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          title: "Discover",
+          tabBarIcon: ({ color }) => <TabIcon name="search" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{
+          title: "Stats",
+          tabBarIcon: ({ color }) => <TabIcon name="bar-chart" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

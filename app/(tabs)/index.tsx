@@ -14,9 +14,10 @@ import { useUIStore } from "../../src/store/ui.store";
 import SwipeableGameCard from "../../src/components/SwipeableGameCard";
 import FilterBar from "../../src/components/FilterBar";
 import { GameEntry } from "../../src/types/game";
-import { colors, spacing } from "../../src/constants/theme";
+import { colors, radius, spacing } from "../../src/constants/theme";
 import { updateEntryStatus } from "../../src/db/queries/game";
 import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
+import { Ionicons } from "@expo/vector-icons";
 
 const CARD_HEIGHT = 95 + 16;
 
@@ -98,27 +99,43 @@ export default function BacklogScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
+            <Text style={styles.emptyEmoji}>🎮</Text>
             <Text style={styles.emptyTitle}>
               {activeFilter === "all"
-                ? "Your backlog is empty."
-                : `No games in ${activeFilter}.`}
+                ? "Your backlog is empty"
+                : `No games in ${activeFilter}`}
             </Text>
             <Text style={styles.emptySub}>
               {activeFilter === "all"
-                ? "Go to Discover to add your first game."
-                : "Change the filter above."}
+                ? "Go to Discover to add your first game"
+                : "Swipe a game or change the filter"}
             </Text>
+            {activeFilter === "all" && (
+              <TouchableOpacity
+                style={styles.emptyBtn}
+                onPress={() => router.push("/(tabs)/discover")}
+              >
+                <Text style={styles.emptyBtnText}>Search Games</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
 
       {/* FAB */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.fab}
         onPress={() => setShowNextToPlay(true)}
         activeOpacity={0.8}
       >
         <Text style={styles.fabText}>🎮</Text>
+      </TouchableOpacity> */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowNextToPlay(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="shuffle" size={26} color={colors.text} />
       </TouchableOpacity>
 
       {/* Next To Play Modal */}
@@ -179,5 +196,22 @@ const styles = StyleSheet.create({
   },
   fabText: {
     fontSize: 24,
+  },
+
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  emptyBtn: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+  },
+  emptyBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

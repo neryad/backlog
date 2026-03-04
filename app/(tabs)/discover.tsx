@@ -80,9 +80,13 @@ export default function DiscoverScreen() {
 
       {/* Error */}
       {error && (
-        <Text style={styles.error}>
-          Failed to search. Check your connection.
-        </Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorEmoji}>⚠️</Text>
+          <Text style={styles.errorTitle}>Search unavailable</Text>
+          <Text style={styles.errorSub}>
+            Check your connection and try again
+          </Text>
+        </View>
       )}
 
       {/* Results */}
@@ -197,5 +201,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
+  },
+
+  errorContainer: {
+    alignItems: "center",
+    padding: spacing.xl,
+    gap: spacing.sm,
+  },
+  errorEmoji: {
+    fontSize: 32,
+  },
+  errorTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorSub: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: "center",
   },
 });
