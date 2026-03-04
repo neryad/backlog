@@ -20,7 +20,7 @@ import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
 import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
-
+import { ActivityIndicator } from "react-native";
 const CARD_HEIGHT = 95 + 16;
 
 export default function BacklogScreen() {
@@ -29,7 +29,7 @@ export default function BacklogScreen() {
   const navigation = useNavigation();
   const [showAbout, setShowAbout] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
-  const { games: allGames, reload } = useBacklog("all");
+  const { games: allGames, loading, reload } = useBacklog("all");
 
   const [showNextToPlay, setShowNextToPlay] = useState(false);
 
@@ -102,54 +102,59 @@ export default function BacklogScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <FilterBar active={activeFilter} onChange={setFilter} games={allGames} />
-      <FlatList
-        data={filteredGames}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        getItemLayout={getItemLayout}
-        removeClippedSubviews
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={12}
-        contentContainerStyle={
-          filteredGames.length === 0
-            ? styles.emptyContainer
-            : styles.listContent
-        }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🎮</Text>
-            <Text style={styles.emptyTitle}>
-              {activeFilter === "all"
-                ? "Your backlog is empty"
-                : `No games in ${activeFilter}`}
-            </Text>
-            <Text style={styles.emptySub}>
-              {activeFilter === "all"
-                ? "Go to Discover to add your first game"
-                : "Swipe a game or change the filter"}
-            </Text>
-            {activeFilter === "all" && (
-              <TouchableOpacity
-                style={styles.emptyBtn}
-                onPress={() => router.push("/(tabs)/discover")}
-              >
-                <Text style={styles.emptyBtnText}>Search Games</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <>
+          <FilterBar
+            active={activeFilter}
+            onChange={setFilter}
+            games={allGames}
+          />
+          <FlatList
+            data={filteredGames}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            getItemLayout={getItemLayout}
+            removeClippedSubviews
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            initialNumToRender={12}
+            contentContainerStyle={
+              filteredGames.length === 0
+                ? styles.emptyContainer
+                : styles.listContent
+            }
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Text style={styles.emptyEmoji}>🎮</Text>
+                <Text style={styles.emptyTitle}>
+                  {activeFilter === "all"
+                    ? "Your backlog is empty"
+                    : `No games in ${activeFilter}`}
+                </Text>
+                <Text style={styles.emptySub}>
+                  {activeFilter === "all"
+                    ? "Go to Discover to add your first game"
+                    : "Swipe a game or change the filter"}
+                </Text>
+                {activeFilter === "all" && (
+                  <TouchableOpacity
+                    style={styles.emptyBtn}
+                    onPress={() => router.push("/(tabs)/discover")}
+                  >
+                    <Text style={styles.emptyBtnText}>Search Games</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        </>
+      )}
 
-      {/* FAB */}
-      {/* <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowNextToPlay(true)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>🎮</Text>
-      </TouchableOpacity> */}
+      {/* FAB siempre visible */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setShowNextToPlay(true)}
@@ -158,7 +163,6 @@ export default function BacklogScreen() {
         <Ionicons name="shuffle" size={26} color={colors.text} />
       </TouchableOpacity>
 
-      {/* Next To Play Modal */}
       <NextToPlayModal
         visible={showNextToPlay}
         games={allGames}
@@ -234,5 +238,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
     fontSize: 15,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

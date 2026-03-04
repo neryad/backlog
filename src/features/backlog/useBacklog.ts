@@ -5,10 +5,13 @@ import { useFocusEffect } from "expo-router";
 
 export function useBacklog(filter: string) {
   const [games, setGames] = useState<GameEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
+    setLoading(true);
     const results = getGameEntries(filter === "all" ? undefined : filter);
     setGames(results);
+    setLoading(false);
   }, [filter]);
 
   useEffect(() => {
@@ -21,5 +24,5 @@ export function useBacklog(filter: string) {
     }, [load]),
   );
 
-  return { games, reload: load };
+  return { games, loading, reload: load };
 }

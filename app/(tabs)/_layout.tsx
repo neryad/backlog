@@ -27,7 +27,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Backlog",
+          title: "Playlogged",
           tabBarIcon: ({ color }) => (
             <TabIcon name="game-controller" color={color} />
           ),

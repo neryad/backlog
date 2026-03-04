@@ -81,7 +81,7 @@ export default function AboutModal({ visible, onClose }: Props) {
                   color={colors.primary}
                 />
               </View>
-              <Text style={styles.appName}>Gamelog</Text>
+              <Text style={styles.appName}>Playlogged</Text>
               <Text style={styles.appVersion}>Version 1.0.0</Text>
               <Text style={styles.appDesc}>
                 A minimal game backlog tracker built for gamers who want to
