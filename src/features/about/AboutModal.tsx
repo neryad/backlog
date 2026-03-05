@@ -10,40 +10,40 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../constants/theme";
-
+import { Image as ExpoImage } from "expo-image";
 const LINKS = [
   {
     label: "Twitter / X",
-    handle: "@yourhandle",
-    url: "https://twitter.com/yourhandle",
+    handle: "@NeryadG",
+    url: "https://x.com/NeryadG",
     icon: "logo-twitter" as const,
     color: "#1DA1F2",
   },
   {
     label: "Instagram",
-    handle: "@yourhandle",
-    url: "https://instagram.com/yourhandle",
+    handle: "@neryad_dev",
+    url: "https://www.instagram.com/neryad_dev",
     icon: "logo-instagram" as const,
     color: "#E1306C",
   },
   {
     label: "GitHub",
-    handle: "yourhandle",
-    url: "https://github.com/yourhandle",
+    handle: "neryad",
+    url: "https://github.com/neryad",
     icon: "logo-github" as const,
     color: colors.text,
   },
   {
     label: "Ko-fi",
     handle: "Buy me a coffee",
-    url: "https://ko-fi.com/yourhandle",
+    url: "https://ko-fi.com/neryad",
     icon: "cafe" as const,
     color: "#FF5E5B",
   },
   {
     label: "PayPal",
     handle: "Donate via PayPal",
-    url: "https://paypal.me/yourhandle",
+    url: "https://paypal.me/neryad",
     icon: "card" as const,
     color: "#003087",
   },
@@ -75,10 +75,15 @@ export default function AboutModal({ visible, onClose }: Props) {
             {/* App info */}
             <View style={styles.appInfo}>
               <View style={styles.appIcon}>
-                <Ionicons
+                {/* <Ionicons
                   name="game-controller"
                   size={40}
                   color={colors.primary}
+                /> */}
+                <ExpoImage
+                  source={require("../../../assets/icons/ios-dark.jpg")}
+                  style={styles.appIconImage}
+                  contentFit="cover"
                 />
               </View>
               <Text style={styles.appName}>Playlogged</Text>
@@ -95,7 +100,7 @@ export default function AboutModal({ visible, onClose }: Props) {
             {/* Developer */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Developer</Text>
-              <Text style={styles.devName}>Your Name</Text>
+              <Text style={styles.devName}>Neryad</Text>
               <Text style={styles.devBio}>
                 Building tools for gamers. If you enjoy the app, consider
                 supporting the project.
@@ -261,5 +266,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     marginTop: spacing.lg,
+  },
+
+  // Borra appIcon y agrega:
+  appIconImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 18,
   },
 });
