@@ -131,7 +131,12 @@ export default function BacklogScreen() {
             }
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={styles.emptyEmoji}>🎮</Text>
+                <Ionicons
+                  name="game-controller-outline"
+                  size={64}
+                  color={colors.textMuted}
+                  style={{ marginBottom: spacing.md }}
+                />
                 <Text style={styles.emptyTitle}>
                   {activeFilter === "all"
                     ? "Your backlog is empty"
@@ -225,10 +230,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
 
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
   emptyBtn: {
     marginTop: spacing.lg,
     backgroundColor: colors.primary,
