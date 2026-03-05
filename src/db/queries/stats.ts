@@ -35,12 +35,20 @@ export function getStats(): BacklogStats {
   ) as { avg: number | null };
 
   // Últimos agregados
+  // const recentRows = db.getAllSync(
+  //   `SELECT g.title, ge.created_at
+  //    FROM game_entries ge
+  //    JOIN games g ON g.id = ge.game_id
+  //    ORDER BY ge.created_at DESC
+  //    LIMIT 5`,
+  // ) as { title: string; createdAt: number }[];
+
   const recentRows = db.getAllSync(
-    `SELECT g.title, ge.created_at
-     FROM game_entries ge
-     JOIN games g ON g.id = ge.game_id
-     ORDER BY ge.created_at DESC
-     LIMIT 5`,
+    `SELECT g.title, ge.created_at as createdAt
+   FROM game_entries ge
+   JOIN games g ON g.id = ge.game_id
+   ORDER BY ge.created_at DESC
+   LIMIT 5`,
   ) as { title: string; createdAt: number }[];
 
   const completed = byStatus["completed"] ?? 0;

@@ -4,16 +4,44 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { getStats, BacklogStats } from "../../src/db/queries/stats";
 import { colors, spacing, radius } from "../../src/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+
+// const STATUS_META: Record<
+//   string,
+//   { label: string; color: string; emoji: string }
+// > = {
+//   backlog: { label: "Backlog", color: colors.textMuted, emoji: "📋" },
+//   playing: { label: "Playing", color: colors.primary, emoji: "🎮" },
+//   completed: { label: "Completed", color: colors.success, emoji: "✅" },
+//   dropped: { label: "Dropped", color: colors.danger, emoji: "❌" },
+//   wishlist: { label: "Wishlist", color: colors.warning, emoji: "⭐" },
+// };
 
 const STATUS_META: Record<
   string,
-  { label: string; color: string; emoji: string }
+  {
+    label: string;
+    color: string;
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+  }
 > = {
-  backlog: { label: "Backlog", color: colors.textMuted, emoji: "📋" },
-  playing: { label: "Playing", color: colors.primary, emoji: "🎮" },
-  completed: { label: "Completed", color: colors.success, emoji: "✅" },
-  dropped: { label: "Dropped", color: colors.danger, emoji: "❌" },
-  wishlist: { label: "Wishlist", color: colors.warning, emoji: "⭐" },
+  backlog: { label: "Backlog", color: colors.textMuted, icon: "time-outline" },
+  playing: {
+    label: "Playing",
+    color: colors.primary,
+    icon: "game-controller-outline",
+  },
+  completed: {
+    label: "Completed",
+    color: colors.success,
+    icon: "checkmark-circle-outline",
+  },
+  dropped: {
+    label: "Dropped",
+    color: colors.danger,
+    icon: "close-circle-outline",
+  },
+  wishlist: { label: "Wishlist", color: colors.warning, icon: "star-outline" },
 };
 
 function StatCard({
@@ -93,7 +121,7 @@ export default function StatsScreen() {
           return (
             <View key={key} style={styles.statusRow}>
               <View style={styles.statusHeader}>
-                <Text style={styles.statusEmoji}>{meta.emoji}</Text>
+                <Ionicons name={meta.icon} size={16} color={meta.color} />
                 <Text style={styles.statusLabel}>{meta.label}</Text>
                 <Text style={[styles.statusCount, { color: meta.color }]}>
                   {count}
@@ -116,7 +144,7 @@ export default function StatsScreen() {
                 {g.title}
               </Text>
               <Text style={styles.recentDate}>
-                {new Date(g.createdAt).toLocaleDateString()}
+                {new Date(Number(g.createdAt)).toLocaleDateString()}
               </Text>
             </View>
           ))}
@@ -190,9 +218,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
-  statusEmoji: {
-    fontSize: 14,
-  },
+
   statusLabel: {
     flex: 1,
     color: colors.text,

@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import GameCard from "./GameCard";
 import { GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
   item: GameEntry;
@@ -22,9 +23,12 @@ function renderRightAction(progress: Animated.AnimatedInterpolation<number>) {
 
   return (
     <View style={styles.rightAction}>
-      <Animated.Text style={[styles.actionText, { transform: [{ scale }] }]}>
-        ✅ Done
-      </Animated.Text>
+      <Animated.View
+        style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
+      >
+        <Ionicons name="checkmark-circle" size={28} color={colors.text} />
+        <Animated.Text style={styles.actionText}>Done</Animated.Text>
+      </Animated.View>
     </View>
   );
 }
@@ -38,9 +42,12 @@ function renderLeftAction(progress: Animated.AnimatedInterpolation<number>) {
 
   return (
     <View style={styles.leftAction}>
-      <Animated.Text style={[styles.actionText, { transform: [{ scale }] }]}>
-        🎮 Playing
-      </Animated.Text>
+      <Animated.View
+        style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
+      >
+        <Ionicons name="game-controller" size={28} color={colors.text} />
+        <Animated.Text style={styles.actionText}>Playing</Animated.Text>
+      </Animated.View>
     </View>
   );
 }
@@ -71,8 +78,8 @@ export default function SwipeableGameCard({
       renderRightActions={renderRightAction}
       renderLeftActions={renderLeftAction}
       onSwipeableOpen={(direction) => {
-        if (direction === "left") handleSwipeLeft();
-        if (direction === "right") handleSwipeRight();
+        if (direction === "left") handleSwipeRight();
+        if (direction === "right") handleSwipeLeft();
       }}
       overshootLeft={false}
       overshootRight={false}
