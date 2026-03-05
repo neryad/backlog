@@ -206,6 +206,17 @@ These features are planned for post-MVP releases:
 
 ---
 
+## 📋 Legal
+
+Playlogged takes your privacy seriously — no accounts, no tracking, no data collection. Everything stays on your device.
+
+| Document | Summary |
+|---|---|
+| 📄 [Privacy Policy](./PRIVACY_POLICY.md) | What data the app does (and doesn't) collect, and how third-party services like IGDB are used |
+| 📜 [Terms of Service](./TERMS_OF_SERVICE.md) | Usage rules, intellectual property, and limitations of liability |
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Here's how to get started:
@@ -222,6 +233,8 @@ Please make sure your code:
 - Includes sensible commit messages ([Conventional Commits](https://www.conventionalcommits.org) preferred)
 
 For major changes, please open an issue first to discuss what you'd like to change.
+
+> By submitting a pull request, you agree that your contributions are made under the same [MIT License](./LICENSE) and that you have read the [Terms of Service](./TERMS_OF_SERVICE.md).
 
 ---
 
@@ -241,6 +254,8 @@ Built with ❤️ by **[Neryad]**
 | 🐦 Twitter / X | [@NeryadG](https://twitter.com/NeryadG) |
 | 🌐 Website | [neryad.dev](https://neryad.dev) |
 | ☕ Support | [Buy me a coffee](https://ko-fi.com/neryad) |
+| 📄 Privacy Policy | [View](./PRIVACY_POLICY.md) |
+| 📜 Terms of Service | [View](./TERMS_OF_SERVICE.md) |
 
 ---
 
