@@ -25,11 +25,22 @@
         "backgroundColor": "#0f0f13",
         "foregroundImage": "./assets/icons/adaptive-icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.neryad.playlogged"
     },
     "web": {
       "favicon": "./assets/icons/adaptive-icon.png"
     },
-    "plugins": ["expo-sqlite", "expo-router", "expo-image"]
+    "plugins": [
+      "expo-sqlite",
+      "expo-router",
+      "expo-image"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ae1de6c4-5881-4e0f-a6dc-74412572bc7e"
+      }
+    }
   }
 }
