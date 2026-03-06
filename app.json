@@ -5,7 +5,7 @@
     "scheme": "playlogged",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/splash-icon-dark.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/icons/splash-icon-dark.png",
@@ -18,6 +18,10 @@
         "dark": "./assets/icons/ios-dark.jpg",
         "light": "./assets/icons/ios-light.jpg",
         "tinted": "./assets/icons/ios-tinted.jpg"
+      },
+      "bundleIdentifier": "com.neryad.playlogged",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
