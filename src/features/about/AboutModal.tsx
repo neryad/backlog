@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Linking,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../constants/theme";
 import { Image as ExpoImage } from "expo-image";
+const DONATION_LABELS = ["Ko-fi", "PayPal"];
 const LINKS = [
   {
     label: "Twitter / X",
@@ -58,28 +60,23 @@ export default function AboutModal({ visible, onClose }: Props) {
   function openLink(url: string) {
     Linking.openURL(url).catch(() => null);
   }
+  const visibleLinks =
+    Platform.OS === "ios"
+      ? LINKS.filter((link) => !DONATION_LABELS.includes(link.label))
+      : LINKS;
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          {/* Handle */}
           <View style={styles.handle} />
-
-          {/* Close */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Ionicons name="close" size={22} color={colors.textMuted} />
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            {/* App info */}
             <View style={styles.appInfo}>
               <View style={styles.appIcon}>
-                {/* <Ionicons
-                  name="game-controller"
-                  size={40}
-                  color={colors.primary}
-                /> */}
                 <ExpoImage
                   source={require("../../../assets/icons/ios-dark.jpg")}
                   style={styles.appIconImage}
@@ -94,10 +91,8 @@ export default function AboutModal({ visible, onClose }: Props) {
               </Text>
             </View>
 
-            {/* Divider */}
             <View style={styles.divider} />
 
-            {/* Developer */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Developer</Text>
               <Text style={styles.devName}>Neryad</Text>
@@ -107,10 +102,9 @@ export default function AboutModal({ visible, onClose }: Props) {
               </Text>
             </View>
 
-            {/* Links */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Find me online</Text>
-              {LINKS.map((link) => (
+              {visibleLinks.map((link) => (
                 <TouchableOpacity
                   key={link.label}
                   style={styles.linkRow}
@@ -138,7 +132,6 @@ export default function AboutModal({ visible, onClose }: Props) {
               ))}
             </View>
 
-            {/* Footer */}
             <Text style={styles.footer}>
               Made with ❤️ for gamers everywhere
             </Text>
@@ -148,7 +141,6 @@ export default function AboutModal({ visible, onClose }: Props) {
     </Modal>
   );
 }
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
