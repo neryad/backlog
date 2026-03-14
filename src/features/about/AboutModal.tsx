@@ -8,10 +8,15 @@ import {
   Linking,
   ScrollView,
   Platform,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { colors, spacing, radius } from "../../constants/theme";
 import { Image as ExpoImage } from "expo-image";
+import { useAuthStore } from "../../store/auth.store";
+import { supabase } from "../../lib/supabase";
+
 const DONATION_LABELS = ["Ko-fi", "PayPal"];
 const LINKS = [
   {
@@ -57,9 +62,36 @@ type Props = {
 };
 
 export default function AboutModal({ visible, onClose }: Props) {
+  const { session } = useAuthStore();
+
   function openLink(url: string) {
     Linking.openURL(url).catch(() => null);
   }
+
+  async function handleLogout() {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.auth.signOut();
+          onClose();
+        },
+      },
+    ]);
+  }
+
+  function handleLogin() {
+    onClose();
+    router.push("/auth/login");
+  }
+
+  function handleRegister() {
+    onClose();
+    router.push("/auth/register");
+  }
+
   const visibleLinks =
     Platform.OS === "ios"
       ? LINKS.filter((link) => !DONATION_LABELS.includes(link.label))
@@ -75,6 +107,7 @@ export default function AboutModal({ visible, onClose }: Props) {
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
+            {/* App info */}
             <View style={styles.appInfo}>
               <View style={styles.appIcon}>
                 <ExpoImage
@@ -93,6 +126,58 @@ export default function AboutModal({ visible, onClose }: Props) {
 
             <View style={styles.divider} />
 
+            {/* Account section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Account</Text>
+              {session ? (
+                <View style={styles.accountRow}>
+                  <View style={styles.accountInfo}>
+                    <Ionicons
+                      name="person-circle"
+                      size={36}
+                      color={colors.primary}
+                    />
+                    <View>
+                      <Text style={styles.accountEmail}>
+                        {session.user.email}
+                      </Text>
+                      <Text style={styles.accountStatus}>Syncing backlog</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.logoutBtn}
+                    onPress={handleLogout}
+                  >
+                    <Text style={styles.logoutText}>Sign Out</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.authButtons}>
+                  <Text style={styles.authDesc}>
+                    Create an account to sync your backlog and connect with
+                    friends.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.signInBtn}
+                    onPress={handleLogin}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.signInText}>Sign In</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.registerBtn}
+                    onPress={handleRegister}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.registerText}>Create Account</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Developer */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Developer</Text>
               <Text style={styles.devName}>Neryad</Text>
@@ -102,6 +187,7 @@ export default function AboutModal({ visible, onClose }: Props) {
               </Text>
             </View>
 
+            {/* Links */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Find me online</Text>
               {visibleLinks.map((link) => (
@@ -141,6 +227,7 @@ export default function AboutModal({ visible, onClose }: Props) {
     </Modal>
   );
 }
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -183,6 +270,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.sm,
   },
+  appIconImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 18,
+  },
   appName: {
     color: colors.text,
     fontSize: 24,
@@ -215,6 +307,71 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: spacing.md,
   },
+  // Account
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  accountInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  accountEmail: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  accountStatus: {
+    color: colors.primary,
+    fontSize: 12,
+  },
+  logoutBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  logoutText: {
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  authButtons: {
+    gap: spacing.sm,
+  },
+  authDesc: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: spacing.sm,
+  },
+  signInBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: "center",
+  },
+  signInText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  registerBtn: {
+    backgroundColor: "transparent",
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  registerText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  // Developer
   devName: {
     color: colors.text,
     fontSize: 17,
@@ -258,12 +415,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     marginTop: spacing.lg,
-  },
-
-  // Borra appIcon y agrega:
-  appIconImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 18,
   },
 });

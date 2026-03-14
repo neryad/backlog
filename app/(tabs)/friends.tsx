@@ -1,0 +1,538 @@
+import { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useGlobalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { colors, spacing, radius } from "../../src/constants/theme";
+import { useAuthStore } from "../../src/store/auth.store";
+import { supabase } from "../../src/lib/supabase";
+
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+};
+
+type FriendRequest = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: string;
+  created_at: string;
+  sender?: Profile;
+  receiver?: Profile;
+};
+
+type Friend = {
+  user_id: string;
+  friend_id: string;
+  created_at: string;
+  profile?: Profile;
+};
+
+export default function FriendsScreen() {
+  const { username } = useGlobalSearchParams<{ username: string }>();
+
+  console.log("ProfileScreen mounted, username:", username);
+  const { session } = useAuthStore();
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Si no tiene sesión mostrar pantalla de login
+  if (!session) {
+    return (
+      <View style={styles.guestContainer}>
+        <Ionicons name="people-outline" size={64} color={colors.textMuted} />
+        <Text style={styles.guestTitle}>Connect with friends</Text>
+        <Text style={styles.guestDesc}>
+          Create an account to add friends and see their backlogs.
+        </Text>
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={() => router.push("/auth/login")}
+        >
+          <Text style={styles.guestBtnText}>Sign In</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/auth/register")}>
+          <Text style={styles.guestLink}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  async function loadFriends() {
+    setLoading(true);
+    const userId = session!.user.id;
+
+    // Cargar amigos
+    const { data: friendsData } = await supabase
+      .from("friends")
+      .select("user_id, friend_id, created_at")
+      .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+
+    if (friendsData) {
+      const enriched = await Promise.all(
+        friendsData.map(async (f) => {
+          const otherId = f.user_id === userId ? f.friend_id : f.user_id;
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, username, display_name")
+            .eq("id", otherId)
+            .single();
+          return { ...f, profile: profile ?? undefined };
+        }),
+      );
+      setFriends(enriched);
+    }
+
+    // Cargar solicitudes pendientes recibidas
+    const { data: requestsData } = await supabase
+      .from("friend_requests")
+      .select("id, sender_id, receiver_id, status, created_at")
+      .eq("receiver_id", userId)
+      .eq("status", "pending");
+
+    if (requestsData) {
+      const enriched = await Promise.all(
+        requestsData.map(async (r) => {
+          const { data: sender } = await supabase
+            .from("profiles")
+            .select("id, username, display_name")
+            .eq("id", r.sender_id)
+            .single();
+          return { ...r, sender: sender ?? undefined };
+        }),
+      );
+      setPendingRequests(enriched);
+    }
+
+    setLoading(false);
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFriends();
+    }, [session]),
+  );
+
+  async function handleSearch() {
+    if (search.trim().length < 2) return;
+    setSearching(true);
+    setSearchResults([]);
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name")
+      .or(
+        `username.ilike.%${search.trim()}%,display_name.ilike.%${search.trim()}%`,
+      )
+      .neq("id", session!.user.id)
+      .limit(10);
+
+    setSearchResults(data ?? []);
+    setSearching(false);
+  }
+
+  async function sendRequest(receiverId: string) {
+    const { error } = await supabase.from("friend_requests").insert({
+      sender_id: session!.user.id,
+      receiver_id: receiverId,
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        Alert.alert("Already sent", "You already sent a request to this user.");
+      } else {
+        Alert.alert("Error", error.message);
+      }
+    } else {
+      Alert.alert("Request sent", "Friend request sent successfully.");
+      setSearch("");
+      setSearchResults([]);
+    }
+  }
+
+  async function acceptRequest(requestId: string, senderId: string) {
+    // Actualizar solicitud a accepted
+    await supabase
+      .from("friend_requests")
+      .update({ status: "accepted" })
+      .eq("id", requestId);
+
+    // Crear amistad en ambas direcciones
+    await supabase.from("friends").insert([
+      { user_id: session!.user.id, friend_id: senderId },
+      { user_id: senderId, friend_id: session!.user.id },
+    ]);
+
+    loadFriends();
+  }
+
+  async function rejectRequest(requestId: string) {
+    await supabase
+      .from("friend_requests")
+      .update({ status: "rejected" })
+      .eq("id", requestId);
+
+    setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+  }
+
+  async function removeFriend(friendId: string) {
+    Alert.alert("Remove Friend", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          await supabase
+            .from("friends")
+            .delete()
+            .or(
+              `and(user_id.eq.${session!.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session!.user.id})`,
+            );
+          loadFriends();
+        },
+      },
+    ]);
+  }
+
+  const isFriend = (profileId: string) =>
+    friends.some((f) => f.user_id === profileId || f.friend_id === profileId);
+
+  return (
+    <View style={styles.container}>
+      {/* Search */}
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by username..."
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
+          autoCapitalize="none"
+        />
+        <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+          {searching ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Ionicons name="search" size={20} color={colors.primary} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Search results */}
+      {searchResults.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Search Results</Text>
+          {searchResults.map((profile) => (
+            <View key={profile.id} style={styles.userRow}>
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.username}>{profile.username}</Text>
+                {profile.display_name && (
+                  <Text style={styles.displayName}>{profile.display_name}</Text>
+                )}
+              </View>
+              {isFriend(profile.id) ? (
+                <Text style={styles.alreadyFriend}>Friends</Text>
+              ) : (
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={() => sendRequest(profile.id)}
+                >
+                  <Text style={styles.addBtnText}>Add</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {loading ? (
+        <ActivityIndicator
+          color={colors.primary}
+          style={{ marginTop: spacing.xl }}
+        />
+      ) : (
+        <FlatList
+          data={[]}
+          renderItem={null}
+          ListHeaderComponent={
+            <>
+              {/* Pending requests */}
+              {pendingRequests.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionLabel}>
+                    Pending Requests ({pendingRequests.length})
+                  </Text>
+                  {pendingRequests.map((req) => (
+                    <View key={req.id} style={styles.userRow}>
+                      <View style={styles.avatar}>
+                        <Ionicons
+                          name="person"
+                          size={20}
+                          color={colors.primary}
+                        />
+                      </View>
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {req.sender?.username ?? "Unknown"}
+                        </Text>
+                        <Text style={styles.displayName}>
+                          wants to be your friend
+                        </Text>
+                      </View>
+                      <View style={styles.requestActions}>
+                        <TouchableOpacity
+                          style={styles.acceptBtn}
+                          onPress={() => acceptRequest(req.id, req.sender_id)}
+                        >
+                          <Ionicons name="checkmark" size={18} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.rejectBtn}
+                          onPress={() => rejectRequest(req.id)}
+                        >
+                          <Ionicons
+                            name="close"
+                            size={18}
+                            color={colors.textMuted}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Friends list */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>
+                  Friends ({friends.length})
+                </Text>
+                {friends.length === 0 ? (
+                  <Text style={styles.emptyText}>
+                    No friends yet. Search for someone to add.
+                  </Text>
+                ) : (
+                  friends.map((f) => (
+                    <TouchableOpacity
+                      key={`${f.user_id}-${f.friend_id}`}
+                      style={styles.userRow}
+                      //   onPress={() =>
+                      //     // router.push(`/profile/${f.profile?.username}`)
+                      //     router.push({
+                      //       pathname: "/profile/[username]",
+                      //       params: { username: f.profile?.username },
+                      //     })
+                      //   }
+                      onPress={() => {
+                        console.log("Navigating to:", f.profile?.username);
+                        if (!f.profile?.username) return;
+                        router.navigate(`/profile/${f.profile!.username}`);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.avatar}>
+                        <Ionicons
+                          name="person"
+                          size={20}
+                          color={colors.primary}
+                        />
+                      </View>
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {f.profile?.username ?? "Unknown"}
+                        </Text>
+                        {f.profile?.display_name && (
+                          <Text style={styles.displayName}>
+                            {f.profile.display_name}
+                          </Text>
+                        )}
+                      </View>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color={colors.textMuted}
+                      />
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </>
+          }
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: spacing.md,
+  },
+  guestContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  guestTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  guestDesc: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+  guestBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.sm,
+  },
+  guestBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  guestLink: {
+    color: colors.primary,
+    fontSize: 14,
+    marginTop: spacing.sm,
+  },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchBtn: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    width: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  section: {
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.md,
+  },
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + "22",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  displayName: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  alreadyFriend: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  addBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  addBtnText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  requestActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  acceptBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    width: 34,
+    height: 34,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rejectBtn: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    width: 34,
+    height: 34,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: spacing.lg,
+  },
+});

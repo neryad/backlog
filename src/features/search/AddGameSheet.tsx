@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
-
 import { PLATFORMS } from "../../constants/platforms";
 import { colors, spacing, radius } from "../../constants/theme";
 import { GameSearchResult } from "../../types/igdb.types";
@@ -17,6 +16,8 @@ import {
   insertGame,
   insertGameEntry,
 } from "../../db/queries/game";
+import { useAuthStore } from "../../store/auth.store";
+import { syncSingleEntry } from "../../lib/sync";
 
 const STATUSES = ["backlog", "playing", "completed", "wishlist"] as const;
 
@@ -30,13 +31,20 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
   const [selectedPlatform, setSelectedPlatform] = useState<number>(1);
   const [selectedStatus, setSelectedStatus] = useState<string>("backlog");
   const [loading, setLoading] = useState(false);
+  const { session } = useAuthStore();
 
-  function handleAdd() {
+  async function handleAdd() {
     setLoading(true);
     try {
       let gameId = gameExistsByIgdbId(game.igdbId);
       if (!gameId) gameId = insertGame(game);
-      insertGameEntry(gameId, selectedPlatform, selectedStatus);
+      const entryId = insertGameEntry(gameId, selectedPlatform, selectedStatus);
+
+      // Sync a Supabase en background si hay sesión
+      if (session?.user?.id) {
+        syncSingleEntry(entryId, session.user.id);
+      }
+
       onAdded();
     } finally {
       setLoading(false);
@@ -45,7 +53,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Game header */}
       <View style={styles.header}>
         {game.coverUrl ? (
           <Image
@@ -66,7 +73,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         </View>
       </View>
 
-      {/* Platform picker */}
       <Text style={styles.sectionLabel}>Platform</Text>
       <ScrollView
         horizontal
@@ -94,7 +100,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         ))}
       </ScrollView>
 
-      {/* Status picker */}
       <Text style={styles.sectionLabel}>Status</Text>
       <View style={styles.chips}>
         {STATUSES.map((s) => (
@@ -115,7 +120,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         ))}
       </View>
 
-      {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
           <Text style={styles.cancelText}>Cancel</Text>
