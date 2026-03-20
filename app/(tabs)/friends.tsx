@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useGlobalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { useAuthStore } from "../../src/store/auth.store";
@@ -40,9 +40,6 @@ type Friend = {
 };
 
 export default function FriendsScreen() {
-  const { username } = useGlobalSearchParams<{ username: string }>();
-
-  console.log("ProfileScreen mounted, username:", username);
   const { session } = useAuthStore();
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
@@ -51,33 +48,18 @@ export default function FriendsScreen() {
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Si no tiene sesión mostrar pantalla de login
-  if (!session) {
-    return (
-      <View style={styles.guestContainer}>
-        <Ionicons name="people-outline" size={64} color={colors.textMuted} />
-        <Text style={styles.guestTitle}>Connect with friends</Text>
-        <Text style={styles.guestDesc}>
-          Create an account to add friends and see their backlogs.
-        </Text>
-        <TouchableOpacity
-          style={styles.guestBtn}
-          onPress={() => router.push("/auth/login")}
-        >
-          <Text style={styles.guestBtnText}>Sign In</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/auth/register")}>
-          <Text style={styles.guestLink}>Create Account</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  // ✅ hooks siempre se llaman — el check de sesión va al final
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return;
+      loadFriends();
+    }, [session]),
+  );
 
   async function loadFriends() {
     setLoading(true);
     const userId = session!.user.id;
 
-    // Cargar amigos
     const { data: friendsData } = await supabase
       .from("friends")
       .select("user_id, friend_id, created_at")
@@ -98,7 +80,6 @@ export default function FriendsScreen() {
       setFriends(enriched);
     }
 
-    // Cargar solicitudes pendientes recibidas
     const { data: requestsData } = await supabase
       .from("friend_requests")
       .select("id, sender_id, receiver_id, status, created_at")
@@ -121,12 +102,6 @@ export default function FriendsScreen() {
 
     setLoading(false);
   }
-
-  useFocusEffect(
-    useCallback(() => {
-      loadFriends();
-    }, [session]),
-  );
 
   async function handleSearch() {
     if (search.trim().length < 2) return;
@@ -166,13 +141,11 @@ export default function FriendsScreen() {
   }
 
   async function acceptRequest(requestId: string, senderId: string) {
-    // Actualizar solicitud a accepted
     await supabase
       .from("friend_requests")
       .update({ status: "accepted" })
       .eq("id", requestId);
 
-    // Crear amistad en ambas direcciones
     await supabase.from("friends").insert([
       { user_id: session!.user.id, friend_id: senderId },
       { user_id: senderId, friend_id: session!.user.id },
@@ -211,6 +184,28 @@ export default function FriendsScreen() {
 
   const isFriend = (profileId: string) =>
     friends.some((f) => f.user_id === profileId || f.friend_id === profileId);
+
+  // ✅ check de sesión al final, después de todos los hooks
+  if (!session) {
+    return (
+      <View style={styles.guestContainer}>
+        <Ionicons name="people-outline" size={64} color={colors.textMuted} />
+        <Text style={styles.guestTitle}>Connect with friends</Text>
+        <Text style={styles.guestDesc}>
+          Create an account to add friends and see their backlogs.
+        </Text>
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={() => router.push("/auth/login")}
+        >
+          <Text style={styles.guestBtnText}>Sign In</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/auth/register")}>
+          <Text style={styles.guestLink}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -336,17 +331,9 @@ export default function FriendsScreen() {
                     <TouchableOpacity
                       key={`${f.user_id}-${f.friend_id}`}
                       style={styles.userRow}
-                      //   onPress={() =>
-                      //     // router.push(`/profile/${f.profile?.username}`)
-                      //     router.push({
-                      //       pathname: "/profile/[username]",
-                      //       params: { username: f.profile?.username },
-                      //     })
-                      //   }
                       onPress={() => {
-                        console.log("Navigating to:", f.profile?.username);
                         if (!f.profile?.username) return;
-                        router.navigate(`/profile/${f.profile!.username}`);
+                        router.navigate(`/profile/${f.profile.username}`);
                       }}
                       activeOpacity={0.7}
                     >
@@ -367,11 +354,24 @@ export default function FriendsScreen() {
                           </Text>
                         )}
                       </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color={colors.textMuted}
-                      />
+                      {/* ✅ Botón remove friend */}
+                      <TouchableOpacity
+                        style={styles.removeBtn}
+                        onPress={() => {
+                          const friendId =
+                            f.user_id === session.user.id
+                              ? f.friend_id
+                              : f.user_id;
+                          removeFriend(friendId);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name="person-remove-outline"
+                          size={18}
+                          color={colors.textMuted}
+                        />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                   ))
                 )}
@@ -506,6 +506,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  removeBtn: {
+    padding: spacing.xs,
   },
   requestActions: {
     flexDirection: "row",
