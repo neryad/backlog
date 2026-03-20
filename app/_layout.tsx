@@ -17,7 +17,10 @@ const queryClient = new QueryClient();
 function parseFriendRequestUrl(url: string): { id: string; name: string } | null {
   try {
     const parsed = Linking.parse(url);
-    if (parsed.path !== "add-friend") return null;
+    // For playlogged://add-friend?id=…&name=…, expo-linking puts "add-friend"
+    // in `hostname`, not `path`.  Accept both to be safe.
+    const route = parsed.hostname ?? parsed.path;
+    if (route !== "add-friend") return null;
     const id = parsed.queryParams?.id;
     const name = parsed.queryParams?.name;
     if (typeof id === "string" && id && typeof name === "string" && name) {
