@@ -102,6 +102,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <TabIcon name="bar-chart" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: "Friends",
+          tabBarIcon: ({ color }) => <TabIcon name="people" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

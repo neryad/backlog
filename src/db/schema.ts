@@ -34,5 +34,23 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_entries_status   ON game_entries(status);
     CREATE INDEX IF NOT EXISTS idx_entries_platform ON game_entries(platform_id);
     CREATE INDEX IF NOT EXISTS idx_games_igdb_id    ON games(igdb_id);
+
+    CREATE TABLE IF NOT EXISTS user_profile (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT 'Gamer'
+    );
+
+    CREATE TABLE IF NOT EXISTS friends (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      added_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS friend_requests (
+      id TEXT PRIMARY KEY,
+      from_id TEXT NOT NULL,
+      from_name TEXT NOT NULL,
+      received_at INTEGER NOT NULL
+    );
   `);
 }
