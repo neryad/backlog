@@ -1,7 +1,12 @@
+import { useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../src/constants/theme";
+import { supabase } from "../../src/lib/supabase";
+import { useAuthStore } from "../../src/store/auth.store";
+import { useUIStore } from "../../src/store/ui.store";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -11,6 +16,50 @@ function TabIcon({ name, color }: { name: IoniconsName; color: string }) {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const { session } = useAuthStore();
+  const pendingFriendRequests = useUIStore((state) => state.pendingFriendRequests);
+  const setPendingFriendRequests = useUIStore(
+    (state) => state.setPendingFriendRequests,
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function refreshPendingRequestsCount() {
+      if (!session) {
+        if (isMounted) setPendingFriendRequests(0);
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from("friend_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", session.user.id)
+        .eq("status", "pending");
+
+      if (!error && typeof count === "number" && isMounted) {
+        setPendingFriendRequests(count);
+      }
+    }
+
+    refreshPendingRequestsCount();
+
+    const intervalId = setInterval(refreshPendingRequestsCount, 15000);
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextState) => {
+        if (nextState === "active") {
+          refreshPendingRequestsCount();
+        }
+      },
+    );
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      appStateSubscription.remove();
+    };
+  }, [session, setPendingFriendRequests]);
 
   return (
     <Tabs
@@ -48,6 +97,12 @@ export default function TabsLayout() {
         options={{
           title: "Friends",
           tabBarIcon: ({ color }) => <TabIcon name="people" color={color} />,
+          tabBarBadge:
+            pendingFriendRequests > 0 ? pendingFriendRequests : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.primary,
+            color: colors.text,
+          },
         }}
       />
       <Tabs.Screen

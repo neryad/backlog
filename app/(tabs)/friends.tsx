@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { useAuthStore } from "../../src/store/auth.store";
+import { useUIStore } from "../../src/store/ui.store";
 import { supabase } from "../../src/lib/supabase";
 
 type Profile = {
@@ -41,6 +42,9 @@ type Friend = {
 
 export default function FriendsScreen() {
   const { session } = useAuthStore();
+  const setPendingFriendRequests = useUIStore(
+    (state) => state.setPendingFriendRequests,
+  );
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [searching, setSearching] = useState(false);
@@ -51,9 +55,12 @@ export default function FriendsScreen() {
   // ✅ hooks siempre se llaman — el check de sesión va al final
   useFocusEffect(
     useCallback(() => {
-      if (!session) return;
+      if (!session) {
+        setPendingFriendRequests(0);
+        return;
+      }
       loadFriends();
-    }, [session]),
+    }, [session, setPendingFriendRequests]),
   );
 
   async function loadFriends() {
@@ -78,6 +85,8 @@ export default function FriendsScreen() {
         }),
       );
       setFriends(enriched);
+    } else {
+      setFriends([]);
     }
 
     const { data: requestsData } = await supabase
@@ -98,6 +107,10 @@ export default function FriendsScreen() {
         }),
       );
       setPendingRequests(enriched);
+      setPendingFriendRequests(enriched.length);
+    } else {
+      setPendingRequests([]);
+      setPendingFriendRequests(0);
     }
 
     setLoading(false);
@@ -169,6 +182,12 @@ export default function FriendsScreen() {
         return;
       }
 
+      setPendingRequests((prev) => {
+        const next = prev.filter((r) => r.id !== requestId);
+        setPendingFriendRequests(next.length);
+        return next;
+      });
+
       await loadFriends();
       Alert.alert("Success", "Friend added!");
     } catch (err) {
@@ -190,7 +209,13 @@ export default function FriendsScreen() {
         return;
       }
 
-      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+      setPendingRequests((prev) => {
+        const next = prev.filter((r) => r.id !== requestId);
+        setPendingFriendRequests(next.length);
+        return next;
+      });
+
+      await loadFriends();
     } catch (err) {
       console.error("rejectRequest error:", err);
       Alert.alert("Error", String(err));
