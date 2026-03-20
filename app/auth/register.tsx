@@ -22,20 +22,42 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function getFriendlyAuthError(message: string) {
+    const normalized = message.toLowerCase();
+
+    if (
+      normalized.includes("already registered") ||
+      normalized.includes("already exists") ||
+      normalized.includes("user already registered") ||
+      normalized.includes("email")
+    ) {
+      return "Email already registered. Please sign in.";
+    }
+
+    return message;
+  }
+
   async function handleRegister() {
-    if (!email || !username || !password || !confirmPassword) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername = username.trim().toLowerCase();
+
+    if (!normalizedEmail || !normalizedUsername || !password || !confirmPassword) {
       setError("Please fill in all fields.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-    if (username.length < 3) {
+    if (normalizedUsername.length < 3) {
       setError("Username must be at least 3 characters.");
       return;
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_]+$/.test(normalizedUsername)) {
       setError("Username can only contain letters, numbers and underscores.");
       return;
     }
@@ -47,7 +69,7 @@ export default function RegisterScreen() {
     const { data: existing } = await supabase
       .from("profiles")
       .select("username")
-      .eq("username", username.toLowerCase())
+      .eq("username", normalizedUsername)
       .single();
 
     if (existing) {
@@ -57,13 +79,13 @@ export default function RegisterScreen() {
     }
 
     const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: "https://playlogged.neryad.dev",
         data: {
-          username: username.toLowerCase(),
-          display_name: username,
+          username: normalizedUsername,
+          display_name: normalizedUsername,
         },
       },
     });
@@ -81,7 +103,7 @@ export default function RegisterScreen() {
 
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError(getFriendlyAuthError(error.message));
     } else {
       router.replace("/(tabs)");
     }
@@ -108,7 +130,7 @@ export default function RegisterScreen() {
           placeholder="Email"
           placeholderTextColor={colors.textMuted}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(t) => setEmail(t.trim().toLowerCase())}
           autoCapitalize="none"
           keyboardType="email-address"
         />
