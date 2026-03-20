@@ -63,7 +63,7 @@ export default function FriendsScreen() {
     const { data: friendsData } = await supabase
       .from("friends")
       .select("user_id, friend_id, created_at")
-      .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+      .eq("user_id", userId);
 
     if (friendsData) {
       const enriched = await Promise.all(
@@ -141,26 +141,60 @@ export default function FriendsScreen() {
   }
 
   async function acceptRequest(requestId: string, senderId: string) {
-    await supabase
-      .from("friend_requests")
-      .update({ status: "accepted" })
-      .eq("id", requestId);
+    try {
+      // Eliminar la solicitud
+      const { error: deleteError } = await supabase
+        .from("friend_requests")
+        .delete()
+        .eq("id", requestId);
 
-    await supabase.from("friends").insert([
-      { user_id: session!.user.id, friend_id: senderId },
-      { user_id: senderId, friend_id: session!.user.id },
-    ]);
+      if (deleteError) {
+        console.error("Delete error:", deleteError);
+        Alert.alert(
+          "Error",
+          `Failed to delete request: ${deleteError.message}`,
+        );
+        return;
+      }
 
-    loadFriends();
+      // Agregar amigos
+      const { error: insertError } = await supabase.from("friends").insert([
+        { user_id: session!.user.id, friend_id: senderId },
+        { user_id: senderId, friend_id: session!.user.id },
+      ]);
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        Alert.alert("Error", `Failed to add friend: ${insertError.message}`);
+        return;
+      }
+
+      await loadFriends();
+      Alert.alert("Success", "Friend added!");
+    } catch (err) {
+      console.error("acceptRequest error:", err);
+      Alert.alert("Error", String(err));
+    }
   }
 
   async function rejectRequest(requestId: string) {
-    await supabase
-      .from("friend_requests")
-      .update({ status: "rejected" })
-      .eq("id", requestId);
+    try {
+      const { error } = await supabase
+        .from("friend_requests")
+        .delete()
+        .eq("id", requestId);
 
-    setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+      if (error) {
+        console.error("Reject error:", error);
+        Alert.alert("Error", `Failed to reject: ${error.message}`);
+        return;
+      }
+
+      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err) {
+      console.error("rejectRequest error:", err);
+      Alert.alert("Error", String(err));
+    }
   }
 
   async function removeFriend(friendId: string) {
