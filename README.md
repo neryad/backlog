@@ -93,10 +93,50 @@ cp .env.example .env
 
 ```env
 # .env
-EXPO_PUBLIC_IGDB_PROXY_URL=https://your-vercel-proxy.vercel.app/api/igdb
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+EXPO_PUBLIC_IGDB_PROXY_URL=https://your-vercel-proxy.vercel.app/api/games
 ```
 
 > See the [Environment Setup](#-environment-setup-igdb-proxy) section for how to obtain and configure IGDB credentials.
+
+### 3.1 Build environment strategy (recommended)
+
+For EAS builds, do not rely on local `.env` files. Use EAS project secrets per environment:
+
+```bash
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_URL --value https://your-project.supabase.co
+eas secret:create --scope project --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value your-supabase-anon-key
+eas secret:create --scope project --name EXPO_PUBLIC_IGDB_PROXY_URL --value https://your-vercel-proxy.vercel.app/api/games
+```
+
+Then build with the profile you need:
+
+```bash
+eas build --profile development --platform android
+eas build --profile preview --platform android
+eas build --profile production --platform android
+```
+
+If you use different values per environment, set them in EAS by environment/profile in the dashboard before building.
+
+### 3.2 Account deletion backend (optional)
+
+The app can invoke a `delete-account` Edge Function to permanently remove cloud account data while keeping local SQLite data untouched.
+If you do not use Edge Functions yet, the app falls back to client-side cloud data cleanup.
+
+Function source:
+- `supabase/functions/delete-account/index.ts`
+
+Deploy:
+
+```bash
+supabase functions deploy delete-account
+```
+
+Required Supabase function secrets:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
 ### 4. Run the development server
 

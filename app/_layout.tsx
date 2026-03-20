@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initializeDatabase } from "../src/db/schema";
 import { colors } from "../src/constants/theme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { supabase } from "../src/lib/supabase";
+import { isSupabaseConfigured, supabase } from "../src/lib/supabase";
 import { useAuthStore } from "../src/store/auth.store";
 import { syncBacklogToSupabase } from "../src/lib/sync";
 
@@ -24,13 +24,44 @@ export default function RootLayout() {
   // Restaurar sesión de Supabase al abrir la app
   // Reemplaza el useEffect de auth existente con este:
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      // Sincronizar backlog al restaurar sesión
-      if (session?.user?.id) {
-        syncBacklogToSupabase(session.user.id);
+    if (!isSupabaseConfigured) {
+      setSession(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function restoreSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        if (isMounted) setSession(null);
+        return;
       }
-    });
+
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+        if (isMounted) setSession(null);
+        return;
+      }
+
+      if (isMounted) {
+        setSession(session);
+      }
+
+      if (user.id) {
+        syncBacklogToSupabase(user.id);
+      }
+    }
+
+    restoreSession();
 
     const {
       data: { subscription },
@@ -42,7 +73,10 @@ export default function RootLayout() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
   // useEffect(() => {
   //   // Obtener sesión actual

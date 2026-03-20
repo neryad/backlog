@@ -24,7 +24,7 @@ export async function syncBacklogToSupabase(userId: string): Promise<void> {
 
     const { error } = await supabase
       .from("game_entries")
-      .upsert(rows, { onConflict: "id" });
+      .upsert(rows, { onConflict: "user_id,id" });
 
     if (error) console.error("Sync error:", error.message);
     else console.log(`Synced ${rows.length} entries to Supabase`);
@@ -58,7 +58,7 @@ export async function syncSingleEntry(
         created_at: new Date(entry.createdAt).toISOString(),
         updated_at: new Date(entry.updatedAt).toISOString(),
       },
-      { onConflict: "id" },
+      { onConflict: "user_id,id" },
     );
 
     if (error) console.error("Single sync error:", error.message);
@@ -67,12 +67,16 @@ export async function syncSingleEntry(
   }
 }
 
-export async function deleteSingleEntry(entryId: string): Promise<void> {
+export async function deleteSingleEntry(
+  entryId: string,
+  userId: string,
+): Promise<void> {
   try {
     const { error } = await supabase
       .from("game_entries")
       .delete()
-      .eq("id", entryId);
+      .eq("id", entryId)
+      .eq("user_id", userId);
 
     if (error) console.error("Delete sync error:", error.message);
   } catch (err) {

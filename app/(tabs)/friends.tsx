@@ -229,13 +229,53 @@ export default function FriendsScreen() {
         text: "Remove",
         style: "destructive",
         onPress: async () => {
-          await supabase
-            .from("friends")
-            .delete()
-            .or(
-              `and(user_id.eq.${session!.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session!.user.id})`,
-            );
-          loadFriends();
+          try {
+            const me = session!.user.id;
+
+            // Always remove the current user's row first.
+            const { error: ownDeleteError } = await supabase
+              .from("friends")
+              .delete()
+              .eq("user_id", me)
+              .eq("friend_id", friendId);
+
+            if (ownDeleteError) {
+              Alert.alert(
+                "Error",
+                `Failed to remove friend: ${ownDeleteError.message}`,
+              );
+              return;
+            }
+
+            // Try to remove the mirrored row too (may be blocked by strict RLS).
+            const { error: mirrorDeleteError } = await supabase
+              .from("friends")
+              .delete()
+              .eq("user_id", friendId)
+              .eq("friend_id", me);
+
+            if (mirrorDeleteError) {
+              const message = mirrorDeleteError.message.toLowerCase();
+              if (
+                message.includes("row-level security") ||
+                mirrorDeleteError.code === "42501"
+              ) {
+                Alert.alert(
+                  "Removed for you",
+                  "Friendship was removed on your side. To remove both rows, update DELETE policy on friends to allow auth.uid() = user_id OR auth.uid() = friend_id.",
+                );
+              } else {
+                Alert.alert(
+                  "Warning",
+                  `Mirror cleanup failed: ${mirrorDeleteError.message}`,
+                );
+              }
+            }
+
+            await loadFriends();
+          } catch (err) {
+            Alert.alert("Error", String(err));
+          }
         },
       },
     ]);

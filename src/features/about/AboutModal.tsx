@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -63,6 +63,7 @@ type Props = {
 
 export default function AboutModal({ visible, onClose }: Props) {
   const { session } = useAuthStore();
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   function openLink(url: string) {
     Linking.openURL(url).catch(() => null);
@@ -80,6 +81,75 @@ export default function AboutModal({ visible, onClose }: Props) {
         },
       },
     ]);
+  }
+
+  async function confirmDeleteAccount() {
+    if (!session || deletingAccount) return;
+
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.rpc("delete_my_account");
+
+      if (error) {
+        const message = String(error.message ?? "").toLowerCase();
+        const missingRpc =
+          message.includes("delete_my_account") ||
+          message.includes("function") ||
+          message.includes("not found");
+
+        const hint = missingRpc
+          ? "Missing SQL function 'delete_my_account' in Supabase. Create it in SQL Editor first."
+          : `Could not delete account: ${error.message ?? "unknown error"}`;
+
+        Alert.alert("Delete failed", hint);
+        return;
+      }
+
+      await supabase.auth.signOut({ scope: "local" });
+      onClose();
+      router.replace("/auth/login");
+
+      Alert.alert(
+        "Account deleted",
+        "Your full cloud account was removed. Local backlog and stats stay on this device.",
+      );
+    } catch (error) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => null);
+      Alert.alert(
+        "Delete failed",
+        error instanceof Error
+          ? error.message
+          : "We could not delete your account right now.",
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
+  function handleDeleteAccount() {
+    if (!session || deletingAccount) return;
+
+    Alert.alert(
+      "Delete account",
+      "This will permanently delete your cloud account. You will not be able to sign in again with this account. Local backlog and stats on this device will stay.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Continue",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert("Final confirmation", "This action cannot be undone.", [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete account",
+                style: "destructive",
+                onPress: confirmDeleteAccount,
+              },
+            ]);
+          },
+        },
+      ],
+    );
   }
 
   function handleLogin() {
@@ -144,12 +214,24 @@ export default function AboutModal({ visible, onClose }: Props) {
                       <Text style={styles.accountStatus}>Syncing backlog</Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.logoutBtn}
-                    onPress={handleLogout}
-                  >
-                    <Text style={styles.logoutText}>Sign Out</Text>
-                  </TouchableOpacity>
+                  <View style={styles.accountActions}>
+                    <TouchableOpacity
+                      style={styles.logoutBtn}
+                      onPress={handleLogout}
+                      disabled={deletingAccount}
+                    >
+                      <Text style={styles.logoutText}>Sign Out</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteAccountBtn}
+                      onPress={handleDeleteAccount}
+                      disabled={deletingAccount}
+                    >
+                      <Text style={styles.deleteAccountText}>
+                        {deletingAccount ? "Deleting..." : "Delete Account"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ) : (
                 <View style={styles.authButtons}>
@@ -337,6 +419,23 @@ const styles = StyleSheet.create({
   logoutText: {
     color: colors.textMuted,
     fontSize: 13,
+  },
+  accountActions: {
+    gap: spacing.xs,
+    alignItems: "flex-end",
+  },
+  deleteAccountBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: colors.danger + "22",
+  },
+  deleteAccountText: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: "600",
   },
   authButtons: {
     gap: spacing.sm,

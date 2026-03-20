@@ -63,7 +63,7 @@ export function useGameDetail(id: string) {
   const remove = useCallback(() => {
     deleteGameEntry(id);
     if (session?.user?.id) {
-      deleteSingleEntry(id);
+      deleteSingleEntry(id, session.user.id);
     }
   }, [id, session]);
 
