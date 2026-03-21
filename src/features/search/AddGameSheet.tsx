@@ -27,6 +27,15 @@ const STATUSES: { value: GameStatus; label: string }[] = [
   { value: "wishlist", label: "Wishlist" },
 ];
 
+const ACTION_LABELS: Record<GameStatus, string> = {
+  backlog: "Add to Backlog",
+  playing: "Add as Playing",
+  "playing-social": "Add as Playing (Social)",
+  completed: "Add as Completed",
+  dropped: "Add as Dropped",
+  wishlist: "Add to Wishlist",
+};
+
 type Props = {
   game: GameSearchResult;
   onAdded: () => void;
@@ -37,6 +46,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
   const [selectedPlatform, setSelectedPlatform] = useState<number>(1);
   const [selectedStatus, setSelectedStatus] = useState<GameStatus>("backlog");
   const [loading, setLoading] = useState(false);
+  const addActionLabel = ACTION_LABELS[selectedStatus];
 
   function handleAdd() {
     setLoading(true);
@@ -138,7 +148,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
           {loading ? (
             <ActivityIndicator color={colors.text} />
           ) : (
-            <Text style={styles.addText}>Add to Backlog</Text>
+            <Text style={styles.addText}>{addActionLabel}</Text>
           )}
         </TouchableOpacity>
       </View>

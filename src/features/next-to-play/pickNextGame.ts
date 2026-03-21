@@ -14,13 +14,13 @@ export function pickNextGame(
       return backlog[Math.floor(Math.random() * backlog.length)];
 
     case "oldest":
-      return backlog.sort((a, b) => a.createdAt - b.createdAt)[0];
+      return [...backlog].sort((a, b) => a.createdAt - b.createdAt)[0];
 
     case "highest-rated":
       const rated = backlog.filter((g) => g.personalRating !== null);
       if (rated.length === 0)
         return backlog[Math.floor(Math.random() * backlog.length)];
-      return rated.sort(
+      return [...rated].sort(
         (a, b) => (b.personalRating ?? 0) - (a.personalRating ?? 0),
       )[0];
   }
