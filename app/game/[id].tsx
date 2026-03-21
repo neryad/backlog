@@ -19,6 +19,7 @@ import { PLATFORMS } from "../../src/constants/platforms";
 const STATUSES: { value: GameStatus; label: string; color: string }[] = [
   { value: "backlog", label: "Backlog", color: colors.textMuted },
   { value: "playing", label: "Playing", color: colors.primary },
+  { value: "playing-social", label: "Playing (Social)", color: "#14b8a6" },
   { value: "completed", label: "Completed", color: colors.success },
   { value: "dropped", label: "Dropped", color: colors.danger },
   { value: "wishlist", label: "Wishlist", color: colors.warning },

@@ -31,6 +31,11 @@ const STATUS_META: Record<
     color: colors.primary,
     icon: "game-controller-outline",
   },
+  "playing-social": {
+    label: "Playing (Social)",
+    color: "#14b8a6",
+    icon: "people-outline",
+  },
   completed: {
     label: "Completed",
     color: colors.success,

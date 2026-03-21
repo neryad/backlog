@@ -21,11 +21,16 @@ import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
 import { ActivityIndicator } from "react-native";
+
 const CARD_HEIGHT = 95 + 16;
+const SORT_OPTIONS = [
+  { value: "recently-added", label: "Recent" },
+  { value: "title-az", label: "A-Z" },
+] as const;
 
 export default function BacklogScreen() {
   const router = useRouter();
-  const { activeFilter, setFilter } = useUIStore();
+  const { activeFilter, sortBy, setFilter, setSortBy } = useUIStore();
   const navigation = useNavigation();
   const [showAbout, setShowAbout] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
@@ -55,6 +60,16 @@ export default function BacklogScreen() {
     activeFilter === "all"
       ? allGames
       : allGames.filter((g) => g.status === activeFilter);
+
+  const visibleGames = [...filteredGames].sort((a, b) => {
+    if (sortBy === "title-az") {
+      const aTitle = a.game?.title ?? "";
+      const bTitle = b.game?.title ?? "";
+      return aTitle.localeCompare(bTitle);
+    }
+
+    return b.createdAt - a.createdAt;
+  });
 
   const handlePress = useCallback(
     (item: GameEntry) => {
@@ -109,14 +124,41 @@ export default function BacklogScreen() {
       ) : (
         <>
           {allGames.length > 0 && (
-            <FilterBar
-              active={activeFilter}
-              onChange={setFilter}
-              games={allGames}
-            />
+            <>
+              <FilterBar
+                active={activeFilter}
+                onChange={setFilter}
+                games={allGames}
+              />
+              <View style={styles.sortRow}>
+                {SORT_OPTIONS.map((option) => {
+                  const isActive = sortBy === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.sortChip,
+                        isActive && styles.sortChipActive,
+                      ]}
+                      onPress={() => setSortBy(option.value)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.sortChipText,
+                          isActive && styles.sortChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
           )}
           <FlatList
-            data={filteredGames}
+            data={visibleGames}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             getItemLayout={getItemLayout}
@@ -125,7 +167,7 @@ export default function BacklogScreen() {
             windowSize={5}
             initialNumToRender={12}
             contentContainerStyle={
-              filteredGames.length === 0
+              visibleGames.length === 0
                 ? styles.emptyContainer
                 : styles.listContent
             }
@@ -189,6 +231,33 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
+  },
+  sortRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  sortChip: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  sortChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  sortChipText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  sortChipTextActive: {
+    color: colors.text,
   },
   emptyContainer: {
     flex: 1,

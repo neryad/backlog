@@ -136,9 +136,19 @@ import { colors, spacing, radius } from "../constants/theme";
 const STATUS_COLORS: Record<string, string> = {
   backlog: colors.textMuted,
   playing: colors.primary,
+  "playing-social": "#14b8a6",
   completed: colors.success,
   dropped: colors.danger,
   wishlist: colors.warning,
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  backlog: "Backlog",
+  playing: "Playing",
+  "playing-social": "Playing (Social)",
+  completed: "Completed",
+  dropped: "Dropped",
+  wishlist: "Wishlist",
 };
 
 type Props = {
@@ -184,7 +194,7 @@ function GameCard({ item, onPress }: Props) {
             ]}
           />
           <Text style={[styles.status, { color: STATUS_COLORS[item.status] }]}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+            {STATUS_LABELS[item.status] ?? item.status}
           </Text>
 
           {item.platform && (
