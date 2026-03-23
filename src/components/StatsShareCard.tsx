@@ -1,30 +1,25 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, radius, spacing } from "../constants/theme";
 import { BacklogStats } from "../db/queries/stats";
+import { STATS_STATUS_ORDER, APP_NAME } from "../constants/shareCardThemes";
 
 type Props = {
   stats: BacklogStats;
 };
 
-const STATUS_ORDER = [
-  { key: "completed", label: "Completed", color: colors.success },
-  { key: "playing", label: "Playing", color: colors.primary },
-  { key: "backlog", label: "Backlog", color: colors.textMuted },
-  { key: "wishlist", label: "Wishlist", color: colors.warning },
-  { key: "dropped", label: "Dropped", color: colors.danger },
-];
-
 export function StatsShareCard({ stats }: Props) {
-  const segments = STATUS_ORDER.filter(
-    (item) => (stats.byStatus[item.key] ?? 0) > 0,
+  const segments = useMemo(
+    () =>
+      STATS_STATUS_ORDER.filter((item) => (stats.byStatus[item.key] ?? 0) > 0),
+    [stats.byStatus],
   );
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.kicker}>Playlogged</Text>
+          <Text style={styles.kicker}>{APP_NAME}</Text>
           <Text style={styles.title}>My Backlog Stats</Text>
         </View>
         <View style={styles.percentBadge}>

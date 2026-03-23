@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { colors, radius, spacing } from "../constants/theme";
 import { GameEntry } from "../types/game";
+import { APP_NAME } from "../constants/shareCardThemes";
 
 type Props = {
   entries: GameEntry[];
@@ -22,7 +23,7 @@ export function BacklogShareCard({
 
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.kicker}>Playlogged</Text>
+          <Text style={styles.kicker}>{APP_NAME}</Text>
           <Text style={styles.title}>{label}</Text>
         </View>
         <View style={styles.totalBadge}>
@@ -37,7 +38,9 @@ export function BacklogShareCard({
             ? `${entry.personalRating}/10`
             : "-";
           const hours =
-            entry.hoursPlayed > 0 ? `${entry.hoursPlayed}h` : "No hours";
+            Number.isFinite(entry.hoursPlayed) && entry.hoursPlayed > 0
+              ? `${entry.hoursPlayed}h`
+              : "No hours";
           const platform =
             entry.platform?.shortName ?? entry.platform?.name ?? "Platform";
 

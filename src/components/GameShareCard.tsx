@@ -2,7 +2,8 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { colors, radius, spacing } from "../constants/theme";
-import { GameEntry, GameStatus } from "../types/game";
+import { GameEntry } from "../types/game";
+import { GAME_STATUS_THEMES, APP_NAME } from "../constants/shareCardThemes";
 
 type Props = {
   entry: GameEntry;
@@ -10,55 +11,13 @@ type Props = {
   appName?: string;
 };
 
-const STATUS_META: Record<
-  GameStatus,
-  { label: string; accent: string; gradientTop: string; gradientBottom: string }
-> = {
-  backlog: {
-    label: "Backlog",
-    accent: "#8b96ad",
-    gradientTop: "#1f2a3d",
-    gradientBottom: "#101521",
-  },
-  playing: {
-    label: "Playing",
-    accent: "#0bbf9f",
-    gradientTop: "#12352f",
-    gradientBottom: "#0d1e1b",
-  },
-  "playing-social": {
-    label: "Playing Social",
-    accent: "#2cc6ff",
-    gradientTop: "#123245",
-    gradientBottom: "#0d1b27",
-  },
-  completed: {
-    label: "Completed",
-    accent: "#4caf7d",
-    gradientTop: "#193229",
-    gradientBottom: "#0f1f18",
-  },
-  dropped: {
-    label: "Dropped",
-    accent: "#e05c5c",
-    gradientTop: "#3b1f25",
-    gradientBottom: "#211218",
-  },
-  wishlist: {
-    label: "Wishlist",
-    accent: "#f5a623",
-    gradientTop: "#3a2b1a",
-    gradientBottom: "#211911",
-  },
-};
-
 export function GameShareCard({
   entry,
   platformName,
-  appName = "Playlogged",
+  appName = APP_NAME,
 }: Props) {
   const game = entry.game;
-  const status = STATUS_META[entry.status];
+  const status = GAME_STATUS_THEMES[entry.status];
   const hours = Number.isFinite(entry.hoursPlayed) ? entry.hoursPlayed : 0;
   const rating = entry.personalRating ?? "-";
 

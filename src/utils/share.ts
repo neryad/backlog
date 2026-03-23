@@ -42,10 +42,16 @@ export async function shareViewAsImage(
     });
 
     return true;
-  } catch {
+  } catch (error) {
+    console.error(
+      "[ShareView Error]",
+      error instanceof Error ? error.message : String(error),
+    );
     Alert.alert(
       "Could not share card",
-      options.errorMessage ?? "Try again in a moment.",
+      error instanceof Error && error.message
+        ? error.message
+        : (options.errorMessage ?? "Try again in a moment."),
     );
     return false;
   }
