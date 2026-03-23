@@ -1,10 +1,18 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { getStats, BacklogStats } from "../../src/db/queries/stats";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { StatsShareCard } from "../../src/components/StatsShareCard";
+import { shareViewAsImage } from "../../src/utils/share";
 
 // const STATUS_META: Record<
 //   string,
@@ -82,6 +90,8 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<BacklogStats | null>(null);
+  const shareCardRef = useRef<View>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -93,8 +103,41 @@ export default function StatsScreen() {
 
   const totalForBar = Math.max(stats.total, 1);
 
+  async function handleShareStats() {
+    if (!shareCardRef.current || isSharing) return;
+
+    try {
+      setIsSharing(true);
+      await shareViewAsImage(shareCardRef, {
+        dialogTitle: "Share your backlog stats",
+        width: 1080,
+        height: 1920,
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.shareSection}>
+        <Text style={styles.sectionLabel}>Share Stats</Text>
+        <View style={styles.sharePreviewFrame}>
+          <View ref={shareCardRef} collapsable={false}>
+            <StatsShareCard stats={stats} />
+          </View>
+        </View>
+        <TouchableOpacity
+          style={[styles.shareBtn, isSharing && styles.shareBtnDisabled]}
+          onPress={handleShareStats}
+          disabled={isSharing}
+        >
+          <Text style={styles.shareBtnText}>
+            {isSharing ? "Generating..." : "Share Stats Card"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Top stats */}
       <View style={styles.topCards}>
         <StatCard label="Total Games" value={String(stats.total)} />
@@ -174,6 +217,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
+  shareSection: {
+    marginBottom: spacing.md,
+  },
   statCard: {
     flex: 1,
     minWidth: "45%",
@@ -205,6 +251,28 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.md,
+  },
+  sharePreviewFrame: {
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  shareBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    alignItems: "center",
+  },
+  shareBtnDisabled: {
+    opacity: 0.7,
+  },
+  shareBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
   },
   sectionLabel: {
     color: colors.textMuted,

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   FlatList,
@@ -6,6 +12,7 @@ import {
   StyleSheet,
   ListRenderItem,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,6 +28,8 @@ import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
 import { ActivityIndicator } from "react-native";
+import { BacklogShareCard } from "../../src/components/BacklogShareCard";
+import { shareViewAsImage } from "../../src/utils/share";
 
 const CARD_HEIGHT = 95 + 16;
 const SORT_OPTIONS = [
@@ -32,7 +41,9 @@ export default function BacklogScreen() {
   const router = useRouter();
   const { activeFilter, sortBy, setFilter, setSortBy } = useUIStore();
   const navigation = useNavigation();
+  const shareCardRef = useRef<View>(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
   const { games: allGames, loading, reload } = useBacklog("all");
 
@@ -70,6 +81,20 @@ export default function BacklogScreen() {
 
     return b.createdAt - a.createdAt;
   });
+
+  const topShareGames = useMemo(() => {
+    const ratedGames = [...visibleGames].sort((a, b) => {
+      const ratingDiff = (b.personalRating ?? -1) - (a.personalRating ?? -1);
+      if (ratingDiff !== 0) return ratingDiff;
+
+      const hoursDiff = b.hoursPlayed - a.hoursPlayed;
+      if (hoursDiff !== 0) return hoursDiff;
+
+      return b.createdAt - a.createdAt;
+    });
+
+    return ratedGames.slice(0, 3);
+  }, [visibleGames]);
 
   const handlePress = useCallback(
     (item: GameEntry) => {
@@ -114,6 +139,26 @@ export default function BacklogScreen() {
     }),
     [],
   );
+
+  async function handleShareTopCard() {
+    if (!shareCardRef.current || isSharing) return;
+
+    if (topShareGames.length === 0) {
+      Alert.alert("No games to share", "Add some games to your backlog first.");
+      return;
+    }
+
+    try {
+      setIsSharing(true);
+      await shareViewAsImage(shareCardRef, {
+        dialogTitle: "Share your top backlog games",
+        width: 1080,
+        height: 1920,
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -170,6 +215,38 @@ export default function BacklogScreen() {
               visibleGames.length === 0
                 ? styles.emptyContainer
                 : styles.listContent
+            }
+            ListHeaderComponent={
+              topShareGames.length > 0 ? (
+                <View style={styles.shareSection}>
+                  <Text style={styles.shareSectionTitle}>Share Top List</Text>
+                  <View style={styles.sharePreviewFrame}>
+                    <View ref={shareCardRef} collapsable={false}>
+                      <BacklogShareCard
+                        entries={topShareGames}
+                        totalGames={visibleGames.length}
+                        label={
+                          activeFilter === "all"
+                            ? "Top 3 Right Now"
+                            : `Top ${activeFilter}`
+                        }
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.shareBtn,
+                      isSharing && styles.shareBtnDisabled,
+                    ]}
+                    onPress={handleShareTopCard}
+                    disabled={isSharing}
+                  >
+                    <Text style={styles.shareBtnText}>
+                      {isSharing ? "Generating..." : "Share Top Card"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null
             }
             ListEmptyComponent={
               <View style={styles.empty}>
@@ -231,6 +308,40 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
+  },
+  shareSection: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  shareSectionTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+  },
+  sharePreviewFrame: {
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    alignItems: "center",
+  },
+  shareBtnDisabled: {
+    opacity: 0.7,
+  },
+  shareBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
   },
   sortRow: {
     flexDirection: "row",
