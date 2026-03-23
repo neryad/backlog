@@ -3,30 +3,55 @@ import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { colors, radius, spacing } from "../constants/theme";
 import { GameEntry } from "../types/game";
-import { APP_NAME } from "../constants/shareCardThemes";
+import {
+  APP_NAME,
+  BacklogShareTemplate,
+  BACKLOG_TEMPLATE_PALETTE,
+} from "../constants/shareCardThemes";
 
 type Props = {
   entries: GameEntry[];
   totalGames: number;
   label?: string;
+  template?: BacklogShareTemplate;
 };
 
 export function BacklogShareCard({
   entries,
   totalGames,
   label = "Top 3 Right Now",
+  template = "neon",
 }: Props) {
+  const palette = BACKLOG_TEMPLATE_PALETTE[template];
+
   return (
-    <View style={styles.card}>
-      <View style={styles.glowTop} />
-      <View style={styles.glowBottom} />
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: palette.cardBg, borderColor: palette.border },
+      ]}
+    >
+      <View style={[styles.glowTop, { backgroundColor: palette.glowTop }]} />
+      <View
+        style={[styles.glowBottom, { backgroundColor: palette.glowBottom }]}
+      />
 
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.kicker}>{APP_NAME}</Text>
+          <Text style={[styles.kicker, { color: palette.kicker }]}>
+            {APP_NAME}
+          </Text>
           <Text style={styles.title}>{label}</Text>
         </View>
-        <View style={styles.totalBadge}>
+        <View
+          style={[
+            styles.totalBadge,
+            {
+              borderColor: palette.badgeBorder,
+              backgroundColor: palette.badgeBg,
+            },
+          ]}
+        >
           <Text style={styles.totalBadgeText}>{totalGames} tracked</Text>
         </View>
       </View>
@@ -45,9 +70,20 @@ export function BacklogShareCard({
             entry.platform?.shortName ?? entry.platform?.name ?? "Platform";
 
           return (
-            <View key={entry.id} style={styles.row}>
+            <View
+              key={entry.id}
+              style={[
+                styles.row,
+                {
+                  backgroundColor: palette.rowBg,
+                  borderColor: palette.rowBorder,
+                },
+              ]}
+            >
               <View style={styles.rankCol}>
-                <Text style={styles.rankHash}>#{index + 1}</Text>
+                <Text style={[styles.rankHash, { color: palette.rank }]}>
+                  #{index + 1}
+                </Text>
               </View>
 
               {entry.game?.coverUrl ? (
@@ -68,8 +104,16 @@ export function BacklogShareCard({
                   {platform}
                 </Text>
                 <View style={styles.metaRow}>
-                  <Text style={styles.pill}>{rating}</Text>
-                  <Text style={styles.pill}>{hours}</Text>
+                  <Text
+                    style={[styles.pill, { backgroundColor: palette.pillBg }]}
+                  >
+                    {rating}
+                  </Text>
+                  <Text
+                    style={[styles.pill, { backgroundColor: palette.pillBg }]}
+                  >
+                    {hours}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -78,7 +122,7 @@ export function BacklogShareCard({
       </View>
 
       <Text style={styles.footer}>
-        Share your current picks and compare backlogs.
+        A quick snapshot of what is leading the backlog right now.
       </Text>
     </View>
   );
@@ -90,9 +134,7 @@ const styles = StyleSheet.create({
     minHeight: 420,
     borderRadius: radius.lg,
     padding: spacing.md,
-    backgroundColor: "#121721",
     borderWidth: 1,
-    borderColor: "#2d3a52",
     overflow: "hidden",
   },
   glowTop: {
@@ -102,7 +144,6 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 999,
-    backgroundColor: "rgba(56, 189, 248, 0.16)",
   },
   glowBottom: {
     position: "absolute",
@@ -111,7 +152,6 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 999,
-    backgroundColor: "rgba(124, 106, 247, 0.18)",
   },
   headerRow: {
     flexDirection: "row",
@@ -120,7 +160,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   kicker: {
-    color: "#7dd3fc",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -139,8 +178,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "rgba(125, 211, 252, 0.35)",
-    backgroundColor: "rgba(255,255,255,0.05)",
   },
   totalBadgeText: {
     color: colors.text,
@@ -156,16 +193,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
   },
   rankCol: {
     width: 36,
     alignItems: "center",
   },
   rankHash: {
-    color: "#7dd3fc",
     fontSize: 18,
     fontWeight: "800",
   },
@@ -207,7 +241,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radius.lg,
     overflow: "hidden",
-    backgroundColor: "rgba(0,0,0,0.22)",
   },
   footer: {
     marginTop: spacing.lg,

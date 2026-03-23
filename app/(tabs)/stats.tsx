@@ -7,8 +7,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
-import { getStats, BacklogStats } from "../../src/db/queries/stats";
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  getMonthlyRecap,
+  getStats,
+  BacklogStats,
+  MonthlyRecap,
+} from "../../src/db/queries/stats";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { StatsShareCard } from "../../src/components/StatsShareCard";
@@ -90,43 +95,78 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<BacklogStats | null>(null);
+  const [monthlyRecap, setMonthlyRecap] = useState<MonthlyRecap | null>(null);
   const shareCardRef = useRef<View>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [showSharePreview, setShowSharePreview] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       setStats(getStats());
+      setMonthlyRecap(getMonthlyRecap());
     }, []),
   );
 
-  if (!stats) return null;
-
-  const totalForBar = Math.max(stats.total, 1);
-
-  async function handleShareStats() {
+  const handleShareStats = useCallback(async () => {
     if (!shareCardRef.current || isSharing) return;
 
     try {
       setIsSharing(true);
       await shareViewAsImage(shareCardRef, {
-        dialogTitle: "Share your backlog stats",
+        dialogTitle: "Share your stats card",
         width: 1080,
         height: 1920,
       });
     } finally {
       setIsSharing(false);
     }
-  }
+  }, [isSharing]);
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+  const shareStatsSection = useMemo(() => {
+    if (!stats) return null;
+
+    return (
       <View style={styles.shareSection}>
-        <Text style={styles.sectionLabel}>Share Stats</Text>
-        <View style={styles.sharePreviewFrame}>
+        <View style={styles.shareHeaderRow}>
+          <View>
+            <Text style={styles.shareSectionTitle}>Share Stats</Text>
+            <Text style={styles.shareSectionSub}>
+              Share your overall progress and this month's momentum
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.shareToggleBtn}
+            onPress={() => setShowSharePreview((prev) => !prev)}
+            activeOpacity={0.75}
+          >
+            <Ionicons
+              name={showSharePreview ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={colors.text}
+            />
+            <Text style={styles.shareToggleText}>
+              {showSharePreview ? "Hide" : "Preview"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.sharePreviewFrame,
+            !showSharePreview && styles.sharePreviewHidden,
+          ]}
+        >
           <View ref={shareCardRef} collapsable={false}>
-            <StatsShareCard stats={stats} />
+            <StatsShareCard stats={stats} monthlyRecap={monthlyRecap} />
           </View>
         </View>
+
+        {!showSharePreview && (
+          <Text style={styles.shareHintText}>
+            Open Preview to review the card
+          </Text>
+        )}
+
         <TouchableOpacity
           style={[styles.shareBtn, isSharing && styles.shareBtnDisabled]}
           onPress={handleShareStats}
@@ -137,6 +177,16 @@ export default function StatsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+    );
+  }, [handleShareStats, isSharing, monthlyRecap, showSharePreview, stats]);
+
+  if (!stats) return null;
+
+  const totalForBar = Math.max(stats.total, 1);
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {shareStatsSection}
 
       {/* Top stats */}
       <View style={styles.topCards}>
@@ -220,6 +270,41 @@ const styles = StyleSheet.create({
   shareSection: {
     marginBottom: spacing.md,
   },
+  shareHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.sm,
+  },
+  shareToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareToggleText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  shareSectionTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.xs,
+  },
+  shareSectionSub: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   statCard: {
     flex: 1,
     minWidth: "45%",
@@ -261,6 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   shareBtn: {
+    marginTop: spacing.md,
     backgroundColor: colors.primary,
     borderRadius: radius.md,
     padding: spacing.sm + 2,
@@ -273,6 +359,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
     fontSize: 15,
+  },
+  shareHintText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: spacing.sm,
+  },
+  sharePreviewHidden: {
+    position: "absolute",
+    opacity: 0,
+    zIndex: -1,
+    pointerEvents: "none",
   },
   sectionLabel: {
     color: colors.textMuted,

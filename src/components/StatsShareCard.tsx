@@ -1,26 +1,34 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, radius, spacing } from "../constants/theme";
-import { BacklogStats } from "../db/queries/stats";
+import { BacklogStats, MonthlyRecap } from "../db/queries/stats";
 import { STATS_STATUS_ORDER, APP_NAME } from "../constants/shareCardThemes";
 
 type Props = {
   stats: BacklogStats;
+  monthlyRecap?: MonthlyRecap | null;
 };
 
-export function StatsShareCard({ stats }: Props) {
+export function StatsShareCard({ stats, monthlyRecap }: Props) {
   const segments = useMemo(
     () =>
       STATS_STATUS_ORDER.filter((item) => (stats.byStatus[item.key] ?? 0) > 0),
     [stats.byStatus],
   );
+  const topMonthlyGame = monthlyRecap?.topRatedThisMonth[0] ?? null;
 
   return (
     <View style={styles.card}>
+      <View style={styles.glowTop} />
+      <View style={styles.glowBottom} />
+
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.kicker}>{APP_NAME}</Text>
-          <Text style={styles.title}>My Backlog Stats</Text>
+          <Text style={styles.title}>Backlog Snapshot</Text>
+          <Text style={styles.subtitle}>
+            Progress, playtime, and monthly momentum
+          </Text>
         </View>
         <View style={styles.percentBadge}>
           <Text style={styles.percentBadgeValue}>{stats.completionRate}%</Text>
@@ -80,6 +88,51 @@ export function StatsShareCard({ stats }: Props) {
           ))}
         </View>
       </View>
+
+      {monthlyRecap ? (
+        <View style={styles.monthlyCard}>
+          <View style={styles.monthlyHeaderRow}>
+            <Text style={styles.monthlyTitle}>This Month</Text>
+            <View style={styles.monthPill}>
+              <Text style={styles.monthPillText}>
+                {monthlyRecap.monthLabel}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.monthlyStatsRow}>
+            <View style={styles.monthlyStatBox}>
+              <Text style={styles.monthlyStatValue}>
+                {monthlyRecap.addedThisMonth}
+              </Text>
+              <Text style={styles.monthlyStatLabel}>Added</Text>
+            </View>
+            <View
+              style={[styles.monthlyStatBox, styles.monthlyStatBoxFeatured]}
+            >
+              <Text style={styles.monthlyStatValue}>
+                {monthlyRecap.completedThisMonth}
+              </Text>
+              <Text style={styles.monthlyStatLabel}>Completed</Text>
+            </View>
+          </View>
+
+          {topMonthlyGame ? (
+            <View style={styles.monthlyTopRow}>
+              <Text style={styles.monthlyTopLabel}>Top pick</Text>
+              <Text style={styles.monthlyTopText} numberOfLines={1}>
+                {topMonthlyGame.title} ({topMonthlyGame.rating}/10)
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.monthlyTopRow}>
+              <Text style={styles.monthlyTopLabel}>Top pick</Text>
+              <Text style={styles.monthlyTopText}>
+                No rated games this month
+              </Text>
+            </View>
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -94,6 +147,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#3b3151",
     overflow: "hidden",
+  },
+  glowTop: {
+    position: "absolute",
+    top: -90,
+    right: -30,
+    width: 230,
+    height: 230,
+    borderRadius: 999,
+    backgroundColor: "rgba(124,106,247,0.14)",
+  },
+  glowBottom: {
+    position: "absolute",
+    bottom: -110,
+    left: -40,
+    width: 260,
+    height: 260,
+    borderRadius: 999,
+    backgroundColor: "rgba(76,175,125,0.12)",
   },
   headerRow: {
     flexDirection: "row",
@@ -115,13 +186,20 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 34,
   },
+  subtitle: {
+    color: "rgba(240,240,245,0.72)",
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: spacing.xs,
+    maxWidth: 190,
+  },
   percentBadge: {
     minWidth: 100,
     padding: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.07)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
   },
   percentBadgeValue: {
@@ -144,9 +222,9 @@ const styles = StyleSheet.create({
     width: "48%",
     borderRadius: radius.md,
     padding: spacing.md,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.055)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.07)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   statValue: {
     color: colors.text,
@@ -161,7 +239,7 @@ const styles = StyleSheet.create({
   breakdownCard: {
     borderRadius: radius.md,
     padding: spacing.md,
-    backgroundColor: "rgba(0,0,0,0.18)",
+    backgroundColor: "rgba(0,0,0,0.16)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.07)",
   },
@@ -204,5 +282,90 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     fontWeight: "700",
+  },
+  monthlyCard: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    padding: spacing.sm + 4,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
+  },
+  monthlyHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  monthlyTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  monthPill: {
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  monthPillText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  monthlyStatsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.xs + 2,
+  },
+  monthlyStatBox: {
+    flex: 1,
+    borderRadius: radius.sm,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs + 3,
+  },
+  monthlyStatBoxFeatured: {
+    borderColor: "rgba(76,175,125,0.3)",
+    backgroundColor: "rgba(76,175,125,0.12)",
+  },
+  monthlyStatValue: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  monthlyStatLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    marginTop: 1,
+  },
+  monthlyTopText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  monthlyTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.07)",
+    paddingTop: spacing.sm,
+  },
+  monthlyTopLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
 });

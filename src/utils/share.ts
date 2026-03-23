@@ -15,7 +15,8 @@ export async function shareViewAsImage(
   ref: RefObject<View | null>,
   options: ShareOptions,
 ) {
-  if (!ref.current) return false;
+  const uri = await captureViewImageUri(ref, options.width, options.height);
+  if (!uri) return false;
 
   try {
     const isAvailable = await Sharing.isAvailableAsync();
@@ -27,14 +28,6 @@ export async function shareViewAsImage(
       );
       return false;
     }
-
-    const uri = await captureRef(ref.current, {
-      format: "png",
-      quality: 1,
-      result: "tmpfile",
-      width: options.width ?? 1080,
-      height: options.height ?? 1920,
-    });
 
     await Sharing.shareAsync(uri, {
       mimeType: "image/png",
@@ -54,5 +47,32 @@ export async function shareViewAsImage(
         : (options.errorMessage ?? "Try again in a moment."),
     );
     return false;
+  }
+}
+
+export async function captureViewImageUri(
+  ref: RefObject<View | null>,
+  width = 1080,
+  height = 1920,
+) {
+  if (!ref.current) return null;
+
+  try {
+    const uri = await captureRef(ref.current, {
+      format: "png",
+      quality: 1,
+      result: "tmpfile",
+      width,
+      height,
+    });
+
+    return uri;
+  } catch (error) {
+    console.error(
+      "[CaptureView Error]",
+      error instanceof Error ? error.message : String(error),
+    );
+    Alert.alert("Could not generate image", "Try again in a moment.");
+    return null;
   }
 }

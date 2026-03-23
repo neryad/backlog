@@ -268,12 +268,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     gap: spacing.sm,
-    alignItems: "center", // ← centra verticalmente los chips
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    height: 36, // ← altura fija
+    height: 36,
     paddingHorizontal: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,

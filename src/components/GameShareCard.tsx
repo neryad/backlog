@@ -21,6 +21,56 @@ export function GameShareCard({
   const hours = Number.isFinite(entry.hoursPlayed) ? entry.hoursPlayed : 0;
   const rating = entry.personalRating ?? "-";
 
+  if (!game) {
+    return (
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: status.gradientBottom,
+            borderColor: status.accent,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.topGlow,
+            {
+              backgroundColor: status.gradientTop,
+            },
+          ]}
+        />
+
+        <View style={styles.headerRow}>
+          <Text style={styles.appName}>{appName}</Text>
+          <View style={[styles.statusPill, { borderColor: status.accent }]}>
+            <Text style={[styles.statusText, { color: status.accent }]}>
+              {status.label}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.emptyCardBody}>
+          <Text style={styles.emptyCardTitle}>Game data unavailable</Text>
+          <Text style={styles.emptyCardText}>
+            Some game details are missing, but this entry is still ready to
+            share.
+          </Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Hours</Text>
+              <Text style={styles.statValue}>{hours}</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Rating</Text>
+              <Text style={styles.statValue}>{rating}/10</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -89,7 +139,7 @@ export function GameShareCard({
       <Text numberOfLines={2} style={styles.footerText}>
         {entry.notes?.trim()
           ? entry.notes
-          : "Building my backlog one game at a time."}
+          : "Logged, rated, and ready to share."}
       </Text>
     </View>
   );
@@ -187,6 +237,21 @@ const styles = StyleSheet.create({
   infoCol: {
     flex: 1,
     gap: spacing.xs,
+  },
+  emptyCardBody: {
+    zIndex: 1,
+    marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  emptyCardTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  emptyCardText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
   },
   title: {
     color: colors.text,

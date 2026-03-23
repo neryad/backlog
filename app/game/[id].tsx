@@ -86,7 +86,7 @@ export default function GameDetailScreen() {
     try {
       setIsSharing(true);
       await shareViewAsImage(shareCardRef, {
-        dialogTitle: "Share your backlog card",
+        dialogTitle: "Share your game card",
         width: 1080,
         height: 1920,
       });
@@ -232,7 +232,7 @@ export default function GameDetailScreen() {
 
       {/* Share Card */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Share Card</Text>
+        <Text style={styles.sectionLabel}>Share Game</Text>
         <View style={styles.sharePreviewFrame}>
           <View ref={shareCardRef} collapsable={false}>
             <GameShareCard entry={entry} platformName={platform?.name} />
@@ -244,7 +244,7 @@ export default function GameDetailScreen() {
           disabled={isSharing}
         >
           <Text style={styles.shareBtnText}>
-            {isSharing ? "Generating..." : "Share This Card"}
+            {isSharing ? "Generating..." : "Share Game Card"}
           </Text>
         </TouchableOpacity>
       </View>
