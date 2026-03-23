@@ -44,6 +44,7 @@ export default function BacklogScreen() {
   const shareCardRef = useRef<View>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [showSharePreview, setShowSharePreview] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
   const { games: allGames, loading, reload } = useBacklog("all");
 
@@ -219,8 +220,40 @@ export default function BacklogScreen() {
             ListHeaderComponent={
               topShareGames.length > 0 ? (
                 <View style={styles.shareSection}>
-                  <Text style={styles.shareSectionTitle}>Share Top List</Text>
-                  <View style={styles.sharePreviewFrame}>
+                  <View style={styles.shareHeaderRow}>
+                    <View>
+                      <Text style={styles.shareSectionTitle}>
+                        Share Top List
+                      </Text>
+                      <Text style={styles.shareSectionSub}>
+                        {activeFilter === "all"
+                          ? "Share your current top picks"
+                          : `Share your best ${activeFilter} games`}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.shareToggleBtn}
+                      onPress={() => setShowSharePreview((prev) => !prev)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={showSharePreview ? "chevron-up" : "chevron-down"}
+                        size={16}
+                        color={colors.text}
+                      />
+                      <Text style={styles.shareToggleText}>
+                        {showSharePreview ? "Hide" : "Preview"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.sharePreviewFrame,
+                      !showSharePreview && styles.sharePreviewHidden,
+                    ]}
+                  >
                     <View ref={shareCardRef} collapsable={false}>
                       <BacklogShareCard
                         entries={topShareGames}
@@ -233,6 +266,7 @@ export default function BacklogScreen() {
                       />
                     </View>
                   </View>
+
                   <TouchableOpacity
                     style={[
                       styles.shareBtn,
@@ -426,5 +460,38 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  shareHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  shareSectionSub: {
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  shareToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareToggleText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  sharePreviewHidden: {
+    position: "absolute",
+    opacity: 0,
+    zIndex: -1,
+    pointerEvents: "none",
   },
 });
