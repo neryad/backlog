@@ -12,13 +12,29 @@ import { Image } from "expo-image";
 import { PLATFORMS } from "../../constants/platforms";
 import { colors, spacing, radius } from "../../constants/theme";
 import { GameSearchResult } from "../../types/igdb.types";
+import { GameStatus } from "../../types/game";
 import {
   gameExistsByIgdbId,
   insertGame,
   insertGameEntry,
 } from "../../db/queries/game";
 
-const STATUSES = ["backlog", "playing", "completed", "wishlist"] as const;
+const STATUSES: { value: GameStatus; label: string }[] = [
+  { value: "backlog", label: "Backlog" },
+  { value: "playing", label: "Playing" },
+  { value: "playing-social", label: "Playing (Social)" },
+  { value: "completed", label: "Completed" },
+  { value: "wishlist", label: "Wishlist" },
+];
+
+const ACTION_LABELS: Record<GameStatus, string> = {
+  backlog: "Add to Backlog",
+  playing: "Add as Playing",
+  "playing-social": "Add as Playing (Social)",
+  completed: "Add as Completed",
+  dropped: "Add as Dropped",
+  wishlist: "Add to Wishlist",
+};
 
 type Props = {
   game: GameSearchResult;
@@ -28,8 +44,9 @@ type Props = {
 
 export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
   const [selectedPlatform, setSelectedPlatform] = useState<number>(1);
-  const [selectedStatus, setSelectedStatus] = useState<string>("backlog");
+  const [selectedStatus, setSelectedStatus] = useState<GameStatus>("backlog");
   const [loading, setLoading] = useState(false);
+  const addActionLabel = ACTION_LABELS[selectedStatus];
 
   function handleAdd() {
     setLoading(true);
@@ -99,17 +116,20 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
       <View style={styles.chips}>
         {STATUSES.map((s) => (
           <TouchableOpacity
-            key={s}
-            style={[styles.chip, selectedStatus === s && styles.chipActive]}
-            onPress={() => setSelectedStatus(s)}
+            key={s.value}
+            style={[
+              styles.chip,
+              selectedStatus === s.value && styles.chipActive,
+            ]}
+            onPress={() => setSelectedStatus(s.value)}
           >
             <Text
               style={[
                 styles.chipText,
-                selectedStatus === s && styles.chipTextActive,
+                selectedStatus === s.value && styles.chipTextActive,
               ]}
             >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {s.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -128,7 +148,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
           {loading ? (
             <ActivityIndicator color={colors.text} />
           ) : (
-            <Text style={styles.addText}>Add to Backlog</Text>
+            <Text style={styles.addText}>{addActionLabel}</Text>
           )}
         </TouchableOpacity>
       </View>

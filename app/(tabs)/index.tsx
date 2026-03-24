@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   FlatList,
@@ -6,6 +12,7 @@ import {
   StyleSheet,
   ListRenderItem,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,13 +28,31 @@ import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
 import { ActivityIndicator } from "react-native";
+import { BacklogShareCard } from "../../src/components/BacklogShareCard";
+import { shareViewAsImage } from "../../src/utils/share";
+import { BACKLOG_SHARE_TEMPLATES } from "../../src/constants/shareCardThemes";
+
 const CARD_HEIGHT = 95 + 16;
+const SORT_OPTIONS = [
+  { value: "recently-added", label: "Recent" },
+  { value: "title-az", label: "A-Z" },
+] as const;
 
 export default function BacklogScreen() {
   const router = useRouter();
-  const { activeFilter, setFilter } = useUIStore();
+  const {
+    activeFilter,
+    sortBy,
+    shareTemplate,
+    setFilter,
+    setSortBy,
+    setShareTemplate,
+  } = useUIStore();
   const navigation = useNavigation();
+  const shareCardRef = useRef<View>(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [showSharePreview, setShowSharePreview] = useState(false);
   // Una sola instancia — siempre trae todos los juegos
   const { games: allGames, loading, reload } = useBacklog("all");
 
@@ -55,6 +80,30 @@ export default function BacklogScreen() {
     activeFilter === "all"
       ? allGames
       : allGames.filter((g) => g.status === activeFilter);
+
+  const visibleGames = [...filteredGames].sort((a, b) => {
+    if (sortBy === "title-az") {
+      const aTitle = a.game?.title ?? "";
+      const bTitle = b.game?.title ?? "";
+      return aTitle.localeCompare(bTitle);
+    }
+
+    return b.createdAt - a.createdAt;
+  });
+
+  const topShareGames = useMemo(() => {
+    const ratedGames = [...visibleGames].sort((a, b) => {
+      const ratingDiff = (b.personalRating ?? -1) - (a.personalRating ?? -1);
+      if (ratingDiff !== 0) return ratingDiff;
+
+      const hoursDiff = b.hoursPlayed - a.hoursPlayed;
+      if (hoursDiff !== 0) return hoursDiff;
+
+      return b.createdAt - a.createdAt;
+    });
+
+    return ratedGames.slice(0, 3);
+  }, [visibleGames]);
 
   const handlePress = useCallback(
     (item: GameEntry) => {
@@ -100,6 +149,133 @@ export default function BacklogScreen() {
     [],
   );
 
+  const handleShareTopCard = useCallback(async () => {
+    if (!shareCardRef.current || isSharing) return;
+
+    if (topShareGames.length === 0) {
+      Alert.alert("No games to share", "Add some games to your backlog first.");
+      return;
+    }
+
+    try {
+      setIsSharing(true);
+      await shareViewAsImage(shareCardRef, {
+        dialogTitle: "Share your top card",
+        width: 1080,
+        height: 1920,
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  }, [isSharing, topShareGames]);
+
+  const shareListHeader = useMemo(() => {
+    if (topShareGames.length === 0) return null;
+
+    return (
+      <View style={styles.shareSection}>
+        <View style={styles.shareHeaderRow}>
+          <View>
+            <Text style={styles.shareSectionTitle}>Share Top List</Text>
+            <Text style={styles.shareSectionSub}>
+              {activeFilter === "all"
+                ? "Share the games leading your backlog right now"
+                : `Share the strongest picks in ${activeFilter}`}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.shareToggleBtn}
+            onPress={() => setShowSharePreview((prev) => !prev)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={showSharePreview ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={colors.text}
+            />
+            <Text style={styles.shareToggleText}>
+              {showSharePreview ? "Hide" : "Preview"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.sharePreviewFrame,
+            !showSharePreview && styles.sharePreviewHidden,
+          ]}
+        >
+          <View ref={shareCardRef} collapsable={false}>
+            <BacklogShareCard
+              entries={topShareGames}
+              totalGames={visibleGames.length}
+              template={shareTemplate}
+              label={
+                activeFilter === "all"
+                  ? "Top 3 Right Now"
+                  : `Top ${activeFilter}`
+              }
+            />
+          </View>
+        </View>
+
+        {showSharePreview && (
+          <View style={styles.templateRow}>
+            {BACKLOG_SHARE_TEMPLATES.map((option) => {
+              const isActive = option.value === shareTemplate;
+
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.templateChip,
+                    isActive && styles.templateChipActive,
+                  ]}
+                  onPress={() => setShareTemplate(option.value)}
+                  activeOpacity={0.75}
+                >
+                  <Text
+                    style={[
+                      styles.templateChipText,
+                      isActive && styles.templateChipTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {!showSharePreview && (
+          <Text style={styles.shareHintText}>
+            Open Preview to review the card and change style
+          </Text>
+        )}
+
+        <TouchableOpacity
+          style={[styles.shareBtn, isSharing && styles.shareBtnDisabled]}
+          onPress={handleShareTopCard}
+          disabled={isSharing}
+        >
+          <Text style={styles.shareBtnText}>
+            {isSharing ? "Generating..." : "Share Top Card"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [
+    activeFilter,
+    handleShareTopCard,
+    isSharing,
+    shareTemplate,
+    showSharePreview,
+    topShareGames,
+    visibleGames.length,
+  ]);
+
   return (
     <GestureHandlerRootView style={styles.container}>
       {loading ? (
@@ -109,14 +285,41 @@ export default function BacklogScreen() {
       ) : (
         <>
           {allGames.length > 0 && (
-            <FilterBar
-              active={activeFilter}
-              onChange={setFilter}
-              games={allGames}
-            />
+            <>
+              <FilterBar
+                active={activeFilter}
+                onChange={setFilter}
+                games={allGames}
+              />
+              <View style={styles.sortRow}>
+                {SORT_OPTIONS.map((option) => {
+                  const isActive = sortBy === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.sortChip,
+                        isActive && styles.sortChipActive,
+                      ]}
+                      onPress={() => setSortBy(option.value)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.sortChipText,
+                          isActive && styles.sortChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
           )}
           <FlatList
-            data={filteredGames}
+            data={visibleGames}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             getItemLayout={getItemLayout}
@@ -125,10 +328,11 @@ export default function BacklogScreen() {
             windowSize={5}
             initialNumToRender={12}
             contentContainerStyle={
-              filteredGames.length === 0
+              visibleGames.length === 0
                 ? styles.emptyContainer
                 : styles.listContent
             }
+            ListHeaderComponent={shareListHeader}
             ListEmptyComponent={
               <View style={styles.empty}>
                 <Ionicons
@@ -190,6 +394,98 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
   },
+  shareSection: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  shareSectionTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.xs,
+  },
+  sharePreviewFrame: {
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+  },
+  shareBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    alignItems: "center",
+  },
+  shareBtnDisabled: {
+    opacity: 0.7,
+  },
+  shareBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  templateRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  templateChip: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  templateChipActive: {
+    backgroundColor: colors.surfaceHigh,
+    borderColor: colors.primary,
+  },
+  templateChipText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  templateChipTextActive: {
+    color: colors.text,
+  },
+  shareHintText: {
+    marginTop: spacing.sm,
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  sortRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  sortChip: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  sortChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  sortChipText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  sortChipTextActive: {
+    color: colors.text,
+  },
   emptyContainer: {
     flex: 1,
   },
@@ -246,5 +542,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  shareHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.sm,
+  },
+  shareSectionSub: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  shareToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareToggleText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  sharePreviewHidden: {
+    position: "absolute",
+    opacity: 0,
+    zIndex: -1,
+    pointerEvents: "none",
   },
 });

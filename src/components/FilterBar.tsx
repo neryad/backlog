@@ -208,6 +208,7 @@ const FILTERS: { label: string; value: GameStatus | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Backlog", value: "backlog" },
   { label: "Playing", value: "playing" },
+  { label: "Social", value: "playing-social" },
   { label: "Completed", value: "completed" },
   { label: "Dropped", value: "dropped" },
   { label: "Wishlist", value: "wishlist" },
@@ -267,12 +268,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     gap: spacing.sm,
-    alignItems: "center", // ← centra verticalmente los chips
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    height: 36, // ← altura fija
+    height: 36,
     paddingHorizontal: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,

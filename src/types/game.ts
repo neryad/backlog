@@ -1,4 +1,10 @@
-export type GameStatus = 'backlog' | 'playing' | 'completed' | 'dropped' | 'wishlist';
+export type GameStatus =
+  | "backlog"
+  | "playing"
+  | "playing-social"
+  | "completed"
+  | "dropped"
+  | "wishlist";
 
 export type Platform = {
   id: number;
