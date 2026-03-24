@@ -3,7 +3,7 @@
     "name": "Playlogged",
     "slug": "playlogged",
     "scheme": "playlogged",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icons/splash-icon-dark.png",
     "userInterfaceStyle": "dark",
@@ -35,11 +35,7 @@
     "web": {
       "favicon": "./assets/icons/adaptive-icon.png"
     },
-    "plugins": [
-      "expo-sqlite",
-      "expo-router",
-      "expo-image"
-    ],
+    "plugins": ["expo-sqlite", "expo-router", "expo-image"],
     "extra": {
       "router": {},
       "eas": {
