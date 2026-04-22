@@ -16,6 +16,7 @@ function mapEntry(row: any): GameEntry {
     completedAt: row.completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isPublic: row.is_public !== 0,
     game: row.title
       ? ({
           id: row.game_id,

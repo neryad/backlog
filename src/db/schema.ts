@@ -28,11 +28,21 @@ export function initializeDatabase() {
       started_at INTEGER,
       completed_at INTEGER,
       created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
+      updated_at INTEGER NOT NULL,
+      is_public INTEGER NOT NULL DEFAULT 1
     );
 
     CREATE INDEX IF NOT EXISTS idx_entries_status   ON game_entries(status);
     CREATE INDEX IF NOT EXISTS idx_entries_platform ON game_entries(platform_id);
     CREATE INDEX IF NOT EXISTS idx_games_igdb_id    ON games(igdb_id);
   `);
+
+  // Migration: add is_public to existing databases that predate this column.
+  try {
+    db.execSync(
+      `ALTER TABLE game_entries ADD COLUMN is_public INTEGER NOT NULL DEFAULT 1`,
+    );
+  } catch {
+    // Column already exists — safe to ignore.
+  }
 }

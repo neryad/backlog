@@ -17,7 +17,7 @@ export async function syncBacklogToSupabase(userId: string): Promise<void> {
       personal_rating: entry.personalRating ?? null,
       hours_played: entry.hoursPlayed ?? 0,
       notes: entry.notes ?? null,
-      is_public: true,
+      is_public: entry.isPublic,
       created_at: new Date(entry.createdAt).toISOString(),
       updated_at: new Date(entry.updatedAt).toISOString(),
     }));
@@ -54,7 +54,7 @@ export async function syncSingleEntry(
         personal_rating: entry.personalRating ?? null,
         hours_played: entry.hoursPlayed ?? 0,
         notes: entry.notes ?? null,
-        is_public: true,
+        is_public: entry.isPublic,
         created_at: new Date(entry.createdAt).toISOString(),
         updated_at: new Date(entry.updatedAt).toISOString(),
       },
