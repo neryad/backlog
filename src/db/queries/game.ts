@@ -53,7 +53,6 @@ export function getGameEntries(status?: string): GameEntry[] {
 }
 
 export function updateEntryStatus(id: string, status: string): void {
-  console.log("Updating entry status:", { id, status });
   db.runSync(
     `UPDATE game_entries SET status = ?, updated_at = ? WHERE id = ?`,
     [status, Date.now(), id],

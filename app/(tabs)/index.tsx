@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   FlatList,
@@ -50,11 +50,13 @@ export default function BacklogScreen() {
     });
   }, [navigation]);
 
-  // Filtra localmente, sin segundo hook
-  const filteredGames =
-    activeFilter === "all"
-      ? allGames
-      : allGames.filter((g) => g.status === activeFilter);
+  const filteredGames = useMemo(
+    () =>
+      activeFilter === "all"
+        ? allGames
+        : allGames.filter((g) => g.status === activeFilter),
+    [allGames, activeFilter],
+  );
 
   const handlePress = useCallback(
     (item: GameEntry) => {

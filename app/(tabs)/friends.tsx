@@ -67,45 +67,51 @@ export default function FriendsScreen() {
     setLoading(true);
     const userId = session!.user.id;
 
+    // Amigos: 2 queries en total (friends + batch de perfiles) en vez de N+1.
     const { data: friendsData } = await supabase
       .from("friends")
       .select("user_id, friend_id, created_at")
       .eq("user_id", userId);
 
-    if (friendsData) {
-      const enriched = await Promise.all(
-        friendsData.map(async (f) => {
+    if (friendsData && friendsData.length > 0) {
+      const friendIds = friendsData.map((f) =>
+        f.user_id === userId ? f.friend_id : f.user_id,
+      );
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .in("id", friendIds);
+
+      const profileMap = new Map(profiles?.map((p) => [p.id, p]));
+      setFriends(
+        friendsData.map((f) => {
           const otherId = f.user_id === userId ? f.friend_id : f.user_id;
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id, username, display_name")
-            .eq("id", otherId)
-            .single();
-          return { ...f, profile: profile ?? undefined };
+          return { ...f, profile: profileMap.get(otherId) ?? undefined };
         }),
       );
-      setFriends(enriched);
     } else {
       setFriends([]);
     }
 
+    // Solicitudes pendientes: 2 queries en total en vez de N+1.
     const { data: requestsData } = await supabase
       .from("friend_requests")
       .select("id, sender_id, receiver_id, status, created_at")
       .eq("receiver_id", userId)
       .eq("status", "pending");
 
-    if (requestsData) {
-      const enriched = await Promise.all(
-        requestsData.map(async (r) => {
-          const { data: sender } = await supabase
-            .from("profiles")
-            .select("id, username, display_name")
-            .eq("id", r.sender_id)
-            .single();
-          return { ...r, sender: sender ?? undefined };
-        }),
-      );
+    if (requestsData && requestsData.length > 0) {
+      const senderIds = requestsData.map((r) => r.sender_id);
+      const { data: senderProfiles } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .in("id", senderIds);
+
+      const senderMap = new Map(senderProfiles?.map((p) => [p.id, p]));
+      const enriched = requestsData.map((r) => ({
+        ...r,
+        sender: senderMap.get(r.sender_id) ?? undefined,
+      }));
       setPendingRequests(enriched);
       setPendingFriendRequests(enriched.length);
     } else {

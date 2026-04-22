@@ -30,6 +30,8 @@ export default function TabsLayout() {
         if (isMounted) setPendingFriendRequests(0);
         return;
       }
+      // No hacer requests si la app está en background.
+      if (AppState.currentState !== "active") return;
 
       const { count, error } = await supabase
         .from("friend_requests")

@@ -26,8 +26,10 @@ export async function syncBacklogToSupabase(userId: string): Promise<void> {
       .from("game_entries")
       .upsert(rows, { onConflict: "user_id,id" });
 
-    if (error) console.error("Sync error:", error.message);
-    else console.log(`Synced ${rows.length} entries to Supabase`);
+    if (__DEV__) {
+      if (error) console.error("Sync error:", error.message);
+      else console.log(`Synced ${rows.length} entries to Supabase`);
+    }
   } catch (err) {
     console.error("Sync failed:", err);
   }
@@ -61,7 +63,7 @@ export async function syncSingleEntry(
       { onConflict: "user_id,id" },
     );
 
-    if (error) console.error("Single sync error:", error.message);
+    if (__DEV__ && error) console.error("Single sync error:", error.message);
   } catch (err) {
     console.error("Single sync failed:", err);
   }
@@ -78,7 +80,7 @@ export async function deleteSingleEntry(
       .eq("id", entryId)
       .eq("user_id", userId);
 
-    if (error) console.error("Delete sync error:", error.message);
+    if (__DEV__ && error) console.error("Delete sync error:", error.message);
   } catch (err) {
     console.error("Delete sync failed:", err);
   }

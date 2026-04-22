@@ -17,8 +17,13 @@ export default function RootLayout() {
 
   // Inicializar DB
   useEffect(() => {
-    initializeDatabase();
-    setDbReady(true);
+    try {
+      initializeDatabase();
+    } catch (e) {
+      if (__DEV__) console.error("DB init failed", e);
+    } finally {
+      setDbReady(true);
+    }
   }, []);
 
   // Restaurar sesión de Supabase al abrir la app
@@ -55,10 +60,8 @@ export default function RootLayout() {
       if (isMounted) {
         setSession(session);
       }
-
-      if (user.id) {
-        syncBacklogToSupabase(user.id);
-      }
+      // La sincronización se dispara solo desde onAuthStateChange (SIGNED_IN)
+      // para evitar el doble upsert que ocurría al restaurar sesión + evento.
     }
 
     restoreSession();
@@ -67,7 +70,6 @@ export default function RootLayout() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      // Sincronizar backlog al hacer login
       if (_event === "SIGNED_IN" && session?.user?.id) {
         syncBacklogToSupabase(session.user.id);
       }

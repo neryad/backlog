@@ -32,9 +32,11 @@ export function initializeDatabase() {
       is_public INTEGER NOT NULL DEFAULT 1
     );
 
-    CREATE INDEX IF NOT EXISTS idx_entries_status   ON game_entries(status);
-    CREATE INDEX IF NOT EXISTS idx_entries_platform ON game_entries(platform_id);
-    CREATE INDEX IF NOT EXISTS idx_games_igdb_id    ON games(igdb_id);
+    CREATE INDEX IF NOT EXISTS idx_entries_status     ON game_entries(status);
+    CREATE INDEX IF NOT EXISTS idx_entries_platform   ON game_entries(platform_id);
+    CREATE INDEX IF NOT EXISTS idx_entries_created_at ON game_entries(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_entries_game_id    ON game_entries(game_id);
+    CREATE INDEX IF NOT EXISTS idx_games_igdb_id      ON games(igdb_id);
   `);
 
   // Migration: add is_public to existing databases that predate this column.
