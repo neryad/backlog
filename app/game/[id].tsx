@@ -34,6 +34,15 @@ export default function GameDetailScreen() {
   const [notesValue, setNotesValue] = useState(entry?.notes ?? "");
   const [hoursValue, setHoursValue] = useState(String(entry?.hoursPlayed ?? 0));
 
+  const game = entry?.game;
+  const platform = entry ? PLATFORMS.find((p) => p.id === entry.platformId) : undefined;
+
+  useEffect(() => {
+    if (game?.title) {
+      navigation.setOptions({ title: game.title });
+    }
+  }, [game?.title, navigation]);
+
   if (!entry) {
     return (
       <View style={styles.center}>
@@ -41,15 +50,6 @@ export default function GameDetailScreen() {
       </View>
     );
   }
-
-  const game = entry.game;
-  const platform = PLATFORMS.find((p) => p.id === entry.platformId);
-
-  useEffect(() => {
-    if (game?.title) {
-      navigation.setOptions({ title: game.title }); // ← usa la variable, no el hook
-    }
-  }, [game?.title]);
 
   function handleDelete() {
     Alert.alert("Remove Game", `Remove "${game?.title}" from your backlog?`, [

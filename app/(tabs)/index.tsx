@@ -6,9 +6,11 @@ import {
   StyleSheet,
   ListRenderItem,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBacklog } from "../../src/features/backlog/useBacklog";
 import { useUIStore } from "../../src/store/ui.store";
 import SwipeableGameCard from "../../src/components/SwipeableGameCard";
@@ -20,18 +22,22 @@ import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
 import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
-import { ActivityIndicator } from "react-native";
+
 const CARD_HEIGHT = 95 + 16;
+const FAB_SIZE = 56;
 
 export default function BacklogScreen() {
   const router = useRouter();
   const { activeFilter, setFilter } = useUIStore();
   const navigation = useNavigation();
+  const { bottom: safeBottom } = useSafeAreaInsets();
   const [showAbout, setShowAbout] = useState(false);
-  // Una sola instancia — siempre trae todos los juegos
   const { games: allGames, loading, reload } = useBacklog("all");
-
   const [showNextToPlay, setShowNextToPlay] = useState(false);
+
+  // FAB bottom respects device safe area (iPhone home indicator, etc.)
+  const fabBottom = spacing.xl + safeBottom;
+  const listPaddingBottom = fabBottom + FAB_SIZE + spacing.sm;
 
   useEffect(() => {
     navigation.setOptions({
@@ -68,7 +74,7 @@ export default function BacklogScreen() {
   const handleSwipeRight = useCallback(
     (item: GameEntry) => {
       updateEntryStatus(item.id, "playing");
-      reload(); // ← mismo reload de la única instancia
+      reload();
     },
     [reload],
   );
@@ -76,7 +82,7 @@ export default function BacklogScreen() {
   const handleSwipeLeft = useCallback(
     (item: GameEntry) => {
       updateEntryStatus(item.id, "completed");
-      reload(); // ← mismo reload
+      reload();
     },
     [reload],
   );
@@ -129,7 +135,7 @@ export default function BacklogScreen() {
             contentContainerStyle={
               filteredGames.length === 0
                 ? styles.emptyContainer
-                : styles.listContent
+                : [styles.listContent, { paddingBottom: listPaddingBottom }]
             }
             ListEmptyComponent={
               <View style={styles.empty}>
@@ -163,11 +169,12 @@ export default function BacklogScreen() {
         </>
       )}
 
-      {/* FAB siempre visible */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: fabBottom }]}
         onPress={() => setShowNextToPlay(true)}
         activeOpacity={0.8}
+        accessibilityLabel="Pick next game to play"
+        accessibilityRole="button"
       >
         <Ionicons name="shuffle" size={26} color={colors.text} />
       </TouchableOpacity>
@@ -190,7 +197,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
   },
   emptyContainer: {
     flex: 1,
@@ -211,14 +217,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
   },
-
   fab: {
     position: "absolute",
-    bottom: spacing.xl,
     right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
@@ -228,10 +232,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-  fabText: {
-    fontSize: 24,
-  },
-
   emptyBtn: {
     marginTop: spacing.lg,
     backgroundColor: colors.primary,

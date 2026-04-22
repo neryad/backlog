@@ -1,21 +1,10 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
 import { getStats, BacklogStats } from "../../src/db/queries/stats";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-
-// const STATUS_META: Record<
-//   string,
-//   { label: string; color: string; emoji: string }
-// > = {
-//   backlog: { label: "Backlog", color: colors.textMuted, emoji: "📋" },
-//   playing: { label: "Playing", color: colors.primary, emoji: "🎮" },
-//   completed: { label: "Completed", color: colors.success, emoji: "✅" },
-//   dropped: { label: "Dropped", color: colors.danger, emoji: "❌" },
-//   wishlist: { label: "Wishlist", color: colors.warning, emoji: "⭐" },
-// };
+import SectionLabel from "../../src/components/SectionLabel";
 
 const STATUS_META: Record<
   string,
@@ -84,7 +73,13 @@ export default function StatsScreen() {
     }, []),
   );
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   const totalForBar = Math.max(stats.total, 1);
 

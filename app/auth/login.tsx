@@ -136,12 +136,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   btnText: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   error: {
-    color: "#ff4d4d",
+    color: colors.danger,
     fontSize: 13,
     textAlign: "center",
   },

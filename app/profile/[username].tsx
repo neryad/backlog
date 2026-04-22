@@ -5,8 +5,8 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { useGlobalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../src/constants/theme";
@@ -29,11 +29,11 @@ type RemoteEntry = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  playing: "#7c6af7",
-  completed: "#4caf50",
-  backlog: "#888",
-  dropped: "#f44336",
-  wishlist: "#ff9800",
+  playing:   colors.primary,
+  completed: colors.success,
+  backlog:   colors.textMuted,
+  dropped:   colors.danger,
+  wishlist:  colors.warning,
 };
 
 export default function ProfileScreen() {
@@ -153,7 +153,7 @@ export default function ProfileScreen() {
             <Image
               source={{ uri: item.cover_url }}
               style={styles.cover}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : (
             <View style={styles.coverPlaceholder}>
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   rating: {
-    color: "#f5c518",
+    color: colors.warning,
     fontSize: 12,
     fontWeight: "600",
   },

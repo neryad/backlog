@@ -90,17 +90,6 @@ export default function RegisterScreen() {
       },
     });
 
-    // const { error } = await supabase.auth.signUp({
-    //   email: email.trim(),
-    //   password,
-    //   options: {
-    //     data: {
-    //       username: username.toLowerCase(),
-    //       display_name: username,
-    //     },
-    //   },
-    // });
-
     setLoading(false);
     if (error) {
       setError(getFriendlyAuthError(error.message));
@@ -174,7 +163,7 @@ export default function RegisterScreen() {
           activeOpacity={0.8}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.text} />
           ) : (
             <Text style={styles.btnText}>Create Account</Text>
           )}
@@ -239,12 +228,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   btnText: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   error: {
-    color: "#ff4d4d",
+    color: colors.danger,
     fontSize: 13,
     textAlign: "center",
   },

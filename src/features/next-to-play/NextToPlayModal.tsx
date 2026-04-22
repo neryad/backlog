@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";

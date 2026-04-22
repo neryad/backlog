@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import Constants from "expo-constants";
 import { colors, spacing, radius } from "../../constants/theme";
 import { Image as ExpoImage } from "expo-image";
 import { useAuthStore } from "../../store/auth.store";
@@ -187,7 +188,9 @@ export default function AboutModal({ visible, onClose }: Props) {
                 />
               </View>
               <Text style={styles.appName}>Playlogged</Text>
-              <Text style={styles.appVersion}>Version 1.0.0</Text>
+              <Text style={styles.appVersion}>
+                Version {Constants.expoConfig?.version ?? "1.0.0"}
+              </Text>
               <Text style={styles.appDesc}>
                 A minimal game backlog tracker built for gamers who want to
                 spend more time playing and less time managing lists.
@@ -453,7 +456,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signInText: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 15,
     fontWeight: "600",
   },

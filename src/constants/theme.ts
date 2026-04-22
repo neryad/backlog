@@ -19,3 +19,16 @@ export const spacing = {
 export const radius = {
   sm: 6, md: 12, lg: 20,
 };
+
+export const fontSize = {
+  xs:   11,
+  sm:   12,
+  md:   14,
+  base: 15,
+  lg:   16,
+  xl:   18,
+  '2xl': 20,
+  '3xl': 22,
+  '4xl': 24,
+  '5xl': 28,
+};
