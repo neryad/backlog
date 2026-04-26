@@ -32,6 +32,12 @@ const SecureStoreAdapter = {
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
+if (!isSupabaseConfigured && !__DEV__) {
+  throw new Error(
+    "EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must be set in production.",
+  );
+}
+
 export const supabase = createClient(
   SUPABASE_URL ?? "https://placeholder.supabase.co",
   SUPABASE_ANON_KEY ?? "placeholder-anon-key",

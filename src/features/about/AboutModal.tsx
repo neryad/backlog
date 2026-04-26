@@ -89,20 +89,13 @@ export default function AboutModal({ visible, onClose }: Props) {
 
     setDeletingAccount(true);
     try {
-      const { error } = await supabase.rpc("delete_my_account");
+      const { error } = await supabase.functions.invoke("delete-account");
 
       if (error) {
-        const message = String(error.message ?? "").toLowerCase();
-        const missingRpc =
-          message.includes("delete_my_account") ||
-          message.includes("function") ||
-          message.includes("not found");
-
-        const hint = missingRpc
-          ? "Missing SQL function 'delete_my_account' in Supabase. Create it in SQL Editor first."
-          : `Could not delete account: ${error.message ?? "unknown error"}`;
-
-        Alert.alert("Delete failed", hint);
+        Alert.alert(
+          "Delete failed",
+          error.message ?? "We could not delete your account right now.",
+        );
         return;
       }
 

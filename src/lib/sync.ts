@@ -1,26 +1,31 @@
 import { getGameEntries } from "../db/queries/game";
+import type { GameEntry } from "../../types/game";
 import { supabase } from "./supabase";
+
+function entryToRow(entry: GameEntry, userId: string) {
+  return {
+    id: entry.id,
+    user_id: userId,
+    igdb_id: entry.game?.igdbId ?? null,
+    title: entry.game?.title ?? "Unknown",
+    cover_url: entry.game?.coverUrl ?? null,
+    platform_id: entry.platformId ?? null,
+    status: entry.status,
+    personal_rating: entry.personalRating ?? null,
+    hours_played: entry.hoursPlayed ?? 0,
+    notes: entry.notes ?? null,
+    is_public: entry.isPublic,
+    created_at: new Date(entry.createdAt).toISOString(),
+    updated_at: new Date(entry.updatedAt).toISOString(),
+  };
+}
 
 export async function syncBacklogToSupabase(userId: string): Promise<void> {
   try {
     const entries = getGameEntries();
     if (entries.length === 0) return;
 
-    const rows = entries.map((entry) => ({
-      id: entry.id,
-      user_id: userId,
-      igdb_id: entry.game?.igdbId ?? null,
-      title: entry.game?.title ?? "Unknown",
-      cover_url: entry.game?.coverUrl ?? null,
-      platform_id: entry.platformId ?? null,
-      status: entry.status,
-      personal_rating: entry.personalRating ?? null,
-      hours_played: entry.hoursPlayed ?? 0,
-      notes: entry.notes ?? null,
-      is_public: entry.isPublic,
-      created_at: new Date(entry.createdAt).toISOString(),
-      updated_at: new Date(entry.updatedAt).toISOString(),
-    }));
+    const rows = entries.map((entry) => entryToRow(entry, userId));
 
     const { error } = await supabase
       .from("game_entries")
@@ -44,24 +49,9 @@ export async function syncSingleEntry(
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) return;
 
-    const { error } = await supabase.from("game_entries").upsert(
-      {
-        id: entry.id,
-        user_id: userId,
-        igdb_id: entry.game?.igdbId ?? null,
-        title: entry.game?.title ?? "Unknown",
-        cover_url: entry.game?.coverUrl ?? null,
-        platform_id: entry.platformId ?? null,
-        status: entry.status,
-        personal_rating: entry.personalRating ?? null,
-        hours_played: entry.hoursPlayed ?? 0,
-        notes: entry.notes ?? null,
-        is_public: entry.isPublic,
-        created_at: new Date(entry.createdAt).toISOString(),
-        updated_at: new Date(entry.updatedAt).toISOString(),
-      },
-      { onConflict: "user_id,id" },
-    );
+    const { error } = await supabase
+      .from("game_entries")
+      .upsert(entryToRow(entry, userId), { onConflict: "user_id,id" });
 
     if (__DEV__ && error) console.error("Single sync error:", error.message);
   } catch (err) {

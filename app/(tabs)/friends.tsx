@@ -67,59 +67,61 @@ export default function FriendsScreen() {
     setLoading(true);
     const userId = session!.user.id;
 
-    // Amigos: 2 queries en total (friends + batch de perfiles) en vez de N+1.
-    const { data: friendsData } = await supabase
-      .from("friends")
-      .select("user_id, friend_id, created_at")
-      .eq("user_id", userId);
+    try {
+      // Amigos: 2 queries en total (friends + batch de perfiles) en vez de N+1.
+      const { data: friendsData } = await supabase
+        .from("friends")
+        .select("user_id, friend_id, created_at")
+        .eq("user_id", userId);
 
-    if (friendsData && friendsData.length > 0) {
-      const friendIds = friendsData.map((f) =>
-        f.user_id === userId ? f.friend_id : f.user_id,
-      );
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, display_name")
-        .in("id", friendIds);
+      if (friendsData && friendsData.length > 0) {
+        const friendIds = friendsData.map((f) => f.friend_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", friendIds);
 
-      const profileMap = new Map(profiles?.map((p) => [p.id, p]));
-      setFriends(
-        friendsData.map((f) => {
-          const otherId = f.user_id === userId ? f.friend_id : f.user_id;
-          return { ...f, profile: profileMap.get(otherId) ?? undefined };
-        }),
-      );
-    } else {
-      setFriends([]);
+        const profileMap = new Map(profiles?.map((p) => [p.id, p]));
+        setFriends(
+          friendsData.map((f) => ({
+            ...f,
+            profile: profileMap.get(f.friend_id) ?? undefined,
+          })),
+        );
+      } else {
+        setFriends([]);
+      }
+
+      // Solicitudes pendientes: 2 queries en total en vez de N+1.
+      const { data: requestsData } = await supabase
+        .from("friend_requests")
+        .select("id, sender_id, receiver_id, status, created_at")
+        .eq("receiver_id", userId)
+        .eq("status", "pending");
+
+      if (requestsData && requestsData.length > 0) {
+        const senderIds = requestsData.map((r) => r.sender_id);
+        const { data: senderProfiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", senderIds);
+
+        const senderMap = new Map(senderProfiles?.map((p) => [p.id, p]));
+        const enriched = requestsData.map((r) => ({
+          ...r,
+          sender: senderMap.get(r.sender_id) ?? undefined,
+        }));
+        setPendingRequests(enriched);
+        setPendingFriendRequests(enriched.length);
+      } else {
+        setPendingRequests([]);
+        setPendingFriendRequests(0);
+      }
+    } catch (err) {
+      if (__DEV__) console.error("loadFriends error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    // Solicitudes pendientes: 2 queries en total en vez de N+1.
-    const { data: requestsData } = await supabase
-      .from("friend_requests")
-      .select("id, sender_id, receiver_id, status, created_at")
-      .eq("receiver_id", userId)
-      .eq("status", "pending");
-
-    if (requestsData && requestsData.length > 0) {
-      const senderIds = requestsData.map((r) => r.sender_id);
-      const { data: senderProfiles } = await supabase
-        .from("profiles")
-        .select("id, username, display_name")
-        .in("id", senderIds);
-
-      const senderMap = new Map(senderProfiles?.map((p) => [p.id, p]));
-      const enriched = requestsData.map((r) => ({
-        ...r,
-        sender: senderMap.get(r.sender_id) ?? undefined,
-      }));
-      setPendingRequests(enriched);
-      setPendingFriendRequests(enriched.length);
-    } else {
-      setPendingRequests([]);
-      setPendingFriendRequests(0);
-    }
-
-    setLoading(false);
   }
 
   async function handleSearch() {
@@ -127,12 +129,13 @@ export default function FriendsScreen() {
     setSearching(true);
     setSearchResults([]);
 
+    // Strip PostgREST filter-syntax characters to prevent query injection.
+    const safe = search.trim().replace(/[(),."']/g, "");
+
     const { data } = await supabase
       .from("profiles")
       .select("id, username, display_name")
-      .or(
-        `username.ilike.%${search.trim()}%,display_name.ilike.%${search.trim()}%`,
-      )
+      .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
       .neq("id", session!.user.id)
       .limit(10);
 
@@ -261,21 +264,7 @@ export default function FriendsScreen() {
               .eq("friend_id", me);
 
             if (mirrorDeleteError) {
-              const message = mirrorDeleteError.message.toLowerCase();
-              if (
-                message.includes("row-level security") ||
-                mirrorDeleteError.code === "42501"
-              ) {
-                Alert.alert(
-                  "Removed for you",
-                  "Friendship was removed on your side. To remove both rows, update DELETE policy on friends to allow auth.uid() = user_id OR auth.uid() = friend_id.",
-                );
-              } else {
-                Alert.alert(
-                  "Warning",
-                  `Mirror cleanup failed: ${mirrorDeleteError.message}`,
-                );
-              }
+              if (__DEV__) console.warn("Mirror row cleanup failed:", mirrorDeleteError.message);
             }
 
             await loadFriends();
