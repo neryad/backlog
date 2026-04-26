@@ -29,7 +29,7 @@ export function initializeDatabase() {
       completed_at INTEGER,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
-      is_public INTEGER NOT NULL DEFAULT 1
+      is_public INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE INDEX IF NOT EXISTS idx_entries_status     ON game_entries(status);
@@ -42,7 +42,7 @@ export function initializeDatabase() {
   // Migration: add is_public to existing databases that predate this column.
   try {
     db.execSync(
-      `ALTER TABLE game_entries ADD COLUMN is_public INTEGER NOT NULL DEFAULT 1`,
+      `ALTER TABLE game_entries ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0`,
     );
   } catch {
     // Column already exists — safe to ignore.

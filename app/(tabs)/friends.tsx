@@ -132,15 +132,20 @@ export default function FriendsScreen() {
     // Strip PostgREST filter-syntax characters to prevent query injection.
     const safe = search.trim().replace(/[(),."']/g, "");
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, display_name")
-      .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
-      .neq("id", session!.user.id)
-      .limit(10);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+        .neq("id", session!.user.id)
+        .limit(10);
 
-    setSearchResults(data ?? []);
-    setSearching(false);
+      setSearchResults(data ?? []);
+    } catch (err) {
+      if (__DEV__) console.error("Search error:", err);
+    } finally {
+      setSearching(false);
+    }
   }
 
   async function sendRequest(receiverId: string) {
@@ -277,7 +282,7 @@ export default function FriendsScreen() {
   }
 
   const isFriend = (profileId: string) =>
-    friends.some((f) => f.user_id === profileId || f.friend_id === profileId);
+    friends.some((f) => f.friend_id === profileId);
 
   // ✅ check de sesión al final, después de todos los hooks
   if (!session) {
