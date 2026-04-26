@@ -3,12 +3,32 @@ import { Game, GameEntry } from "../../types/game";
 import { v4 as uuidv4 } from "uuid";
 import { GameSearchResult } from "../../types/igdb.types";
 
-function mapEntry(row: any): GameEntry {
+type GameRow = {
+  id: string;
+  game_id: string;
+  platform_id: number;
+  status: string;
+  hours_played: number;
+  personal_rating: number | null;
+  notes: string | null;
+  started_at: number | null;
+  completed_at: number | null;
+  created_at: number;
+  updated_at: number;
+  is_public: number;
+  title: string | null;
+  cover_url: string | null;
+  summary: string | null;
+  release_year: number | null;
+  igdb_id: number | null;
+};
+
+function mapEntry(row: GameRow): GameEntry {
   return {
     id: row.id,
     gameId: row.game_id,
     platformId: row.platform_id,
-    status: row.status,
+    status: row.status as GameEntry["status"],
     hoursPlayed: row.hours_played,
     personalRating: row.personal_rating,
     notes: row.notes,
@@ -49,7 +69,7 @@ export function getGameEntries(status?: string): GameEntry[] {
          LIMIT 500`,
       );
 
-  return (rows as any[]).map(mapEntry);
+  return (rows as GameRow[]).map(mapEntry);
 }
 
 export function updateEntryStatus(id: string, status: string): void {
@@ -112,7 +132,7 @@ export function getGameEntryById(id: string): GameEntry | null {
      JOIN games g ON g.id = ge.game_id
      WHERE ge.id = ?`,
     [id],
-  ) as any;
+  ) as GameRow | null;
 
   if (!row) return null;
   return mapEntry(row);
@@ -128,7 +148,7 @@ export function updateGameEntry(
   },
 ): void {
   const sets: string[] = [];
-  const values: any[] = [];
+  const values: (string | number | null)[] = [];
 
   if (fields.status !== undefined) {
     sets.push("status = ?");

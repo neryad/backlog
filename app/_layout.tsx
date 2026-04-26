@@ -1,4 +1,4 @@
-import "react-native-get-random-values"; // ← primera línea, antes de todo
+import "react-native-get-random-values";
 import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -15,7 +15,6 @@ export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
   const { setSession } = useAuthStore();
 
-  // Inicializar DB
   useEffect(() => {
     try {
       initializeDatabase();
@@ -26,8 +25,6 @@ export default function RootLayout() {
     }
   }, []);
 
-  // Restaurar sesión de Supabase al abrir la app
-  // Reemplaza el useEffect de auth existente con este:
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setSession(null);
@@ -60,8 +57,6 @@ export default function RootLayout() {
       if (isMounted) {
         setSession(session);
       }
-      // La sincronización se dispara solo desde onAuthStateChange (SIGNED_IN)
-      // para evitar el doble upsert que ocurría al restaurar sesión + evento.
     }
 
     restoreSession();
@@ -80,21 +75,6 @@ export default function RootLayout() {
       subscription.unsubscribe();
     };
   }, []);
-  // useEffect(() => {
-  //   // Obtener sesión actual
-  //   supabase.auth.getSession().then(({ data: { session } }) => {
-  //     setSession(session);
-  //   });
-
-  //   // Escuchar cambios de sesión (login, logout, token refresh)
-  //   const {
-  //     data: { subscription },
-  //   } = supabase.auth.onAuthStateChange((_event, session) => {
-  //     setSession(session);
-  //   });
-
-  //   return () => subscription.unsubscribe();
-  // }, []);
 
   if (!dbReady) return null;
 

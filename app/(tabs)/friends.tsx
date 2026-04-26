@@ -168,7 +168,7 @@ export default function FriendsScreen() {
         .eq("id", requestId);
 
       if (deleteError) {
-        console.error("Delete error:", deleteError);
+        if (__DEV__) console.error("Delete error:", deleteError);
         Alert.alert(
           "Error",
           `Failed to delete request: ${deleteError.message}`,
@@ -183,7 +183,7 @@ export default function FriendsScreen() {
       ]);
 
       if (insertError) {
-        console.error("Insert error:", insertError);
+        if (__DEV__) console.error("Insert error:", insertError);
         Alert.alert("Error", `Failed to add friend: ${insertError.message}`);
         return;
       }
@@ -197,7 +197,7 @@ export default function FriendsScreen() {
       await loadFriends();
       Alert.alert("Success", "Friend added!");
     } catch (err) {
-      console.error("acceptRequest error:", err);
+      if (__DEV__) console.error("acceptRequest error:", err);
       Alert.alert("Error", String(err));
     }
   }
@@ -210,7 +210,7 @@ export default function FriendsScreen() {
         .eq("id", requestId);
 
       if (error) {
-        console.error("Reject error:", error);
+        if (__DEV__) console.error("Reject error:", error);
         Alert.alert("Error", `Failed to reject: ${error.message}`);
         return;
       }
@@ -223,7 +223,7 @@ export default function FriendsScreen() {
 
       await loadFriends();
     } catch (err) {
-      console.error("rejectRequest error:", err);
+      if (__DEV__) console.error("rejectRequest error:", err);
       Alert.alert("Error", String(err));
     }
   }

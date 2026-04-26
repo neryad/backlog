@@ -49,6 +49,10 @@ export default function RegisterScreen() {
       setError("Please enter a valid email address.");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -65,7 +69,6 @@ export default function RegisterScreen() {
     setLoading(true);
     setError(null);
 
-    // Verificar si el username ya existe
     const { data: existing } = await supabase
       .from("profiles")
       .select("username")
@@ -82,7 +85,7 @@ export default function RegisterScreen() {
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: "https://playlogged.neryad.dev",
+        emailRedirectTo: process.env.EXPO_PUBLIC_APP_URL,
         data: {
           username: normalizedUsername,
           display_name: normalizedUsername,

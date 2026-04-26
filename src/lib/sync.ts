@@ -31,7 +31,7 @@ export async function syncBacklogToSupabase(userId: string): Promise<void> {
       else console.log(`Synced ${rows.length} entries to Supabase`);
     }
   } catch (err) {
-    console.error("Sync failed:", err);
+    if (__DEV__) console.error("Sync failed:", err);
   }
 }
 
@@ -65,7 +65,7 @@ export async function syncSingleEntry(
 
     if (__DEV__ && error) console.error("Single sync error:", error.message);
   } catch (err) {
-    console.error("Single sync failed:", err);
+    if (__DEV__) console.error("Single sync failed:", err);
   }
 }
 
@@ -82,6 +82,6 @@ export async function deleteSingleEntry(
 
     if (__DEV__ && error) console.error("Delete sync error:", error.message);
   } catch (err) {
-    console.error("Delete sync failed:", err);
+    if (__DEV__) console.error("Delete sync failed:", err);
   }
 }

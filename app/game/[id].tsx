@@ -72,7 +72,11 @@ export default function GameDetailScreen() {
 
   function handleSaveHours() {
     const parsed = parseFloat(hoursValue);
-    if (!isNaN(parsed)) setHours(parsed);
+    if (!isNaN(parsed) && parsed >= 0 && parsed <= 9999) {
+      setHours(parsed);
+    } else {
+      setHoursValue(String(entry?.hoursPlayed ?? 0));
+    }
   }
 
   return (

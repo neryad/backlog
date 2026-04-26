@@ -9,6 +9,7 @@ import {
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
 import { GameEntry } from "../../types/game";
 import { pickNextGame, PickStrategy } from "./pickNextGame";
 
@@ -18,19 +19,12 @@ import { updateEntryStatus } from "../../db/queries/game";
 const STRATEGIES: {
   value: PickStrategy;
   label: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
   description: string;
 }[] = [
-  { value: "random", label: "🎲 Random", description: "Surprise me" },
-  {
-    value: "oldest",
-    label: "📅 Oldest Added",
-    description: "Clear the backlog",
-  },
-  {
-    value: "highest-rated",
-    label: "⭐ Top Rated",
-    description: "Your highest wishlist",
-  },
+  { value: "random", label: "Random", icon: "shuffle", description: "Surprise me" },
+  { value: "oldest", label: "Oldest Added", icon: "time-outline", description: "Clear the backlog" },
+  { value: "highest-rated", label: "Top Rated", icon: "star-outline", description: "Your highest wishlist" },
 ];
 
 type Props = {
@@ -103,14 +97,21 @@ export default function NextToPlayModal({
                     onPress={() => setStrategy(s.value)}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.strategyLabel,
-                        strategy === s.value && styles.strategyLabelActive,
-                      ]}
-                    >
-                      {s.label}
-                    </Text>
+                    <View style={styles.strategyLabelRow}>
+                      <Ionicons
+                        name={s.icon}
+                        size={16}
+                        color={strategy === s.value ? colors.text : colors.textMuted}
+                      />
+                      <Text
+                        style={[
+                          styles.strategyLabel,
+                          strategy === s.value && styles.strategyLabelActive,
+                        ]}
+                      >
+                        {s.label}
+                      </Text>
+                    </View>
                     <Text style={styles.strategyDesc}>{s.description}</Text>
                   </TouchableOpacity>
                 ))}
@@ -158,7 +159,10 @@ export default function NextToPlayModal({
                     style={styles.letsPlayBtn}
                     onPress={handleLetsPlay}
                   >
-                    <Text style={styles.letsPlayText}>🎮 Let's Play!</Text>
+                    <View style={styles.letsPlayInner}>
+                      <Ionicons name="game-controller-outline" size={18} color={colors.text} />
+                      <Text style={styles.letsPlayText}>Let's Play!</Text>
+                    </View>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -230,6 +234,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: "rgba(124,106,247,0.15)",
   },
+  strategyLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   strategyLabel: {
     color: colors.textMuted,
     fontSize: 15,
@@ -296,6 +305,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: "center",
     marginBottom: spacing.sm,
+  },
+  letsPlayInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   letsPlayText: {
     color: colors.text,
