@@ -177,7 +177,7 @@ export default function BacklogScreen() {
     return (
       <View style={styles.shareSection}>
         <View style={styles.shareHeaderRow}>
-          <View>
+          <View style={styles.shareHeaderText}>
             <Text style={styles.shareSectionTitle}>Share Top List</Text>
             <Text style={styles.shareSectionSub}>
               {activeFilter === "all"
@@ -541,6 +541,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  shareHeaderText: {
+    flex: 1,
+    flexShrink: 1,
   },
   shareSectionSub: {
     color: colors.foregroundMuted,

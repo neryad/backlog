@@ -106,7 +106,7 @@ export default function StatsScreen() {
     return (
       <View style={styles.shareSection}>
         <View style={styles.shareHeaderRow}>
-          <View>
+          <View style={styles.shareHeaderText}>
             <Text style={styles.shareSectionTitle}>Share Stats</Text>
             <Text style={styles.shareSectionSub}>
               Share your overall progress and this month's momentum
@@ -253,6 +253,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  shareHeaderText: {
+    flex: 1,
+    flexShrink: 1,
   },
   shareToggleBtn: {
     flexDirection: "row",

@@ -205,7 +205,7 @@ export default function AboutModal({ visible, onClose }: Props) {
                       color={colors.primary}
                     />
                     <View>
-                      <Text style={styles.accountEmail}>
+                      <Text style={styles.accountEmail} numberOfLines={1}>
                         {session.user.email}
                       </Text>
                       <Text style={styles.accountStatus}>Syncing backlog</Text>
@@ -400,16 +400,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: spacing.sm,
   },
   accountInfo: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    flexShrink: 1,
   },
   accountEmail: {
     color: colors.foreground,
     fontSize: 14,
     fontFamily: fontFamily.sansMedium,
+    flexShrink: 1,
   },
   accountStatus: {
     color: colors.primary,
@@ -442,6 +446,7 @@ const styles = StyleSheet.create({
   accountActions: {
     gap: spacing.xs,
     alignItems: "flex-end",
+    flexShrink: 0,
   },
   deleteAccountBtn: {
     paddingHorizontal: spacing.md,
