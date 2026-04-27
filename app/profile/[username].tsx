@@ -46,11 +46,12 @@ type RemoteEntry = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  playing:   colors.primary,
-  completed: colors.success,
-  backlog:   colors.foregroundMuted,
-  dropped:   colors.danger,
-  wishlist:  colors.warning,
+  playing:           colors.primary,
+  "playing-social":  colors.statusPlayingSocial,
+  completed:         colors.success,
+  backlog:           colors.foregroundMuted,
+  dropped:           colors.danger,
+  wishlist:          colors.warning,
 };
 
 export default function ProfileScreen() {

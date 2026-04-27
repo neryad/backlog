@@ -66,6 +66,7 @@ export default function RootLayout() {
 
       if (isMounted) {
         setSession(session);
+        syncBacklogToSupabase(user.id);
       }
     }
 
