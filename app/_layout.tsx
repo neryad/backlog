@@ -95,6 +95,10 @@ export default function RootLayout() {
             name="profile/[username]"
             options={{ headerShown: true }}
           />
+          <Stack.Screen
+            name="profile/edit-platforms"
+            options={{ headerShown: true }}
+          />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>

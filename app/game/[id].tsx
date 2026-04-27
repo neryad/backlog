@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,10 +15,13 @@ import { useGameDetail } from "../../src/features/game-detail/useGameDetail";
 import { GameStatus } from "../../src/types/game";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { PLATFORMS } from "../../src/constants/platforms";
+import { GameShareCard } from "../../src/components/GameShareCard";
+import { shareViewAsImage } from "../../src/utils/share";
 
 const STATUSES: { value: GameStatus; label: string; color: string }[] = [
   { value: "backlog", label: "Backlog", color: colors.textMuted },
   { value: "playing", label: "Playing", color: colors.primary },
+  { value: "playing-social", label: "Playing (Social)", color: "#14b8a6" },
   { value: "completed", label: "Completed", color: colors.success },
   { value: "dropped", label: "Dropped", color: colors.danger },
   { value: "wishlist", label: "Wishlist", color: colors.warning },
@@ -30,9 +33,11 @@ export default function GameDetailScreen() {
   const { entry, setStatus, setRating, setNotes, setHours, remove } =
     useGameDetail(id);
   const navigation = useNavigation();
+  const shareCardRef = useRef<View>(null);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState(entry?.notes ?? "");
   const [hoursValue, setHoursValue] = useState(String(entry?.hoursPlayed ?? 0));
+  const [isSharing, setIsSharing] = useState(false);
 
   const game = entry?.game;
   const platform = entry ? PLATFORMS.find((p) => p.id === entry.platformId) : undefined;
@@ -76,6 +81,21 @@ export default function GameDetailScreen() {
       setHours(parsed);
     } else {
       setHoursValue(String(entry?.hoursPlayed ?? 0));
+    }
+  }
+
+  async function handleShareCard() {
+    if (!shareCardRef.current || isSharing) return;
+
+    try {
+      setIsSharing(true);
+      await shareViewAsImage(shareCardRef, {
+        dialogTitle: "Share your game card",
+        width: 1080,
+        height: 1920,
+      });
+    } finally {
+      setIsSharing(false);
     }
   }
 
@@ -212,6 +232,25 @@ export default function GameDetailScreen() {
             </Text>
           </TouchableOpacity>
         )}
+      </View>
+
+      {/* Share Card */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Share Game</Text>
+        <View style={styles.sharePreviewFrame}>
+          <View ref={shareCardRef} collapsable={false}>
+            <GameShareCard entry={entry} platformName={platform?.name} />
+          </View>
+        </View>
+        <TouchableOpacity
+          style={[styles.shareBtn, isSharing && styles.shareBtnDisabled]}
+          onPress={handleShareCard}
+          disabled={isSharing}
+        >
+          <Text style={styles.shareBtnText}>
+            {isSharing ? "Generating..." : "Share Game Card"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Delete */}
@@ -399,6 +438,29 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: colors.text,
     fontWeight: "700",
+  },
+  sharePreviewFrame: {
+    marginTop: spacing.xs,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    alignItems: "center",
+  },
+  shareBtnDisabled: {
+    opacity: 0.7,
+  },
+  shareBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
   },
   deleteBtn: {
     margin: spacing.md,

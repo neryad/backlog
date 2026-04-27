@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { getStats, BacklogStats } from "../../src/db/queries/stats";
+import { getMonthlyRecap, getStats, BacklogStats, MonthlyRecap } from "../../src/db/queries/stats";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import SectionLabel from "../../src/components/SectionLabel";
+import { StatsShareCard } from "../../src/components/StatsShareCard";
+import { shareViewAsImage } from "../../src/utils/share";
 
 const STATUS_META: Record<
   string,
@@ -19,6 +20,11 @@ const STATUS_META: Record<
     label: "Playing",
     color: colors.primary,
     icon: "game-controller-outline",
+  },
+  "playing-social": {
+    label: "Playing (Social)",
+    color: "#14b8a6",
+    icon: "people-outline",
   },
   completed: {
     label: "Completed",
@@ -66,25 +72,99 @@ function ProgressBar({ value, color }: { value: number; color: string }) {
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<BacklogStats | null>(null);
+  const [monthlyRecap, setMonthlyRecap] = useState<MonthlyRecap | null>(null);
+  const shareCardRef = useRef<View>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [showSharePreview, setShowSharePreview] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       setStats(getStats());
+      setMonthlyRecap(getMonthlyRecap());
     }, []),
   );
 
-  if (!stats) {
+  const handleShareStats = useCallback(async () => {
+    if (!shareCardRef.current || isSharing) return;
+
+    try {
+      setIsSharing(true);
+      await shareViewAsImage(shareCardRef, {
+        dialogTitle: "Share your stats card",
+        width: 1080,
+        height: 1920,
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  }, [isSharing]);
+
+  const shareStatsSection = useMemo(() => {
+    if (!stats) return null;
+
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={colors.primary} />
+      <View style={styles.shareSection}>
+        <View style={styles.shareHeaderRow}>
+          <View>
+            <Text style={styles.shareSectionTitle}>Share Stats</Text>
+            <Text style={styles.shareSectionSub}>
+              Share your overall progress and this month's momentum
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.shareToggleBtn}
+            onPress={() => setShowSharePreview((prev) => !prev)}
+            activeOpacity={0.75}
+          >
+            <Ionicons
+              name={showSharePreview ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={colors.text}
+            />
+            <Text style={styles.shareToggleText}>
+              {showSharePreview ? "Hide" : "Preview"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.sharePreviewFrame,
+            !showSharePreview && styles.sharePreviewHidden,
+          ]}
+        >
+          <View ref={shareCardRef} collapsable={false}>
+            <StatsShareCard stats={stats} monthlyRecap={monthlyRecap} />
+          </View>
+        </View>
+
+        {!showSharePreview && (
+          <Text style={styles.shareHintText}>
+            Open Preview to review the card
+          </Text>
+        )}
+
+        <TouchableOpacity
+          style={[styles.shareBtn, isSharing && styles.shareBtnDisabled]}
+          onPress={handleShareStats}
+          disabled={isSharing}
+        >
+          <Text style={styles.shareBtnText}>
+            {isSharing ? "Generating..." : "Share Stats Card"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
-  }
+  }, [handleShareStats, isSharing, monthlyRecap, showSharePreview, stats]);
+
+  if (!stats) return null;
 
   const totalForBar = Math.max(stats.total, 1);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {shareStatsSection}
+
       {/* Top stats */}
       <View style={styles.topCards}>
         <StatCard label="Total Games" value={String(stats.total)} />
@@ -164,6 +244,44 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
+  shareSection: {
+    marginBottom: spacing.md,
+  },
+  shareHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.sm,
+  },
+  shareToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareToggleText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  shareSectionTitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.xs,
+  },
+  shareSectionSub: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   statCard: {
     flex: 1,
     minWidth: "45%",
@@ -195,6 +313,40 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.md,
+  },
+  sharePreviewFrame: {
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  shareBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    alignItems: "center",
+  },
+  shareBtnDisabled: {
+    opacity: 0.7,
+  },
+  shareBtnText: {
+    color: colors.text,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  shareHintText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: spacing.sm,
+  },
+  sharePreviewHidden: {
+    position: "absolute",
+    opacity: 0,
+    zIndex: -1,
+    pointerEvents: "none",
   },
   sectionLabel: {
     color: colors.textMuted,

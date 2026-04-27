@@ -212,6 +212,15 @@ export default function AboutModal({ visible, onClose }: Props) {
                   </View>
                   <View style={styles.accountActions}>
                     <TouchableOpacity
+                      style={styles.gamingIdsBtn}
+                      onPress={() => {
+                        onClose();
+                        router.push("/profile/edit-platforms");
+                      }}
+                    >
+                      <Text style={styles.gamingIdsText}>Gaming IDs</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       style={styles.logoutBtn}
                       onPress={handleLogout}
                       disabled={deletingAccount}
@@ -404,6 +413,19 @@ const styles = StyleSheet.create({
   accountStatus: {
     color: colors.primary,
     fontSize: 12,
+  },
+  gamingIdsBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + "22",
+  },
+  gamingIdsText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "600",
   },
   logoutBtn: {
     paddingHorizontal: spacing.md,

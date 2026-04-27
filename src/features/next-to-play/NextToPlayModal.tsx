@@ -1,30 +1,26 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { GameEntry } from "../../types/game";
 import { pickNextGame, PickStrategy } from "./pickNextGame";
-
 import { colors, spacing, radius } from "../../constants/theme";
 import { updateEntryStatus } from "../../db/queries/game";
 
-const STRATEGIES: {
+type StrategyOption = {
   value: PickStrategy;
   label: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
   description: string;
-}[] = [
-  { value: "random", label: "Random", icon: "shuffle", description: "Surprise me" },
-  { value: "oldest", label: "Oldest Added", icon: "time-outline", description: "Clear the backlog" },
-  { value: "highest-rated", label: "Top Rated", icon: "star-outline", description: "Your highest wishlist" },
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  iconColor: string;
+};
+
+const STRATEGIES: StrategyOption[] = [
+  { value: "random", label: "Random", description: "Surprise me", icon: "shuffle-outline", iconColor: colors.primary },
+  { value: "oldest", label: "Oldest Added", description: "Clear the backlog", icon: "time-outline", iconColor: colors.textMuted },
+  { value: "highest-rated", label: "Top Rated", description: "Your highest wishlist", icon: "star-outline", iconColor: colors.warning },
 ];
 
 type Props = {
@@ -60,6 +56,7 @@ export default function NextToPlayModal({
 
   function handleLetsPlay() {
     if (!picked) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     updateEntryStatus(picked.id, "playing");
     onStatusChange();
@@ -97,12 +94,19 @@ export default function NextToPlayModal({
                     onPress={() => setStrategy(s.value)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.strategyLabelRow}>
-                      <Ionicons
-                        name={s.icon}
-                        size={16}
-                        color={strategy === s.value ? colors.text : colors.textMuted}
-                      />
+                    <View style={styles.strategyHeader}>
+                      <View
+                        style={[
+                          styles.strategyIconWrap,
+                          strategy === s.value && styles.strategyIconWrapActive,
+                        ]}
+                      >
+                        <Ionicons
+                          name={s.icon}
+                          size={16}
+                          color={strategy === s.value ? colors.text : s.iconColor}
+                        />
+                      </View>
                       <Text
                         style={[
                           styles.strategyLabel,
@@ -159,9 +163,9 @@ export default function NextToPlayModal({
                     style={styles.letsPlayBtn}
                     onPress={handleLetsPlay}
                   >
-                    <View style={styles.letsPlayInner}>
-                      <Ionicons name="game-controller-outline" size={18} color={colors.text} />
-                      <Text style={styles.letsPlayText}>Let's Play!</Text>
+                    <View style={styles.letsPlayContent}>
+                      <Ionicons name="play-circle-outline" size={18} color={colors.text} />
+                      <Text style={styles.letsPlayText}>Let's Play</Text>
                     </View>
                   </TouchableOpacity>
 
@@ -234,10 +238,21 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: "rgba(124,106,247,0.15)",
   },
-  strategyLabelRow: {
+  strategyHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
+  },
+  strategyIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  strategyIconWrapActive: {
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   strategyLabel: {
     color: colors.textMuted,
@@ -306,7 +321,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.sm,
   },
-  letsPlayInner: {
+  letsPlayContent: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  Share,
+  TouchableOpacity,
 } from "react-native";
 import { Image } from "expo-image";
 import { useGlobalSearchParams } from "expo-router";
@@ -17,7 +19,20 @@ type Profile = {
   id: string;
   username: string;
   display_name: string | null;
+  psn_id: string | null;
+  xbox_gamertag: string | null;
+  switch_code: string | null;
+  steam_id: string | null;
+  epic_id: string | null;
 };
+
+const PLATFORM_META: { key: keyof Profile; label: string; badge: string; color: string }[] = [
+  { key: "psn_id", label: "PlayStation", badge: "PS", color: "#0070D1" },
+  { key: "xbox_gamertag", label: "Xbox", badge: "XB", color: "#107C10" },
+  { key: "switch_code", label: "Switch", badge: "NSW", color: "#E60012" },
+  { key: "steam_id", label: "Steam", badge: "STM", color: "#66C0F4" },
+  { key: "epic_id", label: "Epic", badge: "EPC", color: "#c8c8c8" },
+];
 
 type RemoteEntry = {
   id: string;
@@ -48,12 +63,26 @@ export default function ProfileScreen() {
     loadProfile();
   }, [username]);
 
+  const handleShare = useCallback(async () => {
+    if (!profile) return;
+
+    const lines: string[] = [`@${profile.username} on Playlogged`];
+    if (profile.psn_id) lines.push(`PlayStation: ${profile.psn_id}`);
+    if (profile.xbox_gamertag) lines.push(`Xbox: ${profile.xbox_gamertag}`);
+    if (profile.switch_code) lines.push(`Nintendo Switch: ${profile.switch_code}`);
+    if (profile.steam_id) lines.push(`Steam: ${profile.steam_id}`);
+    if (profile.epic_id) lines.push(`Epic Games: ${profile.epic_id}`);
+    lines.push(`\nhttps://playlogged.neryad.dev/profile/${profile.username}`);
+
+    await Share.share({ message: lines.join("\n") });
+  }, [profile]);
+
   async function loadProfile() {
     setLoading(true);
     try {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, username, display_name")
+        .select("id, username, display_name, psn_id, xbox_gamertag, switch_code, steam_id, epic_id")
         .eq("username", username)
         .single();
 
@@ -112,7 +141,16 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `@${profile?.username ?? username}` }} />
+      <Stack.Screen
+        options={{
+          title: `@${profile?.username ?? username}`,
+          headerRight: () => (
+            <TouchableOpacity onPress={handleShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="share-outline" size={22} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
     <FlatList
       style={styles.container}
       data={entries}
@@ -149,6 +187,31 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>Avg Rating</Text>
             </View>
           </View>
+
+          {PLATFORM_META.some((p) => profile?.[p.key]) && (
+            <>
+              <Text style={[styles.sectionLabel, { marginTop: spacing.sm }]}>
+                Find me on
+              </Text>
+              <View style={styles.platformsRow}>
+                {PLATFORM_META.filter((p) => profile?.[p.key]).map((p) => (
+                  <View key={p.key} style={styles.platformChip}>
+                    <View style={[styles.platformBadge, { backgroundColor: p.color + "22" }]}>
+                      <Text style={[styles.platformBadgeText, { color: p.color }]}>
+                        {p.badge}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.platformLabel}>{p.label}</Text>
+                      <Text style={styles.platformId} numberOfLines={1}>
+                        {profile?.[p.key] as string}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
           <Text style={styles.sectionLabel}>Public backlog</Text>
         </>
@@ -346,5 +409,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: spacing.lg,
+  },
+  platformsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  platformChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  platformBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  platformBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  platformLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  platformId: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "500",
+    maxWidth: 120,
   },
 });
