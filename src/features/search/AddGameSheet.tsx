@@ -19,6 +19,7 @@ import {
 } from "../../db/queries/game";
 import { useAuthStore } from "../../store/auth.store";
 import { syncSingleEntry } from "../../lib/sync";
+import { fontFamily } from "../../constants/typography";
 
 const STATUSES: { value: GameStatus; label: string }[] = [
   { value: "backlog", label: "Backlog" },
@@ -150,7 +151,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={colors.text} />
+            <ActivityIndicator color={colors.foreground} />
           ) : (
             <Text style={styles.addText}>{addActionLabel}</Text>
           )}
@@ -162,7 +163,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: spacing.md,
     margin: spacing.md,
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 80,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   headerInfo: {
     flex: 1,
@@ -189,18 +190,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: fontFamily.sansBold,
   },
   year: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -224,12 +225,12 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   chipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   chipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   actions: {
     flexDirection: "row",
@@ -240,12 +241,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     alignItems: "center",
   },
   cancelText: {
-    color: colors.textMuted,
-    fontWeight: "600",
+    color: colors.foregroundMuted,
+    fontFamily: fontFamily.sansSemibold,
   },
   addBtn: {
     flex: 2,
@@ -255,8 +256,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
 });

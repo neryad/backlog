@@ -8,6 +8,7 @@ import { GameEntry } from "../../types/game";
 import { pickNextGame, PickStrategy } from "./pickNextGame";
 import { colors, spacing, radius } from "../../constants/theme";
 import { updateEntryStatus } from "../../db/queries/game";
+import { fontFamily } from "../../constants/typography";
 
 type StrategyOption = {
   value: PickStrategy;
@@ -19,7 +20,7 @@ type StrategyOption = {
 
 const STRATEGIES: StrategyOption[] = [
   { value: "random", label: "Random", description: "Surprise me", icon: "shuffle-outline", iconColor: colors.primary },
-  { value: "oldest", label: "Oldest Added", description: "Clear the backlog", icon: "time-outline", iconColor: colors.textMuted },
+  { value: "oldest", label: "Oldest Added", description: "Clear the backlog", icon: "time-outline", iconColor: colors.foregroundMuted },
   { value: "highest-rated", label: "Top Rated", description: "Your highest wishlist", icon: "star-outline", iconColor: colors.warning },
 ];
 
@@ -104,7 +105,7 @@ export default function NextToPlayModal({
                         <Ionicons
                           name={s.icon}
                           size={16}
-                          color={strategy === s.value ? colors.text : s.iconColor}
+                          color={strategy === s.value ? colors.foreground : s.iconColor}
                         />
                       </View>
                       <Text
@@ -164,7 +165,7 @@ export default function NextToPlayModal({
                     onPress={handleLetsPlay}
                   >
                     <View style={styles.letsPlayContent}>
-                      <Ionicons name="play-circle-outline" size={18} color={colors.text} />
+                      <Ionicons name="play-circle-outline" size={18} color={colors.foreground} />
                       <Text style={styles.letsPlayText}>Let's Play</Text>
                     </View>
                   </TouchableOpacity>
@@ -192,11 +193,11 @@ export default function NextToPlayModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    backgroundColor: colors.overlay,
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing.lg,
@@ -211,14 +212,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
     textAlign: "center",
     marginBottom: spacing.xs,
   },
   subtitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     textAlign: "center",
     marginBottom: spacing.lg,
@@ -230,13 +231,13 @@ const styles = StyleSheet.create({
   strategyBtn: {
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
   strategyBtnActive: {
     borderColor: colors.primary,
-    backgroundColor: "rgba(124,106,247,0.15)",
+    backgroundColor: colors.primarySoft,
   },
   strategyHeader: {
     flexDirection: "row",
@@ -249,21 +250,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.surfaceOverlayXs,
   },
   strategyIconWrapActive: {
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.surfaceOverlaySm,
   },
   strategyLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   strategyLabelActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   strategyDesc: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -281,16 +282,16 @@ const styles = StyleSheet.create({
     width: 140,
     height: 190,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   gameName: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: fontFamily.displaySemibold,
     textAlign: "center",
   },
   gameYear: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
   },
   noGames: {
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   noGamesText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 16,
   },
   pickBtn: {
@@ -310,8 +311,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   pickBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 16,
   },
   letsPlayBtn: {
@@ -327,8 +328,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   letsPlayText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 16,
   },
   cancelBtn: {
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 15,
   },
 });

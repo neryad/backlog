@@ -1,17 +1,27 @@
 import "react-native-get-random-values";
 import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
+import { Text } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initializeDatabase } from "../src/db/schema";
 import { colors } from "../src/constants/theme";
+import { fontFamily } from "../src/constants/typography";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { isSupabaseConfigured, supabase } from "../src/lib/supabase";
 import { useAuthStore } from "../src/store/auth.store";
 import { syncBacklogToSupabase } from "../src/lib/sync";
+import { useAppFonts } from "../src/constants/useAppFonts";
+
+// React Native has no global font setting (unlike CSS).
+// This sets Inter as the default font for every <Text> in the app.
+// Individual styles can still override with fontFamily.sansBold, displayBold, mono, etc.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Text as any).defaultProps = { style: { fontFamily: fontFamily.sans } };
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
+  const fontsLoaded = useAppFonts();
   const [dbReady, setDbReady] = useState(false);
   const { setSession } = useAuthStore();
 
@@ -76,7 +86,7 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (!dbReady) return null;
+  if (!dbReady || !fontsLoaded) return null;
 
   return (
     <SafeAreaProvider>
@@ -84,7 +94,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
+            headerTintColor: colors.foreground,
             contentStyle: { backgroundColor: colors.background },
           }}
         >

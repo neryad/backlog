@@ -17,11 +17,12 @@ import { colors, spacing, radius } from "../../src/constants/theme";
 import { PLATFORMS } from "../../src/constants/platforms";
 import { GameShareCard } from "../../src/components/GameShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
+import { fontFamily } from "../../src/constants/typography";
 
 const STATUSES: { value: GameStatus; label: string; color: string }[] = [
-  { value: "backlog", label: "Backlog", color: colors.textMuted },
+  { value: "backlog", label: "Backlog", color: colors.foregroundMuted },
   { value: "playing", label: "Playing", color: colors.primary },
-  { value: "playing-social", label: "Playing (Social)", color: "#14b8a6" },
+  { value: "playing-social", label: "Playing (Social)", color: colors.statusPlayingSocial },
   { value: "completed", label: "Completed", color: colors.success },
   { value: "dropped", label: "Dropped", color: colors.danger },
   { value: "wishlist", label: "Wishlist", color: colors.warning },
@@ -194,7 +195,7 @@ export default function GameDetailScreen() {
             onChangeText={setHoursValue}
             onBlur={handleSaveHours}
             keyboardType="decimal-pad"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.foregroundMuted}
           />
           <Text style={styles.hoursLabel}>hrs</Text>
         </View>
@@ -218,7 +219,7 @@ export default function GameDetailScreen() {
               onChangeText={setNotesValue}
               multiline
               autoFocus
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.foregroundMuted}
               placeholder="Add your thoughts..."
             />
             <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNotes}>
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 120,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   heroInfo: {
     flex: 1,
@@ -300,13 +301,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
     lineHeight: 26,
   },
   meta: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   section: {
@@ -321,15 +322,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
   },
   summary: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -342,17 +343,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
   chipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   chipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   ratingRow: {
     flexDirection: "row",
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderWidth: 1,
     borderColor: colors.border,
     justifyContent: "center",
@@ -374,12 +375,13 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   ratingText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fontFamily.mono,
+    fontVariant: ["tabular-nums"],
   },
   ratingTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   hoursRow: {
     flexDirection: "row",
@@ -387,26 +389,26 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   hoursInput: {
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
     padding: spacing.sm,
     width: 80,
     textAlign: "center",
   },
   hoursLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
   },
   notesInput: {
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
     padding: spacing.sm,
     minHeight: 100,
@@ -414,19 +416,19 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   notes: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
     lineHeight: 21,
   },
   notesEmpty: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     fontStyle: "italic",
   },
   editBtn: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   saveBtn: {
     marginTop: spacing.sm,
@@ -436,14 +438,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
   },
   sharePreviewFrame: {
     marginTop: spacing.xs,
     borderRadius: radius.md,
     padding: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -458,8 +460,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   shareBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
   deleteBtn: {
@@ -473,7 +475,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: colors.danger,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     fontSize: 15,
   },
 });

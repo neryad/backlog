@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   appName: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.5,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     width: 126,
     height: 168,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   coverPlaceholder: {
     width: 126,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   coverPlaceholderText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
@@ -244,23 +244,23 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   emptyCardTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 20,
     fontWeight: "800",
   },
   emptyCardText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     lineHeight: 20,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 22,
     fontWeight: "800",
     lineHeight: 28,
   },
   meta: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   statsGrid: {
@@ -277,21 +277,21 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.2)",
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.4,
     marginBottom: 2,
   },
   statValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: "700",
   },
   footerText: {
     zIndex: 1,
     marginTop: spacing.md,
-    color: colors.text,
+    color: colors.foreground,
     opacity: 0.9,
     fontSize: 13,
     lineHeight: 18,

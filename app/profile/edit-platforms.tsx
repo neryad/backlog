@@ -18,6 +18,7 @@ import { useUIStore } from "../../src/store/ui.store";
 import { GamingIdsShareCard } from "../../src/components/GamingIdsShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
 import { BACKLOG_SHARE_TEMPLATES } from "../../src/constants/shareCardThemes";
+import { fontFamily } from "../../src/constants/typography";
 
 type PlatformIds = {
   psn_id: string;
@@ -34,11 +35,11 @@ const PLATFORMS: {
   badge: string;
   color: string;
 }[] = [
-  { key: "psn_id", label: "PlayStation Network", placeholder: "PSN ID", badge: "PS", color: "#0070D1" },
-  { key: "xbox_gamertag", label: "Xbox", placeholder: "Gamertag", badge: "XB", color: "#107C10" },
-  { key: "switch_code", label: "Nintendo Switch", placeholder: "SW-XXXX-XXXX-XXXX", badge: "NSW", color: "#E60012" },
-  { key: "steam_id", label: "Steam", placeholder: "Username", badge: "STM", color: "#66C0F4" },
-  { key: "epic_id", label: "Epic Games", placeholder: "Display Name", badge: "EPC", color: "#c8c8c8" },
+  { key: "psn_id", label: "PlayStation Network", placeholder: "PSN ID", badge: "PS", color: colors.platformPSN },
+  { key: "xbox_gamertag", label: "Xbox", placeholder: "Gamertag", badge: "XB", color: colors.platformXbox },
+  { key: "switch_code", label: "Nintendo Switch", placeholder: "SW-XXXX-XXXX-XXXX", badge: "NSW", color: colors.platformSwitch },
+  { key: "steam_id", label: "Steam", placeholder: "Username", badge: "STM", color: colors.platformSteam },
+  { key: "epic_id", label: "Epic Games", placeholder: "Display Name", badge: "EPC", color: colors.platformEpic },
 ];
 
 export default function EditPlatformsScreen() {
@@ -169,7 +170,7 @@ export default function EditPlatformsScreen() {
                   setIds((prev) => ({ ...prev, [platform.key]: t }))
                 }
                 placeholder={platform.placeholder}
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={colors.foregroundMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -184,7 +185,7 @@ export default function EditPlatformsScreen() {
           activeOpacity={0.8}
         >
           {saving ? (
-            <ActivityIndicator color={colors.text} />
+            <ActivityIndicator color={colors.foreground} />
           ) : (
             <Text style={styles.saveBtnText}>Save</Text>
           )}
@@ -208,7 +209,7 @@ export default function EditPlatformsScreen() {
                 <Ionicons
                   name={showSharePreview ? "chevron-up" : "chevron-down"}
                   size={16}
-                  color={colors.text}
+                  color={colors.foreground}
                 />
                 <Text style={styles.shareToggleText}>
                   {showSharePreview ? "Hide" : "Preview"}
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   subtitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: spacing.sm,
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: fontFamily.sansBold,
     letterSpacing: 0.5,
   },
   inputWrapper: {
@@ -318,15 +319,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   platformLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: colors.surface,
-    color: colors.text,
+    backgroundColor: colors.card,
+    color: colors.foreground,
     borderRadius: radius.sm,
     padding: spacing.sm,
     fontSize: 14,
@@ -341,9 +342,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveBtnText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   shareSection: {
     marginTop: spacing.sm,
@@ -355,15 +356,15 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   shareSectionTitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.xs,
   },
   shareSectionSub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -374,19 +375,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
   shareToggleText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   sharePreviewFrame: {
     borderRadius: radius.md,
     padding: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   templateChip: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -411,19 +412,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
   },
   templateChipActive: {
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderColor: colors.primary,
   },
   templateChipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   templateChipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   shareHintText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginTop: spacing.xs,
   },
@@ -438,8 +439,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   shareBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
 });

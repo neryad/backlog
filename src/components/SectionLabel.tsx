@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, TextStyle } from "react-native";
 import { colors, spacing } from "../constants/theme";
+import { fontFamily } from "../constants/typography";
 
 type Props = {
   children: React.ReactNode;
@@ -12,9 +13,9 @@ export default function SectionLabel({ children, style }: Props) {
 }
 
 export const sectionLabelStyle: TextStyle = {
-  color: colors.textMuted,
+  color: colors.foregroundMuted,
   fontSize: 11,
-  fontWeight: "600",
+  fontFamily: fontFamily.sansSemibold,
   letterSpacing: 0.8,
   textTransform: "uppercase",
   marginBottom: spacing.md,

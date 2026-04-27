@@ -67,15 +67,15 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.card,
           borderTopColor: colors.border,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarInactiveTintColor: colors.foregroundMuted,
         headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
+        headerTintColor: colors.foreground,
       }}
     >
       <Tabs.Screen
@@ -103,7 +103,7 @@ export default function TabsLayout() {
             pendingFriendRequests > 0 ? pendingFriendRequests : undefined,
           tabBarBadgeStyle: {
             backgroundColor: colors.primary,
-            color: colors.text,
+            color: colors.foreground,
           },
         }}
       />

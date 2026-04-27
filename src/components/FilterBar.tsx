@@ -54,7 +54,7 @@
 // //     paddingHorizontal: spacing.md,
 // //     paddingVertical: spacing.xs + 2,
 // //     borderRadius: radius.lg,
-// //     backgroundColor: colors.surface,
+// //     backgroundColor: colors.card,
 // //     borderWidth: 1,
 // //     borderColor: colors.border,
 // //   },
@@ -63,12 +63,12 @@
 // //     borderColor: colors.primary,
 // //   },
 // //   label: {
-// //     color: colors.textMuted,
+// //     color: colors.foregroundMuted,
 // //     fontSize: 13,
-// //     fontWeight: "500",
+// //     fontFamily: fontFamily.sansMedium,
 // //   },
 // //   labelActive: {
-// //     color: colors.text,
+// //     color: colors.foreground,
 // //   },
 // // });
 // import React, { memo } from "react";
@@ -158,7 +158,7 @@
 //     paddingHorizontal: spacing.md,
 //     paddingVertical: spacing.xs + 2,
 //     borderRadius: radius.lg,
-//     backgroundColor: colors.surface,
+//     backgroundColor: colors.card,
 //     borderWidth: 1,
 //     borderColor: colors.border,
 //     gap: spacing.xs,
@@ -168,29 +168,29 @@
 //     borderColor: colors.primary,
 //   },
 //   label: {
-//     color: colors.textMuted,
+//     color: colors.foregroundMuted,
 //     fontSize: 13,
-//     fontWeight: "500",
+//     fontFamily: fontFamily.sansMedium,
 //   },
 //   labelActive: {
-//     color: colors.text,
+//     color: colors.foreground,
 //   },
 //   badge: {
-//     backgroundColor: colors.surfaceHigh,
+//     backgroundColor: colors.cardElevated,
 //     borderRadius: 10,
 //     paddingHorizontal: 6,
 //     paddingVertical: 1,
 //   },
 //   badgeActive: {
-//     backgroundColor: "rgba(255,255,255,0.25)",
+//     backgroundColor: colors.surfaceOverlayMd,
 //   },
 //   badgeText: {
-//     color: colors.textMuted,
+//     color: colors.foregroundMuted,
 //     fontSize: 11,
-//     fontWeight: "600",
+//     fontFamily: fontFamily.sansSemibold,
 //   },
 //   badgeTextActive: {
-//     color: colors.text,
+//     color: colors.foreground,
 //   },
 // });
 import React, { memo } from "react";
@@ -203,6 +203,7 @@ import {
 } from "react-native";
 import { GameStatus, GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
+import { fontFamily } from "../constants/typography";
 
 const FILTERS: { label: string; value: GameStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     height: 36,
     paddingHorizontal: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.xs,
@@ -285,15 +286,15 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   label: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   labelActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   badge: {
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -302,14 +303,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badgeActive: {
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: colors.surfaceOverlayMd,
   },
   badgeText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   badgeTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
 });

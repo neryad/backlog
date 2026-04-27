@@ -16,6 +16,7 @@ import { useDebounce } from "../../src/hooks/useDebounce";
 import { useGameSearch } from "../../src/features/search/useGameSearch";
 import { colors, radius, spacing } from "../../src/constants/theme";
 import AddGameSheet from "../../src/features/search/AddGameSheet";
+import { fontFamily } from "../../src/constants/typography";
 
 export default function DiscoverScreen() {
   const [query, setQuery] = useState("");
@@ -66,7 +67,7 @@ export default function DiscoverScreen() {
         <TextInput
           style={styles.input}
           placeholder="Search games..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.foregroundMuted}
           value={query}
           onChangeText={setQuery}
           autoCorrect={false}
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     margin: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
     paddingVertical: spacing.md,
   },
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 80,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   info: {
     flex: 1,
@@ -174,16 +175,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   year: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   summary: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -193,13 +194,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   empty: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     textAlign: "center",
     padding: spacing.xl,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    backgroundColor: colors.overlay,
     justifyContent: "flex-end",
   },
 
@@ -212,12 +213,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
   errorTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   errorSub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
     textAlign: "center",
   },

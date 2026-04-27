@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../src/lib/supabase";
 import { colors, spacing, radius } from "../../src/constants/theme";
+import { fontFamily } from "../../src/constants/typography";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -72,7 +73,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.foregroundMuted}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -87,7 +88,7 @@ export default function LoginScreen() {
             ref={passwordRef}
             style={styles.passwordInput}
             placeholder="Password"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.foregroundMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -102,7 +103,7 @@ export default function LoginScreen() {
             <Ionicons
               name={showPassword ? "eye-off-outline" : "eye-outline"}
               size={20}
-              color={colors.textMuted}
+              color={colors.foregroundMuted}
             />
           </TouchableOpacity>
         </View>
@@ -121,7 +122,7 @@ export default function LoginScreen() {
           activeOpacity={0.8}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.primaryForeground} />
           ) : (
             <Text style={styles.btnText}>Sign In</Text>
           )}
@@ -153,19 +154,19 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
     marginBottom: spacing.xs,
   },
   subtitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 15,
     marginBottom: spacing.lg,
   },
   input: {
-    backgroundColor: colors.surface,
-    color: colors.text,
+    backgroundColor: colors.card,
+    color: colors.foreground,
     borderRadius: radius.md,
     padding: spacing.md,
     fontSize: 15,
@@ -175,14 +176,14 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   passwordInput: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     padding: spacing.md,
     fontSize: 15,
   },
@@ -205,9 +206,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   btnText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   error: {
     color: colors.danger,
@@ -219,11 +220,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   linkText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
   },
   linkAccent: {
     color: colors.primary,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
 });

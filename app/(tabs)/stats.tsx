@@ -6,6 +6,7 @@ import { colors, spacing, radius } from "../../src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { StatsShareCard } from "../../src/components/StatsShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
+import { fontFamily } from "../../src/constants/typography";
 
 const STATUS_META: Record<
   string,
@@ -15,7 +16,7 @@ const STATUS_META: Record<
     icon: React.ComponentProps<typeof Ionicons>["name"];
   }
 > = {
-  backlog: { label: "Backlog", color: colors.textMuted, icon: "time-outline" },
+  backlog: { label: "Backlog", color: colors.foregroundMuted, icon: "time-outline" },
   playing: {
     label: "Playing",
     color: colors.primary,
@@ -23,7 +24,7 @@ const STATUS_META: Record<
   },
   "playing-social": {
     label: "Playing (Social)",
-    color: "#14b8a6",
+    color: colors.statusPlayingSocial,
     icon: "people-outline",
   },
   completed: {
@@ -119,7 +120,7 @@ export default function StatsScreen() {
             <Ionicons
               name={showSharePreview ? "chevron-up" : "chevron-down"}
               size={16}
-              color={colors.text}
+              color={colors.foreground}
             />
             <Text style={styles.shareToggleText}>
               {showSharePreview ? "Hide" : "Preview"}
@@ -260,32 +261,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
   shareToggleText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   shareSectionTitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.xs,
   },
   shareSectionSub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
     lineHeight: 18,
   },
   statCard: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -294,20 +295,21 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   statValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: fontFamily.monoBold,
+    fontVariant: ["tabular-nums"],
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   statSub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
   },
   section: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -317,7 +319,7 @@ const styles = StyleSheet.create({
   sharePreviewFrame: {
     borderRadius: radius.md,
     padding: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.md,
@@ -333,12 +335,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   shareBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
   shareHintText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginTop: spacing.sm,
   },
@@ -349,9 +351,9 @@ const styles = StyleSheet.create({
     pointerEvents: "none",
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.md,
@@ -368,23 +370,26 @@ const styles = StyleSheet.create({
 
   statusLabel: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   statusCount: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fontFamily.monoBold,
+    fontVariant: ["tabular-nums"],
   },
   statusPercent: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
+    fontFamily: fontFamily.mono,
+    fontVariant: ["tabular-nums"],
     width: 35,
     textAlign: "right",
   },
   progressTrack: {
     height: 6,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -402,12 +407,12 @@ const styles = StyleSheet.create({
   },
   recentTitle: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   recentDate: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
 });

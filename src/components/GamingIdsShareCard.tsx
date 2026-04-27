@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { APP_NAME, BacklogShareTemplate, BACKLOG_TEMPLATE_PALETTE } from "../constants/shareCardThemes";
+import { colors } from "../constants/colors";
 
 type Props = {
   username: string;
@@ -15,11 +16,11 @@ type Props = {
 };
 
 const PLATFORMS = [
-  { key: "psn_id" as const,       label: "PlayStation", badge: "PS",  color: "#0070D1" },
-  { key: "xbox_gamertag" as const, label: "Xbox",        badge: "XB",  color: "#107C10" },
-  { key: "switch_code" as const,   label: "Switch",      badge: "NSW", color: "#E60012" },
-  { key: "steam_id" as const,      label: "Steam",       badge: "STM", color: "#66C0F4" },
-  { key: "epic_id" as const,       label: "Epic Games",  badge: "EPC", color: "#c8c8c8" },
+  { key: "psn_id" as const,       label: "PlayStation", badge: "PS",  color: colors.platformPSN },
+  { key: "xbox_gamertag" as const, label: "Xbox",        badge: "XB",  color: colors.platformXbox },
+  { key: "switch_code" as const,   label: "Switch",      badge: "NSW", color: colors.platformSwitch },
+  { key: "steam_id" as const,      label: "Steam",       badge: "STM", color: colors.platformSteam },
+  { key: "epic_id" as const,       label: "Epic Games",  badge: "EPC", color: colors.platformEpic },
 ];
 
 export function GamingIdsShareCard({ username, ids, template = "neon" }: Props) {
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   headline: {
-    color: "#fff",
+    color: colors.primaryForeground,
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   platformId: {
-    color: "#fff",
+    color: colors.primaryForeground,
     fontSize: 15,
     fontWeight: "600",
   },

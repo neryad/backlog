@@ -14,6 +14,7 @@ import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { supabase } from "../../src/lib/supabase";
+import { fontFamily } from "../../src/constants/typography";
 
 type Profile = {
   id: string;
@@ -27,11 +28,11 @@ type Profile = {
 };
 
 const PLATFORM_META: { key: keyof Profile; label: string; badge: string; color: string }[] = [
-  { key: "psn_id", label: "PlayStation", badge: "PS", color: "#0070D1" },
-  { key: "xbox_gamertag", label: "Xbox", badge: "XB", color: "#107C10" },
-  { key: "switch_code", label: "Switch", badge: "NSW", color: "#E60012" },
-  { key: "steam_id", label: "Steam", badge: "STM", color: "#66C0F4" },
-  { key: "epic_id", label: "Epic", badge: "EPC", color: "#c8c8c8" },
+  { key: "psn_id", label: "PlayStation", badge: "PS", color: colors.platformPSN },
+  { key: "xbox_gamertag", label: "Xbox", badge: "XB", color: colors.platformXbox },
+  { key: "switch_code", label: "Switch", badge: "NSW", color: colors.platformSwitch },
+  { key: "steam_id", label: "Steam", badge: "STM", color: colors.platformSteam },
+  { key: "epic_id", label: "Epic", badge: "EPC", color: colors.platformEpic },
 ];
 
 type RemoteEntry = {
@@ -47,7 +48,7 @@ type RemoteEntry = {
 const STATUS_COLORS: Record<string, string> = {
   playing:   colors.primary,
   completed: colors.success,
-  backlog:   colors.textMuted,
+  backlog:   colors.foregroundMuted,
   dropped:   colors.danger,
   wishlist:  colors.warning,
 };
@@ -121,7 +122,7 @@ export default function ProfileScreen() {
   if (notFound) {
     return (
       <View style={styles.centered}>
-        <Ionicons name="person-outline" size={48} color={colors.textMuted} />
+        <Ionicons name="person-outline" size={48} color={colors.foregroundMuted} />
         <Text style={styles.notFoundText}>User not found</Text>
       </View>
     );
@@ -146,7 +147,7 @@ export default function ProfileScreen() {
           title: `@${profile?.username ?? username}`,
           headerRight: () => (
             <TouchableOpacity onPress={handleShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="share-outline" size={22} color={colors.text} />
+              <Ionicons name="share-outline" size={22} color={colors.foreground} />
             </TouchableOpacity>
           ),
         }}
@@ -229,7 +230,7 @@ export default function ProfileScreen() {
               <Ionicons
                 name="game-controller"
                 size={20}
-                color={colors.textMuted}
+                color={colors.foregroundMuted}
               />
             </View>
           )}
@@ -243,14 +244,14 @@ export default function ProfileScreen() {
                   styles.statusBadge,
                   {
                     backgroundColor:
-                      (STATUS_COLORS[item.status] ?? "#888") + "33",
+                      (STATUS_COLORS[item.status] ?? colors.foregroundMuted) + "33",
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.statusText,
-                    { color: STATUS_COLORS[item.status] ?? "#888" },
+                    { color: STATUS_COLORS[item.status] ?? colors.foregroundMuted },
                   ]}
                 >
                   {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   notFoundText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 16,
   },
   profileHeader: {
@@ -306,12 +307,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   username: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
   },
   displayName: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
   },
   statsRow: {
@@ -322,26 +323,27 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: "center",
     gap: spacing.xs,
   },
   statNumber: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: fontFamily.monoBold,
+    fontVariant: ["tabular-nums"],
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
     textAlign: "center",
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginHorizontal: spacing.md,
@@ -368,7 +370,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 60,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -377,9 +379,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   entryTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   entryMeta: {
     flexDirection: "row",
@@ -393,19 +395,22 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   rating: {
     color: colors.warning,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.mono,
+    fontVariant: ["tabular-nums"],
   },
   hours: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
+    fontFamily: fontFamily.mono,
+    fontVariant: ["tabular-nums"],
   },
   emptyText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     textAlign: "center",
     marginTop: spacing.lg,
@@ -421,7 +426,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
@@ -437,20 +442,20 @@ const styles = StyleSheet.create({
   },
   platformBadgeText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: fontFamily.sansBold,
     letterSpacing: 0.5,
   },
   platformLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 10,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   platformId: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
     maxWidth: 120,
   },
 });

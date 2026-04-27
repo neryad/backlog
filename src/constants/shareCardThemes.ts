@@ -48,7 +48,7 @@ export const GAME_STATUS_THEMES: Record<
 export const STATS_STATUS_ORDER = [
   { key: "completed", label: "Completed", color: colors.success },
   { key: "playing", label: "Playing", color: colors.primary },
-  { key: "backlog", label: "Backlog", color: colors.textMuted },
+  { key: "backlog", label: "Backlog", color: colors.foregroundMuted },
   { key: "wishlist", label: "Wishlist", color: colors.warning },
   { key: "dropped", label: "Dropped", color: colors.danger },
 ];

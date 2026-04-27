@@ -17,7 +17,7 @@ import { useUIStore } from "../../src/store/ui.store";
 import SwipeableGameCard from "../../src/components/SwipeableGameCard";
 import FilterBar from "../../src/components/FilterBar";
 import { GameEntry } from "../../src/types/game";
-import { colors, radius, spacing } from "../../src/constants/theme";
+import { colors, radius, spacing, shadows } from "../../src/constants/theme";
 import { updateEntryStatus } from "../../src/db/queries/game";
 import NextToPlayModal from "../../src/features/next-to-play/NextToPlayModal";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +26,7 @@ import { useNavigation } from "expo-router";
 import { BacklogShareCard } from "../../src/components/BacklogShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
 import { BACKLOG_SHARE_TEMPLATES } from "../../src/constants/shareCardThemes";
+import { fontFamily } from "../../src/constants/typography";
 
 const CARD_HEIGHT = 95 + 16;
 const FAB_SIZE = 56;
@@ -67,7 +68,7 @@ export default function BacklogScreen() {
           <Ionicons
             name="information-circle-outline"
             size={24}
-            color={colors.textMuted}
+            color={colors.foregroundMuted}
           />
         </TouchableOpacity>
       ),
@@ -193,7 +194,7 @@ export default function BacklogScreen() {
             <Ionicons
               name={showSharePreview ? "chevron-up" : "chevron-down"}
               size={16}
-              color={colors.text}
+              color={colors.foreground}
             />
             <Text style={styles.shareToggleText}>
               {showSharePreview ? "Hide" : "Preview"}
@@ -339,7 +340,7 @@ export default function BacklogScreen() {
                 <Ionicons
                   name="game-controller-outline"
                   size={64}
-                  color={colors.textMuted}
+                  color={colors.foregroundMuted}
                   style={{ marginBottom: spacing.md }}
                 />
                 <Text style={styles.emptyTitle}>
@@ -373,7 +374,7 @@ export default function BacklogScreen() {
         accessibilityLabel="Pick next game to play"
         accessibilityRole="button"
       >
-        <Ionicons name="shuffle" size={26} color={colors.text} />
+        <Ionicons name="shuffle" size={26} color={colors.foreground} />
       </TouchableOpacity>
 
       <NextToPlayModal
@@ -400,9 +401,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   shareSectionTitle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.xs,
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
   sharePreviewFrame: {
     borderRadius: radius.md,
     padding: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.sm,
@@ -426,8 +427,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   shareBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
   templateRow: {
@@ -436,7 +437,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   templateChip: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -444,20 +445,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
   },
   templateChipActive: {
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderColor: colors.primary,
   },
   templateChipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   templateChipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   shareHintText: {
     marginTop: spacing.sm,
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   sortRow: {
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   sortChip: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -480,12 +481,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   sortChipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   sortChipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   emptyContainer: {
     flex: 1,
@@ -497,12 +498,12 @@ const styles = StyleSheet.create({
     paddingTop: 120,
   },
   emptyTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   emptySub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     marginTop: 8,
   },
@@ -515,11 +516,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    ...shadows.elevated,
   },
   emptyBtn: {
     marginTop: spacing.lg,
@@ -529,8 +526,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
   },
   emptyBtnText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
   loadingContainer: {
@@ -546,7 +543,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   shareSectionSub: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -557,14 +554,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
   shareToggleText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   sharePreviewHidden: {
     position: "absolute",

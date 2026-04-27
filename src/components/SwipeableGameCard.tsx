@@ -6,6 +6,7 @@ import GameCard from "./GameCard";
 import { GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { fontFamily } from "../constants/typography";
 
 type Props = {
   item: GameEntry;
@@ -26,7 +27,7 @@ function renderRightAction(progress: Animated.AnimatedInterpolation<number>) {
       <Animated.View
         style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
       >
-        <Ionicons name="checkmark-circle" size={28} color={colors.text} />
+        <Ionicons name="checkmark-circle" size={28} color={colors.foreground} />
         <Text style={styles.actionText}>Done</Text>
       </Animated.View>
     </View>
@@ -45,7 +46,7 @@ function renderLeftAction(progress: Animated.AnimatedInterpolation<number>) {
       <Animated.View
         style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
       >
-        <Ionicons name="game-controller" size={28} color={colors.text} />
+        <Ionicons name="game-controller" size={28} color={colors.foreground} />
         <Text style={styles.actionText}>Playing</Text>
       </Animated.View>
     </View>
@@ -113,8 +114,8 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
   actionText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 14,
   },
 });

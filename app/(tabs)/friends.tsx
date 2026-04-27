@@ -16,6 +16,7 @@ import { colors, spacing, radius } from "../../src/constants/theme";
 import { useAuthStore } from "../../src/store/auth.store";
 import { useUIStore } from "../../src/store/ui.store";
 import { supabase } from "../../src/lib/supabase";
+import { fontFamily } from "../../src/constants/typography";
 
 type Profile = {
   id: string;
@@ -292,7 +293,7 @@ export default function FriendsScreen() {
   if (!session) {
     return (
       <View style={styles.guestContainer}>
-        <Ionicons name="people-outline" size={64} color={colors.textMuted} />
+        <Ionicons name="people-outline" size={64} color={colors.foregroundMuted} />
         <Text style={styles.guestTitle}>Connect with friends</Text>
         <Text style={styles.guestDesc}>
           Create an account to add friends and see their backlogs.
@@ -317,7 +318,7 @@ export default function FriendsScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Search by username..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.foregroundMuted}
           value={search}
           onChangeText={setSearch}
           onSubmitEditing={handleSearch}
@@ -402,7 +403,7 @@ export default function FriendsScreen() {
                           style={styles.acceptBtn}
                           onPress={() => acceptRequest(req.id, req.sender_id)}
                         >
-                          <Ionicons name="checkmark" size={18} color="#fff" />
+                          <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.rejectBtn}
@@ -411,7 +412,7 @@ export default function FriendsScreen() {
                           <Ionicons
                             name="close"
                             size={18}
-                            color={colors.textMuted}
+                            color={colors.foregroundMuted}
                           />
                         </TouchableOpacity>
                       </View>
@@ -472,7 +473,7 @@ export default function FriendsScreen() {
                         <Ionicons
                           name="person-remove-outline"
                           size={18}
-                          color={colors.textMuted}
+                          color={colors.foregroundMuted}
                         />
                       </TouchableOpacity>
                     </TouchableOpacity>
@@ -502,13 +503,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   guestTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
     textAlign: "center",
   },
   guestDesc: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 21,
@@ -521,8 +522,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   guestBtnText: {
-    color: "#fff",
-    fontWeight: "600",
+    color: colors.primaryForeground,
+    fontFamily: fontFamily.sansSemibold,
     fontSize: 15,
   },
   guestLink: {
@@ -537,8 +538,8 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    backgroundColor: colors.surface,
-    color: colors.text,
+    backgroundColor: colors.card,
+    color: colors.foreground,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   searchBtn: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     width: 44,
     justifyContent: "center",
@@ -559,9 +560,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.md,
@@ -586,18 +587,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   displayName: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   alreadyFriend: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   addBtn: {
     backgroundColor: colors.primary,
@@ -606,9 +607,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   addBtnText: {
-    color: "#fff",
+    color: colors.primaryForeground,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   removeBtn: {
     padding: spacing.xs,
@@ -626,7 +627,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rejectBtn: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.sm,
     width: 34,
     height: 34,
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     textAlign: "center",
     marginTop: spacing.lg,

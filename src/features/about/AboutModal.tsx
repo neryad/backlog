@@ -17,6 +17,7 @@ import { colors, spacing, radius } from "../../constants/theme";
 import { Image as ExpoImage } from "expo-image";
 import { useAuthStore } from "../../store/auth.store";
 import { supabase } from "../../lib/supabase";
+import { fontFamily } from "../../constants/typography";
 
 const DONATION_LABELS = ["Ko-fi", "PayPal"];
 const LINKS = [
@@ -25,35 +26,35 @@ const LINKS = [
     handle: "@NeryadG",
     url: "https://x.com/NeryadG",
     icon: "logo-twitter" as const,
-    color: "#1DA1F2",
+    color: colors.socialTwitter,
   },
   {
     label: "Instagram",
     handle: "@neryad_dev",
     url: "https://www.instagram.com/neryad_dev",
     icon: "logo-instagram" as const,
-    color: "#E1306C",
+    color: colors.socialInstagram,
   },
   {
     label: "GitHub",
     handle: "neryad",
     url: "https://github.com/neryad",
     icon: "logo-github" as const,
-    color: colors.text,
+    color: colors.foreground,
   },
   {
     label: "Ko-fi",
     handle: "Buy me a coffee",
     url: "https://ko-fi.com/neryad",
     icon: "cafe" as const,
-    color: "#FF5E5B",
+    color: colors.socialKofi,
   },
   {
     label: "PayPal",
     handle: "Donate via PayPal",
     url: "https://paypal.me/neryad",
     icon: "card" as const,
-    color: "#003087",
+    color: colors.socialPaypal,
   },
 ];
 
@@ -167,7 +168,7 @@ export default function AboutModal({ visible, onClose }: Props) {
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={22} color={colors.textMuted} />
+            <Ionicons name="close" size={22} color={colors.foregroundMuted} />
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -299,7 +300,7 @@ export default function AboutModal({ visible, onClose }: Props) {
                   <Ionicons
                     name="chevron-forward"
                     size={16}
-                    color={colors.textMuted}
+                    color={colors.foregroundMuted}
                   />
                 </TouchableOpacity>
               ))}
@@ -318,11 +319,11 @@ export default function AboutModal({ visible, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    backgroundColor: colors.overlay,
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing.lg,
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.sm,
@@ -363,16 +364,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   appName: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 24,
-    fontWeight: "700",
+    fontFamily: fontFamily.displayBold,
   },
   appVersion: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   appDesc: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 21,
@@ -387,9 +388,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.md,
@@ -406,9 +407,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   accountEmail: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   accountStatus: {
     color: colors.primary,
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
   gamingIdsText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   logoutBtn: {
     paddingHorizontal: spacing.md,
@@ -435,7 +436,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   logoutText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   accountActions: {
@@ -453,13 +454,13 @@ const styles = StyleSheet.create({
   deleteAccountText: {
     color: colors.danger,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   authButtons: {
     gap: spacing.sm,
   },
   authDesc: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     lineHeight: 21,
     marginBottom: spacing.sm,
@@ -471,9 +472,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signInText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   registerBtn: {
     backgroundColor: "transparent",
@@ -484,19 +485,19 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   registerText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   // Developer
   devName: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 17,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     marginBottom: spacing.xs,
   },
   devBio: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -519,16 +520,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   linkLabel: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   linkHandle: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   footer: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
     textAlign: "center",
     marginTop: spacing.lg,

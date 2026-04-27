@@ -4,7 +4,7 @@
 // import { colors, spacing, radius } from "../constants/theme";
 
 // const STATUS_COLORS: Record<string, string> = {
-//   backlog: colors.textMuted,
+//   backlog: colors.foregroundMuted,
 //   playing: colors.primary,
 //   completed: colors.success,
 //   dropped: colors.danger,
@@ -67,7 +67,7 @@
 // const styles = StyleSheet.create({
 //   card: {
 //     flexDirection: "row",
-//     backgroundColor: colors.surface,
+//     backgroundColor: colors.card,
 //     borderRadius: radius.md,
 //     marginHorizontal: spacing.md,
 //     marginBottom: spacing.sm,
@@ -82,12 +82,12 @@
 //   coverPlaceholder: {
 //     width: 70,
 //     height: 95,
-//     backgroundColor: colors.surfaceHigh,
+//     backgroundColor: colors.cardElevated,
 //     justifyContent: "center",
 //     alignItems: "center",
 //   },
 //   coverPlaceholderText: {
-//     color: colors.textMuted,
+//     color: colors.foregroundMuted,
 //     fontSize: 24,
 //   },
 //   info: {
@@ -96,12 +96,12 @@
 //     justifyContent: "space-between",
 //   },
 //   title: {
-//     color: colors.text,
+//     color: colors.foreground,
 //     fontSize: 15,
-//     fontWeight: "600",
+//     fontFamily: fontFamily.sansSemibold,
 //   },
 //   year: {
-//     color: colors.textMuted,
+//     color: colors.foregroundMuted,
 //     fontSize: 12,
 //     marginTop: 2,
 //   },
@@ -118,7 +118,7 @@
 //   },
 //   status: {
 //     fontSize: 12,
-//     fontWeight: "500",
+//     fontFamily: fontFamily.sansMedium,
 //   },
 //   rating: {
 //     color: colors.warning,
@@ -132,11 +132,12 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
+import { fontFamily } from "../constants/typography";
 
 const STATUS_COLORS: Record<string, string> = {
-  backlog: colors.textMuted,
+  backlog: colors.foregroundMuted,
   playing: colors.primary,
-  "playing-social": "#14b8a6",
+  "playing-social": colors.statusPlayingSocial,
   completed: colors.success,
   dropped: colors.danger,
   wishlist: colors.warning,
@@ -215,7 +216,7 @@ export default memo(GameCard);
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.md,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
@@ -230,12 +231,12 @@ const styles = StyleSheet.create({
   coverPlaceholder: {
     width: 70,
     height: 95,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     justifyContent: "center",
     alignItems: "center",
   },
   coverPlaceholderText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 24,
   },
   info: {
@@ -244,12 +245,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
   },
   year: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -266,15 +267,17 @@ const styles = StyleSheet.create({
   },
   status: {
     fontSize: 12,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   platform: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
   },
   rating: {
     color: colors.warning,
     fontSize: 13,
+    fontFamily: fontFamily.mono,
+    fontVariant: ["tabular-nums"],
     padding: spacing.sm,
     alignSelf: "flex-start",
   },
