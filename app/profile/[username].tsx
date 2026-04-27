@@ -54,6 +54,15 @@ const STATUS_COLORS: Record<string, string> = {
   wishlist:          colors.warning,
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  playing:           "Playing",
+  "playing-social":  "Playing (Social)",
+  completed:         "Completed",
+  backlog:           "Backlog",
+  dropped:           "Dropped",
+  wishlist:          "Wishlist",
+};
+
 export default function ProfileScreen() {
   const { username } = useGlobalSearchParams<{ username: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -132,7 +141,9 @@ export default function ProfileScreen() {
   // Stats rápidas
   const total = entries.length;
   const completed = entries.filter((e) => e.status === "completed").length;
-  const playing = entries.filter((e) => e.status === "playing").length;
+  const playing = entries.filter(
+    (e) => e.status === "playing" || e.status === "playing-social",
+  ).length;
   const rated = entries.filter((e) => e.personal_rating != null);
   const avgRating =
     rated.length > 0
@@ -255,7 +266,7 @@ export default function ProfileScreen() {
                     { color: STATUS_COLORS[item.status] ?? colors.foregroundMuted },
                   ]}
                 >
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                  {STATUS_LABELS[item.status] ?? item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                 </Text>
               </View>
               {item.personal_rating && (

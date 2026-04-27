@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AppState } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../src/constants/theme";
-import { supabase } from "../../src/lib/supabase";
+import { isSupabaseConfigured, supabase } from "../../src/lib/supabase";
 import { useAuthStore } from "../../src/store/auth.store";
 import { useUIStore } from "../../src/store/ui.store";
 
@@ -26,7 +26,7 @@ export default function TabsLayout() {
     let isMounted = true;
 
     async function refreshPendingRequestsCount() {
-      if (!session) {
+      if (!session || !isSupabaseConfigured) {
         if (isMounted) setPendingFriendRequests(0);
         return;
       }
