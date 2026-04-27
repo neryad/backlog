@@ -1,5 +1,5 @@
 import { getGameEntries } from "../db/queries/game";
-import type { GameEntry } from "../../types/game";
+import type { GameEntry } from "../types/game";
 import { supabase } from "./supabase";
 
 function entryToRow(entry: GameEntry, userId: string) {
