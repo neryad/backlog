@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../src/lib/supabase";
 import { colors, spacing, radius } from "../../src/constants/theme";
 
@@ -21,10 +22,15 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const usernameRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
   function getFriendlyAuthError(message: string) {
     const normalized = message.toLowerCase();
-
     if (
       normalized.includes("already registered") ||
       normalized.includes("already exists") ||
@@ -33,7 +39,6 @@ export default function RegisterScreen() {
     ) {
       return "Email already registered. Please sign in.";
     }
-
     return message;
   }
 
@@ -49,20 +54,20 @@ export default function RegisterScreen() {
       setError("Please enter a valid email address.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
     if (normalizedUsername.length < 3) {
       setError("Username must be at least 3 characters.");
       return;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(normalizedUsername)) {
       setError("Username can only contain letters, numbers and underscores.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
@@ -104,7 +109,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         contentContainerStyle={styles.inner}
@@ -125,39 +130,77 @@ export default function RegisterScreen() {
           onChangeText={(t) => setEmail(t.trim().toLowerCase())}
           autoCapitalize="none"
           keyboardType="email-address"
+          returnKeyType="next"
+          onSubmitEditing={() => usernameRef.current?.focus()}
+          submitBehavior="submit"
         />
 
         <View>
           <TextInput
+            ref={usernameRef}
             style={styles.input}
             placeholder="Username"
             placeholderTextColor={colors.textMuted}
             value={username}
             onChangeText={(t) => setUsername(t.toLowerCase())}
             autoCapitalize="none"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            submitBehavior="submit"
           />
-          <Text style={styles.hint}>
-            Letters, numbers and underscores only.
-          </Text>
+          <Text style={styles.hint}>Letters, numbers and underscores only.</Text>
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={colors.textMuted}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            ref={passwordRef}
+            style={styles.passwordInput}
+            placeholder="Password (min. 8 characters)"
+            placeholderTextColor={colors.textMuted}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            returnKeyType="next"
+            onSubmitEditing={() => confirmRef.current?.focus()}
+            submitBehavior="submit"
+          />
+          <TouchableOpacity
+            style={styles.eyeBtn}
+            onPress={() => setShowPassword((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={colors.textMuted}
+            />
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm password"
-          placeholderTextColor={colors.textMuted}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            ref={confirmRef}
+            style={styles.passwordInput}
+            placeholder="Confirm password"
+            placeholderTextColor={colors.textMuted}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirm}
+            returnKeyType="done"
+            onSubmitEditing={handleRegister}
+          />
+          <TouchableOpacity
+            style={styles.eyeBtn}
+            onPress={() => setShowConfirm((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={showConfirm ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={colors.textMuted}
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={styles.btn}
@@ -216,6 +259,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  passwordInput: {
+    flex: 1,
+    color: colors.text,
+    padding: spacing.md,
+    fontSize: 15,
+  },
+  eyeBtn: {
+    paddingHorizontal: spacing.md,
   },
   hint: {
     color: colors.textMuted,

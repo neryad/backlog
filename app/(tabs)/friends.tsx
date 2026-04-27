@@ -60,6 +60,10 @@ export default function FriendsScreen() {
         return;
       }
       loadFriends();
+      return () => {
+        setSearch("");
+        setSearchResults([]);
+      };
     }, [session, setPendingFriendRequests]),
   );
 

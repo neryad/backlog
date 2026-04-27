@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { useGlobalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { supabase } from "../../src/lib/supabase";
@@ -49,32 +50,35 @@ export default function ProfileScreen() {
 
   async function loadProfile() {
     setLoading(true);
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .eq("username", username)
+        .single();
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, username, display_name")
-      .eq("username", username)
-      .single();
+      if (!profileData) {
+        setNotFound(true);
+        return;
+      }
 
-    if (!profileData) {
-      setNotFound(true);
+      setProfile(profileData);
+
+      const { data: entriesData } = await supabase
+        .from("game_entries")
+        .select(
+          "id, title, cover_url, status, personal_rating, hours_played, platform_id",
+        )
+        .eq("user_id", profileData.id)
+        .eq("is_public", true)
+        .order("updated_at", { ascending: false });
+
+      setEntries(entriesData ?? []);
+    } catch (err) {
+      if (__DEV__) console.error("loadProfile error:", err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setProfile(profileData);
-
-    const { data: entriesData } = await supabase
-      .from("game_entries")
-      .select(
-        "id, title, cover_url, status, personal_rating, hours_played, platform_id",
-      )
-      .eq("user_id", profileData.id)
-      .eq("is_public", true)
-      .order("updated_at", { ascending: false });
-
-    setEntries(entriesData ?? []);
-    setLoading(false);
   }
 
   if (loading) {
@@ -107,6 +111,8 @@ export default function ProfileScreen() {
       : null;
 
   return (
+    <>
+      <Stack.Screen options={{ title: `@${profile?.username ?? username}` }} />
     <FlatList
       style={styles.container}
       data={entries}
@@ -128,7 +134,7 @@ export default function ProfileScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{total}</Text>
-              <Text style={styles.statLabel}>Games</Text>
+              <Text style={styles.statLabel}>Public</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{completed}</Text>
@@ -144,7 +150,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text style={styles.sectionLabel}>Backlog</Text>
+          <Text style={styles.sectionLabel}>Public backlog</Text>
         </>
       }
       renderItem={({ item }) => (
@@ -202,6 +208,7 @@ export default function ProfileScreen() {
       }
       contentContainerStyle={styles.listContent}
     />
+    </>
   );
 }
 

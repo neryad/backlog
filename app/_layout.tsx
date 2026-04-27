@@ -93,10 +93,7 @@ export default function RootLayout() {
           <Stack.Screen name="auth/register" options={{ headerShown: false }} />
           <Stack.Screen
             name="profile/[username]"
-            options={{
-              headerShown: true,
-              title: "Profile",
-            }}
+            options={{ headerShown: true }}
           />
         </Stack>
       </QueryClientProvider>
