@@ -12,6 +12,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?style=flat)](https://expo.dev)
+[![Version](https://img.shields.io/badge/Version-1.1.1-brightgreen?style=flat)](./app.json)
 
 </div>
 
@@ -29,16 +30,32 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 
 ## ✨ Features
 
+### Core
 - 🎮 **Multi-platform tracking** — Manage games across PC, PS5, PS4, Xbox, Switch, and Mobile
 - 🔍 **Game search via IGDB** — Real covers, release dates, and descriptions from the world's largest games database
-- 📋 **Status tracking** — Organize games as Backlog, Playing, Completed, Dropped, or Wishlist
+- 📋 **Status tracking** — Organize games as Backlog, Playing, Playing (Social), Completed, Dropped, or Wishlist
 - 👆 **Swipe gestures** — Swipe right → Playing, Swipe left → Completed
 - 🔢 **Filter bar with live counters** — Instantly filter by status with per-status game counts
 - ⭐ **Game Detail** — Log your personal rating (1–10), notes, and hours played
 - 🎲 **Next to Play** — Break analysis paralysis with three pick strategies: Random, Oldest Added, or Top Rated
-- 📊 **Stats screen** — Total games, hours played, average rating, completion rate, and breakdown by status
+- 📊 **Stats screen** — Total games, hours played, average rating, completion rate, breakdown by status, and a monthly recap
 - 🌑 **Dark mode UI** — Easy on the eyes for late-night sessions
-- 📴 **Offline-first** — No account, no cloud, no tracking. Your data lives on your device
+- 📴 **Offline-first** — Your local data lives on your device via SQLite
+
+### Social & Cloud (optional account)
+- 🔐 **Account system** — Optional sign-up/login powered by Supabase Auth
+- ☁️ **Cloud sync** — Automatically back up your backlog to Supabase when logged in
+- 👥 **Friends** — Search users, send and accept friend requests, manage your friends list
+- 🌐 **Public profiles** — View any user's public backlog at `@username`
+- 🎮 **Gaming IDs** — Save and display your PSN, Xbox Gamertag, Nintendo Switch code, Steam, and Epic Games IDs on your profile
+
+### Share Cards
+- 📤 **Shareable image cards** — Export polished cards as PNG images to share anywhere
+  - **Stats Card** — Overall progress snapshot with monthly recap (games added, completed, top pick)
+  - **Backlog Card** — Top 3 games you're tracking right now
+  - **Gaming IDs Card** — All your platform handles in one card
+  - **Game Card** — Individual game highlight
+- 🎨 **3 visual themes** — Choose between **Minimal**, **Neon**, or **Retro** for Backlog and Gaming ID cards
 
 ---
 
@@ -50,12 +67,16 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 | Language | [TypeScript](https://www.typescriptlang.org) |
 | Navigation | [Expo Router](https://expo.github.io/router) (file-based) |
 | Local Database | [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) |
-| UI State | [Zustand](https://zustand-demo.pmnd.rs) |
+| UI State | [Zustand](https://zustand-demo.pmnd.rs) + AsyncStorage persistence |
 | Server / API State | [TanStack Query](https://tanstack.com/query) |
 | Game Data API | [IGDB](https://www.igdb.com/api) via Vercel serverless proxy |
+| Auth & Cloud | [Supabase](https://supabase.com) (Auth + Postgres) |
+| Secure Storage | [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/) |
+| Share Cards | [react-native-view-shot](https://github.com/gre/react-native-view-shot) + [expo-sharing](https://docs.expo.dev/versions/latest/sdk/sharing/) |
 | Gestures | [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/) |
 | Haptics | [expo-haptics](https://docs.expo.dev/versions/latest/sdk/haptics/) |
 | Images | [expo-image](https://docs.expo.dev/versions/latest/sdk/image/) |
+| Fonts | Space Grotesk + JetBrains Mono via [@expo-google-fonts](https://github.com/expo/google-fonts) |
 | Icons | [@expo/vector-icons](https://docs.expo.dev/guides/icons/) / Ionicons |
 
 ---
@@ -69,6 +90,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 - [EAS CLI](https://docs.expo.dev/eas/) (for production builds)
 - A [Twitch Developer](https://dev.twitch.tv/console) account (for IGDB API credentials)
 - A [Vercel](https://vercel.com) account (to deploy the IGDB proxy)
+- A [Supabase](https://supabase.com) project (for cloud sync and social features)
 
 ### 1. Clone the repository
 
@@ -98,7 +120,9 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 EXPO_PUBLIC_IGDB_PROXY_URL=https://your-vercel-proxy.vercel.app/api/games
 ```
 
-> See the [Environment Setup](#-environment-setup-igdb-proxy) section for how to obtain and configure IGDB credentials.
+> The app works fully offline without Supabase — cloud sync, auth, and social features are unlocked once valid Supabase credentials are provided.
+>
+> See the [IGDB Proxy](#-environment-setup-igdb-proxy) and [Supabase Setup](#-supabase-setup) sections for details.
 
 ### 3.1 Build environment strategy (recommended)
 
@@ -117,8 +141,6 @@ eas build --profile development --platform android
 eas build --profile preview --platform android
 eas build --profile production --platform android
 ```
-
-If you use different values per environment, set them in EAS by environment/profile in the dashboard before building.
 
 ### 3.2 Account deletion backend (optional)
 
@@ -187,44 +209,151 @@ EXPO_PUBLIC_IGDB_PROXY_URL=https://your-project.vercel.app/api/igdb
 
 ---
 
+## ☁️ Supabase Setup
+
+Cloud sync, authentication, friend requests, and public profiles all require a Supabase project.
+
+### Step 1 — Create a Supabase project
+
+Go to [supabase.com](https://supabase.com), create a new project, and copy the **Project URL** and **Anon Key** from **Settings → API**.
+
+### Step 2 — Create the required tables
+
+Run the following SQL in the Supabase SQL Editor:
+
+```sql
+-- User profiles (auto-created on sign-up via trigger)
+create table public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  username text unique not null,
+  display_name text,
+  psn_id text,
+  xbox_gamertag text,
+  switch_code text,
+  steam_id text,
+  epic_id text,
+  created_at timestamptz default now()
+);
+
+-- Public game entries (synced from the app)
+create table public.game_entries (
+  id text not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  igdb_id integer,
+  title text not null,
+  cover_url text,
+  platform_id integer,
+  status text not null,
+  personal_rating integer,
+  hours_played real default 0,
+  notes text,
+  is_public boolean not null default false,
+  created_at timestamptz,
+  updated_at timestamptz,
+  primary key (user_id, id)
+);
+
+-- Friend requests
+create table public.friend_requests (
+  id uuid default gen_random_uuid() primary key,
+  sender_id uuid references public.profiles(id) on delete cascade not null,
+  receiver_id uuid references public.profiles(id) on delete cascade not null,
+  status text not null default 'pending',
+  created_at timestamptz default now()
+);
+
+-- Accepted friendships
+create table public.friendships (
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  friend_id uuid references public.profiles(id) on delete cascade not null,
+  created_at timestamptz default now(),
+  primary key (user_id, friend_id)
+);
+```
+
+### Step 3 — Connect the app
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
 playlogged/
-├── app/                        # Expo Router file-based routes
-│   ├── (tabs)/                 # Bottom tab navigator
-│   │   ├── index.tsx           # Home / Backlog screen
-│   │   ├── search.tsx          # Game search screen
-│   │   └── stats.tsx           # Stats screen
+├── app/                          # Expo Router file-based routes
+│   ├── (tabs)/                   # Bottom tab navigator
+│   │   ├── index.tsx             # Home / Backlog screen
+│   │   ├── discover.tsx          # Game search / discovery screen
+│   │   ├── stats.tsx             # Stats screen (with share card)
+│   │   └── friends.tsx           # Friends & social screen
+│   ├── auth/
+│   │   ├── login.tsx             # Login screen
+│   │   └── register.tsx          # Register screen
+│   ├── profile/
+│   │   ├── [username].tsx        # Public profile view
+│   │   └── edit-platforms.tsx    # Gaming IDs editor
 │   ├── game/
-│   │   └── [id].tsx            # Game Detail screen
-│   └── _layout.tsx             # Root layout
+│   │   └── [id].tsx              # Game Detail screen
+│   └── _layout.tsx               # Root layout (auth gate)
 │
 ├── src/
-│   ├── api/                    # IGDB API layer
-│   │   └── igdb.ts
-│   ├── components/             # Shared UI components
-│   │   ├── GameCard.tsx
+│   ├── api/                      # IGDB API layer
+│   │   └── igdb.client.ts
+│   ├── components/               # Shared UI components
+│   │   ├── BacklogShareCard.tsx  # Share card — top games
+│   │   ├── GameShareCard.tsx     # Share card — single game
+│   │   ├── GamingIdsShareCard.tsx# Share card — platform IDs
+│   │   ├── StatsShareCard.tsx    # Share card — stats + monthly recap
 │   │   ├── FilterBar.tsx
-│   │   └── ...
-│   ├── db/                     # SQLite database layer
-│   │   ├── schema.ts           # Table definitions
-│   │   └── queries/            # Per-feature query modules
-│   │       ├── games.ts
+│   │   ├── GameCard.tsx
+│   │   ├── SwipeableGameCard.tsx
+│   │   ├── SectionLabel.tsx
+│   │   └── ui/Text.tsx
+│   ├── constants/
+│   │   ├── shareCardThemes.ts    # Share card palettes & templates
+│   │   ├── typography.ts         # Font family constants
+│   │   ├── useAppFonts.ts        # Font loader hook
+│   │   ├── colors.ts
+│   │   ├── platforms.ts
+│   │   └── theme.ts
+│   ├── db/                       # SQLite database layer
+│   │   ├── schema.ts
+│   │   └── queries/
+│   │       ├── game.ts
 │   │       └── stats.ts
-│   ├── features/               # Feature-first modules
+│   ├── features/
 │   │   ├── backlog/
 │   │   ├── search/
 │   │   ├── stats/
-│   │   └── nextToPlay/
-│   └── store/                  # Zustand global stores
-│       └── useBacklogStore.ts
+│   │   ├── next-to-play/
+│   │   └── about/
+│   ├── lib/
+│   │   ├── supabase.ts           # Supabase client
+│   │   └── sync.ts               # Backlog → Supabase sync helpers
+│   ├── store/
+│   │   ├── auth.store.ts         # Supabase session store
+│   │   └── ui.store.ts           # UI state (filters, sort, share template)
+│   ├── types/
+│   │   ├── game.ts
+│   │   ├── igdb.types.ts
+│   │   └── igdb.mapper.ts
+│   ├── hooks/
+│   │   └── useDebounce.ts
+│   └── utils/
+│       └── share.ts              # View-shot + expo-sharing helpers
 │
-├── assets/                     # Images, fonts, icons
-├── proxy/                      # Vercel IGDB proxy (serverless)
-├── app.json                    # Expo app configuration
-├── eas.json                    # EAS Build configuration
-├── .env.example                # Environment variable template
+├── assets/                       # Images, fonts, icons
+├── proxy/                        # Vercel IGDB proxy (serverless)
+├── supabase/
+│   └── functions/
+│       └── delete-account/       # Edge function for account deletion
+├── app.json
+├── eas.json
+├── .env.example
 └── README.md
 ```
 
@@ -232,15 +361,15 @@ playlogged/
 
 ## 🗺️ Roadmap
 
-These features are planned for post-MVP releases:
-
-- [ ] **iCloud / Google Drive sync** — Optional cloud backup of your library
+- [x] **Friends & sharing** — Send friend requests, view friends' public backlogs, share stat/backlog/gaming-ID cards
+- [x] **Cloud sync** — Optional Supabase-backed backup for logged-in users
+- [x] **Public profiles** — Share your backlog at `@username`
+- [ ] **iCloud / Google Drive sync** — Optional cloud backup without an account
 - [ ] **Playtime tracking** — Built-in session timer per game
 - [ ] **Custom shelves** — Create named collections beyond the default statuses
 - [ ] **Import / Export** — Migrate from other trackers via CSV or JSON
 - [ ] **Widgets** — iOS and Android home screen widgets for current game
 - [ ] **Completion achievements** — Milestone badges (10 games, 50 hours, etc.)
-- [ ] **Friends & sharing** — Share your backlog or completion lists publicly
 - [ ] **iPad / tablet layout** — Optimised split-view for larger screens
 - [ ] **Notifications** — Reminders to pick up a game you haven't touched in weeks
 
@@ -248,11 +377,11 @@ These features are planned for post-MVP releases:
 
 ## 📋 Legal
 
-Playlogged takes your privacy seriously — no accounts, no tracking, no data collection. Everything stays on your device.
+Playlogged takes your privacy seriously. Local-only mode involves no accounts, no tracking, and no data collection. Cloud features (sync, profiles) are opt-in and powered by Supabase.
 
 | Document | Summary |
 |---|---|
-| 📄 [Privacy Policy](./PRIVACY_POLICY.md) | What data the app does (and doesn't) collect, and how third-party services like IGDB are used |
+| 📄 [Privacy Policy](./PRIVACY_POLICY.md) | What data the app does (and doesn't) collect, and how third-party services like IGDB and Supabase are used |
 | 📜 [Terms of Service](./TERMS_OF_SERVICE.md) | Usage rules, intellectual property, and limitations of liability |
 
 ---
