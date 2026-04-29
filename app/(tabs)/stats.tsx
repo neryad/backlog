@@ -27,6 +27,11 @@ const STATUS_META: Record<
     color: colors.statusPlayingSocial,
     icon: "people-outline",
   },
+  paused: {
+    label: "Paused",
+    color: colors.statusOnHold,
+    icon: "pause-circle-outline",
+  },
   completed: {
     label: "Completed",
     color: colors.success,

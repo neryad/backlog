@@ -210,6 +210,7 @@ const FILTERS: { label: string; value: GameStatus | "all" }[] = [
   { label: "Backlog", value: "backlog" },
   { label: "Playing", value: "playing" },
   { label: "Social", value: "playing-social" },
+  { label: "Paused", value: "paused" },
   { label: "Completed", value: "completed" },
   { label: "Dropped", value: "dropped" },
   { label: "Wishlist", value: "wishlist" },

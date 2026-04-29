@@ -5,6 +5,7 @@ export const PLATFORMS: Platform[] = [
   { id: 2, name: 'PlayStation 5',    shortName: 'PS5' },
   { id: 3, name: 'PlayStation 4',    shortName: 'PS4' },
   { id: 4, name: 'Xbox Series X',    shortName: 'Xbox' },
-  { id: 5, name: 'Nintendo Switch',  shortName: 'Switch' },
+  { id: 5, name: 'Nintendo Switch',   shortName: 'Switch' },
+  { id: 7, name: 'Nintendo Switch 2', shortName: 'Switch 2' },
   { id: 6, name: 'Mobile',           shortName: 'Mobile' },
 ];

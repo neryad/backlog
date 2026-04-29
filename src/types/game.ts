@@ -2,6 +2,7 @@ export type GameStatus =
   | "backlog"
   | "playing"
   | "playing-social"
+  | "paused"
   | "completed"
   | "dropped"
   | "wishlist";

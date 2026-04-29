@@ -110,8 +110,8 @@ export function insertGameEntry(
   const now = Date.now();
 
   db.runSync(
-    `INSERT INTO game_entries (id, game_id, platform_id, status, hours_played, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 0, ?, ?)`,
+    `INSERT INTO game_entries (id, game_id, platform_id, status, hours_played, is_public, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, 1, ?, ?)`,
     [id, gameId, platformId, status, now, now],
   );
 
@@ -145,6 +145,7 @@ export function updateGameEntry(
     personalRating?: number | null;
     notes?: string | null;
     hoursPlayed?: number;
+    isPublic?: boolean;
   },
 ): void {
   const sets: string[] = [];
@@ -165,6 +166,10 @@ export function updateGameEntry(
   if (fields.hoursPlayed !== undefined) {
     sets.push("hours_played = ?");
     values.push(fields.hoursPlayed);
+  }
+  if (fields.isPublic !== undefined) {
+    sets.push("is_public = ?");
+    values.push(fields.isPublic ? 1 : 0);
   }
 
   sets.push("updated_at = ?");

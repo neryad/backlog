@@ -60,6 +60,15 @@ export function useGameDetail(id: string) {
     [id, reload, syncIfLoggedIn],
   );
 
+  const setIsPublic = useCallback(
+    (value: boolean) => {
+      updateGameEntry(id, { isPublic: value });
+      reload();
+      syncIfLoggedIn();
+    },
+    [id, reload, syncIfLoggedIn],
+  );
+
   const remove = useCallback(() => {
     deleteGameEntry(id);
     if (session?.user?.id) {
@@ -67,5 +76,5 @@ export function useGameDetail(id: string) {
     }
   }, [id, session]);
 
-  return { entry, setStatus, setRating, setNotes, setHours, remove };
+  return { entry, setStatus, setRating, setNotes, setHours, setIsPublic, remove };
 }

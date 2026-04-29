@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
@@ -23,6 +24,7 @@ const STATUSES: { value: GameStatus; label: string; color: string }[] = [
   { value: "backlog", label: "Backlog", color: colors.foregroundMuted },
   { value: "playing", label: "Playing", color: colors.primary },
   { value: "playing-social", label: "Playing (Social)", color: colors.statusPlayingSocial },
+  { value: "paused", label: "Paused", color: colors.statusOnHold },
   { value: "completed", label: "Completed", color: colors.success },
   { value: "dropped", label: "Dropped", color: colors.danger },
   { value: "wishlist", label: "Wishlist", color: colors.warning },
@@ -31,7 +33,7 @@ const STATUSES: { value: GameStatus; label: string; color: string }[] = [
 export default function GameDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { entry, setStatus, setRating, setNotes, setHours, remove } =
+  const { entry, setStatus, setRating, setNotes, setHours, setIsPublic, remove } =
     useGameDetail(id);
   const navigation = useNavigation();
   const shareCardRef = useRef<View>(null);
@@ -233,6 +235,23 @@ export default function GameDetailScreen() {
             </Text>
           </TouchableOpacity>
         )}
+      </View>
+
+      {/* Visibility */}
+      <View style={styles.section}>
+        <View style={styles.visibilityRow}>
+          <View>
+            <Text style={styles.sectionLabel}>Visible to friends</Text>
+            <Text style={styles.visibilityHint}>
+              {entry.isPublic ? "Appears on your public profile" : "Hidden from your profile"}
+            </Text>
+          </View>
+          <Switch
+            value={entry.isPublic}
+            onValueChange={setIsPublic}
+            trackColor={{ false: colors.cardElevated, true: colors.primary }}
+          />
+        </View>
       </View>
 
       {/* Share Card */}
@@ -477,5 +496,15 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontFamily: fontFamily.sansSemibold,
     fontSize: 15,
+  },
+  visibilityRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  visibilityHint: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+    marginTop: 2,
   },
 });
