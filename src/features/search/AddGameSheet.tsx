@@ -25,7 +25,9 @@ const STATUSES: { value: GameStatus; label: string }[] = [
   { value: "backlog", label: "Backlog" },
   { value: "playing", label: "Playing" },
   { value: "playing-social", label: "Playing (Social)" },
+  { value: "paused", label: "Paused" },
   { value: "completed", label: "Completed" },
+  { value: "dropped", label: "Dropped" },
   { value: "wishlist", label: "Wishlist" },
 ];
 
@@ -33,6 +35,7 @@ const ACTION_LABELS: Record<GameStatus, string> = {
   backlog: "Add to Backlog",
   playing: "Add as Playing",
   "playing-social": "Add as Playing (Social)",
+  paused: "Add as Paused",
   completed: "Add as Completed",
   dropped: "Add as Dropped",
   wishlist: "Add to Wishlist",
