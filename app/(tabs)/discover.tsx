@@ -1,3 +1,228 @@
+// import React, { useState, useCallback } from "react";
+// import {
+//   View,
+//   TextInput,
+//   FlatList,
+//   Text,
+//   TouchableOpacity,
+//   StyleSheet,
+//   Modal,
+//   ActivityIndicator,
+//   ListRenderItem,
+// } from "react-native";
+// import { Image } from "expo-image";
+// import { GameSearchResult } from "../../src/types/igdb.types";
+// import { useDebounce } from "../../src/hooks/useDebounce";
+// import { useGameSearch } from "../../src/features/search/useGameSearch";
+// import { colors, radius, spacing } from "../../src/constants/theme";
+// import AddGameSheet from "../../src/features/search/AddGameSheet";
+// import { fontFamily } from "../../src/constants/typography";
+
+// export default function DiscoverScreen() {
+//   const [query, setQuery] = useState("");
+//   const [selected, setSelected] = useState<GameSearchResult | null>(null);
+//   const debouncedQuery = useDebounce(query, 400);
+//   const { data, isFetching, error } = useGameSearch(debouncedQuery);
+
+//   const handleAdded = useCallback(() => setSelected(null), []);
+
+//   const renderItem: ListRenderItem<GameSearchResult> = useCallback(
+//     ({ item }) => (
+//       <TouchableOpacity
+//         style={styles.resultCard}
+//         onPress={() => setSelected(item)}
+//         activeOpacity={0.7}
+//       >
+//         {item.coverUrl ? (
+//           <Image
+//             source={{ uri: item.coverUrl }}
+//             style={styles.cover}
+//             contentFit="cover"
+//           />
+//         ) : (
+//           <View style={styles.coverPlaceholder} />
+//         )}
+//         <View style={styles.info}>
+//           <Text style={styles.title} numberOfLines={2}>
+//             {item.title}
+//           </Text>
+//           {item.releaseYear && (
+//             <Text style={styles.year}>{item.releaseYear}</Text>
+//           )}
+//           {item.summary && (
+//             <Text style={styles.summary} numberOfLines={2}>
+//               {item.summary}
+//             </Text>
+//           )}
+//         </View>
+//       </TouchableOpacity>
+//     ),
+//     [],
+//   );
+
+//   return (
+//     <View style={styles.container}>
+//       {/* Search Bar */}
+//       <View style={styles.searchBar}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder="Search games..."
+//           placeholderTextColor={colors.foregroundMuted}
+//           value={query}
+//           onChangeText={setQuery}
+//           autoCorrect={false}
+//           autoCapitalize="none"
+//           returnKeyType="search"
+//         />
+//         {isFetching && (
+//           <ActivityIndicator color={colors.primary} style={styles.spinner} />
+//         )}
+//       </View>
+
+//       {/* Error */}
+//       {error && (
+//         <View style={styles.errorContainer}>
+//           <Text style={styles.errorEmoji}>⚠️</Text>
+//           <Text style={styles.errorTitle}>Search unavailable</Text>
+//           <Text style={styles.errorSub}>
+//             Check your connection and try again
+//           </Text>
+//         </View>
+//       )}
+
+//       {/* Results */}
+//       <FlatList
+//         data={data ?? []}
+//         keyExtractor={(item) => String(item.igdbId)}
+//         renderItem={renderItem}
+//         contentContainerStyle={styles.list}
+//         keyboardShouldPersistTaps="handled"
+//         ListEmptyComponent={
+//           debouncedQuery.length > 2 && !isFetching ? (
+//             <Text style={styles.empty}>No results for "{debouncedQuery}"</Text>
+//           ) : null
+//         }
+//       />
+
+//       {/* Add Game Modal */}
+//       <Modal visible={!!selected} transparent animationType="slide">
+//         <View style={styles.modalOverlay}>
+//           {selected && (
+//             <AddGameSheet
+//               game={selected}
+//               onAdded={handleAdded}
+//               onCancel={() => setSelected(null)}
+//             />
+//           )}
+//         </View>
+//       </Modal>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: colors.background,
+//   },
+//   searchBar: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     margin: spacing.md,
+//     backgroundColor: colors.card,
+//     borderRadius: radius.md,
+//     borderWidth: 1,
+//     borderColor: colors.border,
+//     paddingHorizontal: spacing.md,
+//   },
+//   input: {
+//     flex: 1,
+//     color: colors.foreground,
+//     fontSize: 15,
+//     paddingVertical: spacing.md,
+//   },
+//   spinner: {
+//     marginLeft: spacing.sm,
+//   },
+//   list: {
+//     paddingBottom: spacing.xl,
+//   },
+//   resultCard: {
+//     flexDirection: "row",
+//     padding: spacing.sm,
+//     marginHorizontal: spacing.md,
+//     marginBottom: spacing.sm,
+//     backgroundColor: colors.card,
+//     borderRadius: radius.md,
+//     borderWidth: 1,
+//     borderColor: colors.border,
+//     gap: spacing.sm,
+//   },
+//   cover: {
+//     width: 60,
+//     height: 80,
+//     borderRadius: radius.sm,
+//   },
+//   coverPlaceholder: {
+//     width: 60,
+//     height: 80,
+//     borderRadius: radius.sm,
+//     backgroundColor: colors.cardElevated,
+//   },
+//   info: {
+//     flex: 1,
+//     justifyContent: "center",
+//     gap: spacing.xs,
+//   },
+//   title: {
+//     color: colors.foreground,
+//     fontSize: 15,
+//     fontFamily: fontFamily.sansSemibold,
+//   },
+//   year: {
+//     color: colors.foregroundMuted,
+//     fontSize: 12,
+//   },
+//   summary: {
+//     color: colors.foregroundMuted,
+//     fontSize: 12,
+//     lineHeight: 17,
+//   },
+//   error: {
+//     color: colors.danger,
+//     textAlign: "center",
+//     padding: spacing.md,
+//   },
+//   empty: {
+//     color: colors.foregroundMuted,
+//     textAlign: "center",
+//     padding: spacing.xl,
+//   },
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: colors.overlay,
+//     justifyContent: "flex-end",
+//   },
+
+//   errorContainer: {
+//     alignItems: "center",
+//     padding: spacing.xl,
+//     gap: spacing.sm,
+//   },
+//   errorEmoji: {
+//     fontSize: 32,
+//   },
+//   errorTitle: {
+//     color: colors.foreground,
+//     fontSize: 16,
+//     fontFamily: fontFamily.sansSemibold,
+//   },
+//   errorSub: {
+//     color: colors.foregroundMuted,
+//     fontSize: 13,
+//     textAlign: "center",
+//   },
+// });
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -11,6 +236,8 @@ import {
   ListRenderItem,
 } from "react-native";
 import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
+
 import { GameSearchResult } from "../../src/types/igdb.types";
 import { useDebounce } from "../../src/hooks/useDebounce";
 import { useGameSearch } from "../../src/features/search/useGameSearch";
@@ -21,6 +248,7 @@ import { fontFamily } from "../../src/constants/typography";
 export default function DiscoverScreen() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<GameSearchResult | null>(null);
+
   const debouncedQuery = useDebounce(query, 400);
   const { data, isFetching, error } = useGameSearch(debouncedQuery);
 
@@ -29,9 +257,9 @@ export default function DiscoverScreen() {
   const renderItem: ListRenderItem<GameSearchResult> = useCallback(
     ({ item }) => (
       <TouchableOpacity
-        style={styles.resultCard}
+        style={styles.card}
         onPress={() => setSelected(item)}
-        activeOpacity={0.7}
+        activeOpacity={0.85}
       >
         {item.coverUrl ? (
           <Image
@@ -42,28 +270,46 @@ export default function DiscoverScreen() {
         ) : (
           <View style={styles.coverPlaceholder} />
         )}
+
         <View style={styles.info}>
           <Text style={styles.title} numberOfLines={2}>
             {item.title}
           </Text>
+
           {item.releaseYear && (
-            <Text style={styles.year}>{item.releaseYear}</Text>
+            <Text style={styles.meta}>{item.releaseYear}</Text>
           )}
+
           {item.summary && (
             <Text style={styles.summary} numberOfLines={2}>
               {item.summary}
             </Text>
           )}
         </View>
+
+        <Ionicons
+          name="add-circle-outline"
+          size={22}
+          color={colors.primary}
+        />
       </TouchableOpacity>
     ),
     [],
   );
 
+  const showEmptyState =
+    debouncedQuery.length === 0 && !isFetching && !error;
+
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
+      {/* SEARCH */}
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={18}
+          color={colors.foregroundMuted}
+        />
+
         <TextInput
           style={styles.input}
           placeholder="Search games..."
@@ -74,12 +320,28 @@ export default function DiscoverScreen() {
           autoCapitalize="none"
           returnKeyType="search"
         />
+
         {isFetching && (
-          <ActivityIndicator color={colors.primary} style={styles.spinner} />
+          <ActivityIndicator size="small" color={colors.primary} />
         )}
       </View>
 
-      {/* Error */}
+      {/* EMPTY INITIAL */}
+      {showEmptyState && (
+        <View style={styles.emptyState}>
+          <Ionicons
+            name="game-controller-outline"
+            size={48}
+            color={colors.foregroundMuted}
+          />
+          <Text style={styles.emptyTitle}>Discover games</Text>
+          <Text style={styles.emptySub}>
+            Search any game and add it to your backlog
+          </Text>
+        </View>
+      )}
+
+      {/* ERROR */}
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorEmoji}>⚠️</Text>
@@ -90,7 +352,7 @@ export default function DiscoverScreen() {
         </View>
       )}
 
-      {/* Results */}
+      {/* RESULTS */}
       <FlatList
         data={data ?? []}
         keyExtractor={(item) => String(item.igdbId)}
@@ -99,12 +361,14 @@ export default function DiscoverScreen() {
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           debouncedQuery.length > 2 && !isFetching ? (
-            <Text style={styles.empty}>No results for "{debouncedQuery}"</Text>
+            <Text style={styles.emptyResults}>
+              No results for "{debouncedQuery}"
+            </Text>
           ) : null
         }
       />
 
-      {/* Add Game Modal */}
+      {/* MODAL */}
       <Modal visible={!!selected} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           {selected && (
@@ -125,30 +389,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  searchBar: {
+
+  /* SEARCH */
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm,
     margin: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.md,
   },
+
   input: {
     flex: 1,
     color: colors.foreground,
     fontSize: 15,
-    paddingVertical: spacing.md,
   },
-  spinner: {
-    marginLeft: spacing.sm,
-  },
+
+  /* LIST */
   list: {
     paddingBottom: spacing.xl,
   },
-  resultCard: {
+
+  /* CARD */
+  card: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     padding: spacing.sm,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
@@ -156,70 +427,95 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    gap: spacing.sm,
   },
+
   cover: {
     width: 60,
     height: 80,
     borderRadius: radius.sm,
   },
+
   coverPlaceholder: {
     width: 60,
     height: 80,
     borderRadius: radius.sm,
     backgroundColor: colors.cardElevated,
   },
+
   info: {
     flex: 1,
-    justifyContent: "center",
     gap: spacing.xs,
   },
+
   title: {
     color: colors.foreground,
     fontSize: 15,
     fontFamily: fontFamily.sansSemibold,
   },
-  year: {
+
+  meta: {
     color: colors.foregroundMuted,
     fontSize: 12,
   },
+
   summary: {
     color: colors.foregroundMuted,
     fontSize: 12,
-    lineHeight: 17,
-  },
-  error: {
-    color: colors.danger,
-    textAlign: "center",
-    padding: spacing.md,
-  },
-  empty: {
-    color: colors.foregroundMuted,
-    textAlign: "center",
-    padding: spacing.xl,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: "flex-end",
+    lineHeight: 16,
   },
 
+  /* EMPTY STATE */
+  emptyState: {
+    alignItems: "center",
+    marginTop: spacing.xl,
+    gap: spacing.sm,
+  },
+
+  emptyTitle: {
+    color: colors.foreground,
+    fontSize: 16,
+    fontFamily: fontFamily.sansSemibold,
+  },
+
+  emptySub: {
+    color: colors.foregroundMuted,
+    fontSize: 13,
+    textAlign: "center",
+  },
+
+  emptyResults: {
+    textAlign: "center",
+    color: colors.foregroundMuted,
+    marginTop: spacing.lg,
+  },
+
+  /* ERROR */
   errorContainer: {
     alignItems: "center",
     padding: spacing.xl,
     gap: spacing.sm,
   },
+
   errorEmoji: {
     fontSize: 32,
   },
+
   errorTitle: {
     color: colors.foreground,
     fontSize: 16,
     fontFamily: fontFamily.sansSemibold,
   },
+
   errorSub: {
     color: colors.foregroundMuted,
     fontSize: 13,
     textAlign: "center",
+  },
+
+  /* MODAL */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "flex-end",
   },
 });
