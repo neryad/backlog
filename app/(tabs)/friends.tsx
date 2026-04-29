@@ -311,46 +311,219 @@ export default function FriendsScreen() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      {/* Search */}
-      <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by username..."
-          placeholderTextColor={colors.foregroundMuted}
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-          autoCapitalize="none"
-        />
-        <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-          {searching ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Ionicons name="search" size={20} color={colors.primary} />
-          )}
-        </TouchableOpacity>
-      </View>
+  // return (
+  //   <View style={styles.container}>
+  //     {/* Search */}
+  //     <View style={styles.searchRow}>
+  //       <TextInput
+  //         style={styles.searchInput}
+  //         placeholder="Search by username..."
+  //         placeholderTextColor={colors.foregroundMuted}
+  //         value={search}
+  //         onChangeText={setSearch}
+  //         onSubmitEditing={handleSearch}
+  //         returnKeyType="search"
+  //         autoCapitalize="none"
+  //       />
+  //       <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+  //         {searching ? (
+  //           <ActivityIndicator size="small" color={colors.primary} />
+  //         ) : (
+  //           <Ionicons name="search" size={20} color={colors.primary} />
+  //         )}
+  //       </TouchableOpacity>
+  //     </View>
 
-      {/* Search results */}
-      {searchResults.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Search Results</Text>
-          {searchResults.map((profile) => (
-            <View key={profile.id} style={styles.userRow}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={20} color={colors.primary} />
-              </View>
+  //     {/* Search results */}
+  //     {searchResults.length > 0 && (
+  //       <View style={styles.section}>
+  //         <Text style={styles.sectionLabel}>Search Results</Text>
+  //         {searchResults.map((profile) => (
+  //           <View key={profile.id} style={styles.userRow}>
+  //             <View style={styles.avatar}>
+  //               <Ionicons name="person" size={20} color={colors.primary} />
+  //             </View>
+  //             <View style={styles.userInfo}>
+  //               <Text style={styles.username}>{profile.username}</Text>
+  //               {profile.display_name && (
+  //                 <Text style={styles.displayName}>{profile.display_name}</Text>
+  //               )}
+  //             </View>
+  //             {isFriend(profile.id) ? (
+  //               <Text style={styles.alreadyFriend}>Friends</Text>
+  //             ) : (
+  //               <TouchableOpacity
+  //                 style={styles.addBtn}
+  //                 onPress={() => sendRequest(profile.id)}
+  //               >
+  //                 <Text style={styles.addBtnText}>Add</Text>
+  //               </TouchableOpacity>
+  //             )}
+  //           </View>
+  //         ))}
+  //       </View>
+  //     )}
+
+  //     {loading ? (
+  //       <ActivityIndicator
+  //         color={colors.primary}
+  //         style={{ marginTop: spacing.xl }}
+  //       />
+  //     ) : (
+  //       <FlatList
+  //         data={[]}
+  //         renderItem={null}
+  //         ListHeaderComponent={
+  //           <>
+  //             {/* Pending requests */}
+  //             {pendingRequests.length > 0 && (
+  //               <View style={styles.section}>
+  //                 <Text style={styles.sectionLabel}>
+  //                   Pending Requests ({pendingRequests.length})
+  //                 </Text>
+  //                 {pendingRequests.map((req) => (
+  //                   <View key={req.id} style={styles.userRow}>
+  //                     <View style={styles.avatar}>
+  //                       <Ionicons
+  //                         name="person"
+  //                         size={20}
+  //                         color={colors.primary}
+  //                       />
+  //                     </View>
+  //                     <View style={styles.userInfo}>
+  //                       <Text style={styles.username}>
+  //                         {req.sender?.username ?? "Unknown"}
+  //                       </Text>
+  //                       <Text style={styles.displayName}>
+  //                         wants to be your friend
+  //                       </Text>
+  //                     </View>
+  //                     <View style={styles.requestActions}>
+  //                       <TouchableOpacity
+  //                         style={styles.acceptBtn}
+  //                         onPress={() => acceptRequest(req.id, req.sender_id)}
+  //                       >
+  //                         <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
+  //                       </TouchableOpacity>
+  //                       <TouchableOpacity
+  //                         style={styles.rejectBtn}
+  //                         onPress={() => rejectRequest(req.id)}
+  //                       >
+  //                         <Ionicons
+  //                           name="close"
+  //                           size={18}
+  //                           color={colors.foregroundMuted}
+  //                         />
+  //                       </TouchableOpacity>
+  //                     </View>
+  //                   </View>
+  //                 ))}
+  //               </View>
+  //             )}
+
+  //             {/* Friends list */}
+  //             <View style={styles.section}>
+  //               <Text style={styles.sectionLabel}>
+  //                 Friends ({friends.length})
+  //               </Text>
+  //               {friends.length === 0 ? (
+  //                 <Text style={styles.emptyText}>
+  //                   No friends yet. Search for someone to add.
+  //                 </Text>
+  //               ) : (
+  //                 friends.map((f) => (
+  //                   <TouchableOpacity
+  //                     key={`${f.user_id}-${f.friend_id}`}
+  //                     style={styles.userRow}
+  //                     onPress={() => {
+  //                       if (!f.profile?.username) return;
+  //                       router.navigate(`/profile/${f.profile.username}`);
+  //                     }}
+  //                     activeOpacity={0.7}
+  //                   >
+  //                     <View style={styles.avatar}>
+  //                       <Ionicons
+  //                         name="person"
+  //                         size={20}
+  //                         color={colors.primary}
+  //                       />
+  //                     </View>
+  //                     <View style={styles.userInfo}>
+  //                       <Text style={styles.username}>
+  //                         {f.profile?.username ?? "Unknown"}
+  //                       </Text>
+  //                       {f.profile?.display_name && (
+  //                         <Text style={styles.displayName}>
+  //                           {f.profile.display_name}
+  //                         </Text>
+  //                       )}
+  //                     </View>
+  //                     {/* ✅ Botón remove friend */}
+  //                     <TouchableOpacity
+  //                       style={styles.removeBtn}
+  //                       onPress={() => {
+  //                         const friendId =
+  //                           f.user_id === session.user.id
+  //                             ? f.friend_id
+  //                             : f.user_id;
+  //                         removeFriend(friendId);
+  //                       }}
+  //                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+  //                     >
+  //                       <Ionicons
+  //                         name="person-remove-outline"
+  //                         size={18}
+  //                         color={colors.foregroundMuted}
+  //                       />
+  //                     </TouchableOpacity>
+  //                   </TouchableOpacity>
+  //                 ))
+  //               )}
+  //             </View>
+  //           </>
+  //         }
+  //       />
+  //     )}
+  //   </View>
+  // );
+
+
+return (
+  <View style={styles.container}>
+    
+    {/* 🔍 SEARCH (MEJORADO) */}
+    <View style={styles.searchContainer}>
+      <Ionicons name="search" size={18} color={colors.foregroundMuted} />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search friends..."
+        placeholderTextColor={colors.foregroundMuted}
+        value={search}
+        onChangeText={setSearch}
+        onSubmitEditing={handleSearch}
+      />
+    </View>
+
+    {/* 🔍 RESULTS (MÁS LIMPIO) */}
+    {searchResults.length > 0 && (
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Search Results</Text>
+        {searchResults.map((profile, index) => (
+          <View key={profile.id}>
+            {index > 0 && <View style={styles.separator} />}
+            <View style={styles.userRow}>
+              <View style={styles.avatar} />
               <View style={styles.userInfo}>
                 <Text style={styles.username}>{profile.username}</Text>
                 {profile.display_name && (
-                  <Text style={styles.displayName}>{profile.display_name}</Text>
+                  <Text style={styles.displayName}>
+                    {profile.display_name}
+                  </Text>
                 )}
               </View>
+
               {isFriend(profile.id) ? (
-                <Text style={styles.alreadyFriend}>Friends</Text>
+                <Text style={styles.friendTag}>Friends</Text>
               ) : (
                 <TouchableOpacity
                   style={styles.addBtn}
@@ -360,97 +533,82 @@ export default function FriendsScreen() {
                 </TouchableOpacity>
               )}
             </View>
-          ))}
-        </View>
-      )}
+          </View>
+        ))}
+      </View>
+    )}
 
-      {loading ? (
-        <ActivityIndicator
-          color={colors.primary}
-          style={{ marginTop: spacing.xl }}
-        />
-      ) : (
-        <FlatList
-          data={[]}
-          renderItem={null}
-          ListHeaderComponent={
-            <>
-              {/* Pending requests */}
-              {pendingRequests.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>
-                    Pending Requests ({pendingRequests.length})
-                  </Text>
-                  {pendingRequests.map((req) => (
-                    <View key={req.id} style={styles.userRow}>
-                      <View style={styles.avatar}>
-                        <Ionicons
-                          name="person"
-                          size={20}
-                          color={colors.primary}
-                        />
-                      </View>
+    {loading ? (
+      <ActivityIndicator style={{ marginTop: spacing.xl }} />
+    ) : (
+      <FlatList
+        data={[]}
+        renderItem={null}
+        ListHeaderComponent={
+          <>
+            {/* 📨 REQUESTS */}
+            {pendingRequests.length > 0 && (
+              <View style={styles.cardHighlight}>
+                <Text style={styles.sectionTitle}>
+                  Requests ({pendingRequests.length})
+                </Text>
+
+                {pendingRequests.map((req, index) => (
+                  <View key={req.id}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <View style={styles.userRow}>
+                      <View style={styles.avatar} />
                       <View style={styles.userInfo}>
                         <Text style={styles.username}>
-                          {req.sender?.username ?? "Unknown"}
+                          {req.sender?.username}
                         </Text>
                         <Text style={styles.displayName}>
-                          wants to be your friend
+                          wants to connect
                         </Text>
                       </View>
-                      <View style={styles.requestActions}>
+
+                      <View style={styles.actions}>
                         <TouchableOpacity
                           style={styles.acceptBtn}
-                          onPress={() => acceptRequest(req.id, req.sender_id)}
+                          onPress={() =>
+                            acceptRequest(req.id, req.sender_id)
+                          }
                         >
-                          <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
+                          <Ionicons name="checkmark" size={16} color="#fff" />
                         </TouchableOpacity>
+
                         <TouchableOpacity
                           style={styles.rejectBtn}
                           onPress={() => rejectRequest(req.id)}
                         >
-                          <Ionicons
-                            name="close"
-                            size={18}
-                            color={colors.foregroundMuted}
-                          />
+                          <Ionicons name="close" size={16} color={colors.foregroundMuted} />
                         </TouchableOpacity>
                       </View>
                     </View>
-                  ))}
-                </View>
-              )}
+                  </View>
+                ))}
+              </View>
+            )}
 
-              {/* Friends list */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>
-                  Friends ({friends.length})
+            {/* 👥 FRIENDS */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>
+                Friends ({friends.length})
+              </Text>
+
+              {friends.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  No friends yet. Start adding people 👀
                 </Text>
-                {friends.length === 0 ? (
-                  <Text style={styles.emptyText}>
-                    No friends yet. Search for someone to add.
-                  </Text>
-                ) : (
-                  friends.map((f) => (
-                    <TouchableOpacity
-                      key={`${f.user_id}-${f.friend_id}`}
-                      style={styles.userRow}
-                      onPress={() => {
-                        if (!f.profile?.username) return;
-                        router.navigate(`/profile/${f.profile.username}`);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.avatar}>
-                        <Ionicons
-                          name="person"
-                          size={20}
-                          color={colors.primary}
-                        />
-                      </View>
+              ) : (
+                friends.map((f, index) => (
+                  <View key={`${f.user_id}-${f.friend_id}`}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <TouchableOpacity style={styles.userRow}>
+                      <View style={styles.avatar} />
                       <View style={styles.userInfo}>
                         <Text style={styles.username}>
-                          {f.profile?.username ?? "Unknown"}
+                          {f.profile?.username}
                         </Text>
                         {f.profile?.display_name && (
                           <Text style={styles.displayName}>
@@ -458,18 +616,8 @@ export default function FriendsScreen() {
                           </Text>
                         )}
                       </View>
-                      {/* ✅ Botón remove friend */}
-                      <TouchableOpacity
-                        style={styles.removeBtn}
-                        onPress={() => {
-                          const friendId =
-                            f.user_id === session.user.id
-                              ? f.friend_id
-                              : f.user_id;
-                          removeFriend(friendId);
-                        }}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
+
+                      <TouchableOpacity style={styles.removeBtn}>
                         <Ionicons
                           name="person-remove-outline"
                           size={18}
@@ -477,15 +625,16 @@ export default function FriendsScreen() {
                         />
                       </TouchableOpacity>
                     </TouchableOpacity>
-                  ))
-                )}
-              </View>
-            </>
-          }
-        />
-      )}
-    </View>
-  );
+                  </View>
+                ))
+              )}
+            </View>
+          </>
+        }
+      />
+    )}
+  </View>
+);
 }
 
 const styles = StyleSheet.create({
@@ -567,22 +716,22 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: spacing.md,
   },
-  userRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary + "22",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  // userRow: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   gap: spacing.md,
+  //   paddingVertical: spacing.sm,
+  //   borderBottomWidth: 1,
+  //   borderBottomColor: colors.border,
+  // },
+  // avatar: {
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 20,
+  //   backgroundColor: colors.primary + "22",
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
   userInfo: {
     flex: 1,
   },
@@ -641,5 +790,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: spacing.lg,
+  },
+
+    searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.cardElevated,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  cardHighlight: {
+    backgroundColor: colors.cardElevated,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    color: colors.foreground,
+    marginBottom: spacing.md,
+    fontFamily: fontFamily.sansSemibold,
+  },
+
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+
+  separator: {
+    height: 1,
+    backgroundColor: colors.border,
+  },
+
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + "22",
+  },
+
+  friendTag: {
+    color: colors.primary,
+    fontSize: 13,
+  },
+
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
 });
