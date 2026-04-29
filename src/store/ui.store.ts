@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameStatus } from "../types/game";
 import { BacklogShareTemplate } from "../constants/shareCardThemes";
 
-export type SortOption = "recently-added" | "title-az";
+export type SortOption = "recently-added" | "title-az" | "top-rated" | "most-played";
 
 type UIStore = {
   activeFilter: GameStatus | "all";
