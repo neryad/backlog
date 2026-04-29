@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   View,
@@ -20,6 +21,7 @@ import { supabase } from "../../lib/supabase";
 import { fontFamily } from "../../constants/typography";
 
 const DONATION_LABELS = ["Ko-fi", "PayPal"];
+
 const LINKS = [
   {
     label: "Twitter / X",
@@ -67,12 +69,17 @@ export default function AboutModal({ visible, onClose }: Props) {
   const { session } = useAuthStore();
   const [deletingAccount, setDeletingAccount] = useState(false);
 
+  const visibleLinks =
+    Platform.OS === "ios"
+      ? LINKS.filter((l) => !DONATION_LABELS.includes(l.label))
+      : LINKS;
+
   function openLink(url: string) {
     Linking.openURL(url).catch(() => null);
   }
 
   async function handleLogout() {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+    Alert.alert("Sign Out", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Sign Out",
@@ -93,10 +100,7 @@ export default function AboutModal({ visible, onClose }: Props) {
       const { error } = await supabase.functions.invoke("delete-account");
 
       if (error) {
-        Alert.alert(
-          "Delete failed",
-          error.message ?? "We could not delete your account right now.",
-        );
+        Alert.alert("Error", error.message);
         return;
       }
 
@@ -104,196 +108,143 @@ export default function AboutModal({ visible, onClose }: Props) {
       onClose();
       router.replace("/auth/login");
 
-      Alert.alert(
-        "Account deleted",
-        "Your full cloud account was removed. Local backlog and stats stay on this device.",
-      );
-    } catch (error) {
-      await supabase.auth.signOut({ scope: "local" }).catch(() => null);
-      Alert.alert(
-        "Delete failed",
-        error instanceof Error
-          ? error.message
-          : "We could not delete your account right now.",
-      );
+      Alert.alert("Account deleted", "Your account was removed.");
+    } catch (e) {
+      Alert.alert("Error", String(e));
     } finally {
       setDeletingAccount(false);
     }
   }
 
   function handleDeleteAccount() {
-    if (!session || deletingAccount) return;
-
     Alert.alert(
       "Delete account",
-      "This will permanently delete your cloud account. You will not be able to sign in again with this account. Local backlog and stats on this device will stay.",
+      "This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Continue",
+          text: "Delete",
           style: "destructive",
-          onPress: () => {
-            Alert.alert("Final confirmation", "This action cannot be undone.", [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Delete account",
-                style: "destructive",
-                onPress: confirmDeleteAccount,
-              },
-            ]);
-          },
+          onPress: confirmDeleteAccount,
         },
       ],
     );
   }
-
-  function handleLogin() {
-    onClose();
-    router.push("/auth/login");
-  }
-
-  function handleRegister() {
-    onClose();
-    router.push("/auth/register");
-  }
-
-  const visibleLinks =
-    Platform.OS === "ios"
-      ? LINKS.filter((link) => !DONATION_LABELS.includes(link.label))
-      : LINKS;
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
+
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Ionicons name="close" size={22} color={colors.foregroundMuted} />
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            {/* App info */}
-            <View style={styles.appInfo}>
-              <View style={styles.appIcon}>
-                <ExpoImage
-                  source={require("../../../assets/icons/ios-dark.jpg")}
-                  style={styles.appIconImage}
-                  contentFit="cover"
-                />
-              </View>
+            {/* HEADER */}
+            <View style={styles.header}>
+              <ExpoImage
+                source={require("../../../assets/icons/ios-dark.jpg")}
+                style={styles.appIcon}
+              />
               <Text style={styles.appName}>Playlogged</Text>
-              <Text style={styles.appVersion}>
-                Version {Constants.expoConfig?.version ?? "1.0.0"}
+              <Text style={styles.version}>
+                v{Constants.expoConfig?.version ?? "1.0.0"}
               </Text>
-              <Text style={styles.appDesc}>
-                A minimal game backlog tracker built for gamers who want to
-                spend more time playing and less time managing lists.
+              <Text style={styles.description}>
+                Track your backlog. Play more, manage less.
               </Text>
             </View>
 
-            <View style={styles.divider} />
+            {/* ACCOUNT */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Account</Text>
 
-            {/* Account section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Account</Text>
               {session ? (
-                <View style={styles.accountRow}>
-                  <View style={styles.accountInfo}>
+                <>
+                  <View style={styles.accountRow}>
                     <Ionicons
                       name="person-circle"
                       size={36}
                       color={colors.primary}
                     />
-                    <View>
-                      <Text style={styles.accountEmail} numberOfLines={1}>
-                        {session.user.email}
-                      </Text>
-                      <Text style={styles.accountStatus}>Syncing backlog</Text>
-                    </View>
+                    <Text style={styles.email} numberOfLines={1}>
+                      {session.user.email}
+                    </Text>
                   </View>
-                  <View style={styles.accountActions}>
+
+                  <View style={styles.actionsRow}>
                     <TouchableOpacity
-                      style={styles.gamingIdsBtn}
+                      style={styles.primaryBtn}
                       onPress={() => {
                         onClose();
                         router.push("/profile/edit-platforms");
                       }}
                     >
-                      <Text style={styles.gamingIdsText}>Gaming IDs</Text>
+                      <Text style={styles.primaryBtnText}>Gaming IDs</Text>
                     </TouchableOpacity>
+
                     <TouchableOpacity
-                      style={styles.logoutBtn}
+                      style={styles.secondaryBtn}
                       onPress={handleLogout}
-                      disabled={deletingAccount}
                     >
-                      <Text style={styles.logoutText}>Sign Out</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteAccountBtn}
-                      onPress={handleDeleteAccount}
-                      disabled={deletingAccount}
-                    >
-                      <Text style={styles.deleteAccountText}>
-                        {deletingAccount ? "Deleting..." : "Delete Account"}
-                      </Text>
+                      <Text style={styles.secondaryBtnText}>Sign Out</Text>
                     </TouchableOpacity>
                   </View>
-                </View>
+
+                  <TouchableOpacity
+                    style={styles.dangerBtn}
+                    onPress={handleDeleteAccount}
+                  >
+                    <Text style={styles.dangerText}>
+                      {deletingAccount ? "Deleting..." : "Delete Account"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
               ) : (
-                <View style={styles.authButtons}>
-                  <Text style={styles.authDesc}>
-                    Create an account to sync your backlog and connect with
-                    friends.
+                <>
+                  <Text style={styles.helper}>
+                    Create an account to sync and add friends
                   </Text>
+
                   <TouchableOpacity
-                    style={styles.signInBtn}
-                    onPress={handleLogin}
-                    activeOpacity={0.8}
+                    style={styles.primaryBtn}
+                    onPress={() => {
+                      onClose();
+                      router.push("/auth/login");
+                    }}
                   >
-                    <Text style={styles.signInText}>Sign In</Text>
+                    <Text style={styles.primaryBtnText}>Sign In</Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    style={styles.registerBtn}
-                    onPress={handleRegister}
-                    activeOpacity={0.8}
+                    style={styles.secondaryBtn}
+                    onPress={() => {
+                      onClose();
+                      router.push("/auth/register");
+                    }}
                   >
-                    <Text style={styles.registerText}>Create Account</Text>
+                    <Text style={styles.secondaryBtnText}>
+                      Create Account
+                    </Text>
                   </TouchableOpacity>
-                </View>
+                </>
               )}
             </View>
 
-            <View style={styles.divider} />
+            {/* LINKS */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Links</Text>
 
-            {/* Developer */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Developer</Text>
-              <Text style={styles.devName}>Neryad</Text>
-              <Text style={styles.devBio}>
-                Building tools for gamers. If you enjoy the app, consider
-                supporting the project.
-              </Text>
-            </View>
-
-            {/* Links */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Find me online</Text>
               {visibleLinks.map((link) => (
                 <TouchableOpacity
                   key={link.label}
                   style={styles.linkRow}
                   onPress={() => openLink(link.url)}
-                  activeOpacity={0.7}
                 >
-                  <View
-                    style={[
-                      styles.linkIcon,
-                      { backgroundColor: link.color + "22" },
-                    ]}
-                  >
-                    <Ionicons name={link.icon} size={18} color={link.color} />
-                  </View>
-                  <View style={styles.linkInfo}>
+                  <Ionicons name={link.icon} size={18} color={link.color} />
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.linkLabel}>{link.label}</Text>
                     <Text style={styles.linkHandle}>{link.handle}</Text>
                   </View>
@@ -307,7 +258,7 @@ export default function AboutModal({ visible, onClose }: Props) {
             </View>
 
             <Text style={styles.footer}>
-              Made with ❤️ for gamers everywhere
+              Made for gamers 🎮
             </Text>
           </ScrollView>
         </View>
@@ -323,220 +274,144 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.background,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing.lg,
-    paddingBottom: spacing.xl * 2,
     maxHeight: "90%",
   },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: colors.border,
-    borderRadius: 2,
     alignSelf: "center",
     marginBottom: spacing.md,
+    borderRadius: 2,
   },
   closeBtn: {
     position: "absolute",
-    top: spacing.lg,
     right: spacing.lg,
-    zIndex: 1,
+    top: spacing.lg,
   },
-  appInfo: {
+
+  header: {
     alignItems: "center",
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   appIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.cardElevated,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  appIconImage: {
-    width: 80,
-    height: 80,
+    width: 72,
+    height: 72,
     borderRadius: 18,
+    marginBottom: spacing.sm,
   },
   appName: {
     color: colors.foreground,
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: fontFamily.displayBold,
   },
-  appVersion: {
+  version: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+  },
+  description: {
     color: colors.foregroundMuted,
     fontSize: 13,
-  },
-  appDesc: {
-    color: colors.foregroundMuted,
-    fontSize: 14,
     textAlign: "center",
-    lineHeight: 21,
-    paddingHorizontal: spacing.md,
+    marginTop: spacing.xs,
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
+
+  sectionTitle: {
     color: colors.foregroundMuted,
     fontSize: 11,
-    fontFamily: fontFamily.sansSemibold,
-    letterSpacing: 0.8,
     textTransform: "uppercase",
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  // Account
+
   accountRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  accountInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    flexShrink: 1,
-  },
-  accountEmail: {
+
+  email: {
     color: colors.foreground,
-    fontSize: 14,
-    fontFamily: fontFamily.sansMedium,
-    flexShrink: 1,
+    flex: 1,
   },
-  accountStatus: {
-    color: colors.primary,
-    fontSize: 12,
-  },
-  gamingIdsBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + "22",
-  },
-  gamingIdsText: {
-    color: colors.primary,
-    fontSize: 13,
-    fontFamily: fontFamily.sansSemibold,
-  },
-  logoutBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  logoutText: {
-    color: colors.foregroundMuted,
-    fontSize: 13,
-  },
-  accountActions: {
-    gap: spacing.xs,
-    alignItems: "flex-end",
-    flexShrink: 0,
-  },
-  deleteAccountBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    backgroundColor: colors.danger + "22",
-  },
-  deleteAccountText: {
-    color: colors.danger,
-    fontSize: 13,
-    fontFamily: fontFamily.sansSemibold,
-  },
-  authButtons: {
+
+  actionsRow: {
+    flexDirection: "row",
     gap: spacing.sm,
-  },
-  authDesc: {
-    color: colors.foregroundMuted,
-    fontSize: 14,
-    lineHeight: 21,
     marginBottom: spacing.sm,
   },
-  signInBtn: {
+
+  primaryBtn: {
+    flex: 1,
     backgroundColor: colors.primary,
+    padding: spacing.sm,
     borderRadius: radius.md,
-    padding: spacing.md,
     alignItems: "center",
   },
-  signInText: {
+  primaryBtnText: {
     color: colors.foreground,
-    fontSize: 15,
     fontFamily: fontFamily.sansSemibold,
   },
-  registerBtn: {
-    backgroundColor: "transparent",
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: "center",
+
+  secondaryBtn: {
+    flex: 1,
     borderWidth: 1,
     borderColor: colors.border,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    alignItems: "center",
   },
-  registerText: {
+  secondaryBtnText: {
     color: colors.foreground,
-    fontSize: 15,
-    fontFamily: fontFamily.sansMedium,
   },
-  // Developer
-  devName: {
-    color: colors.foreground,
-    fontSize: 17,
-    fontFamily: fontFamily.sansSemibold,
-    marginBottom: spacing.xs,
+
+  dangerBtn: {
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.danger + "22",
+    alignItems: "center",
   },
-  devBio: {
+  dangerText: {
+    color: colors.danger,
+  },
+
+  helper: {
     color: colors.foregroundMuted,
-    fontSize: 14,
-    lineHeight: 21,
+    marginBottom: spacing.sm,
   },
+
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  linkIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  linkInfo: {
-    flex: 1,
-  },
+
   linkLabel: {
     color: colors.foreground,
-    fontSize: 14,
-    fontFamily: fontFamily.sansMedium,
   },
   linkHandle: {
     color: colors.foregroundMuted,
     fontSize: 12,
   },
+
   footer: {
-    color: colors.foregroundMuted,
-    fontSize: 13,
     textAlign: "center",
+    color: colors.foregroundMuted,
     marginTop: spacing.lg,
   },
 });
