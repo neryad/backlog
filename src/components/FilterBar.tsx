@@ -205,6 +205,16 @@ import { GameStatus, GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
 import { fontFamily } from "../constants/typography";
 
+const STATUS_COLORS: Record<string, string> = {
+  backlog: colors.foregroundMuted,
+  playing: colors.primary,
+  "playing-social": colors.statusPlayingSocial,
+  paused: colors.statusOnHold,
+  completed: colors.success,
+  dropped: colors.danger,
+  wishlist: colors.warning,
+};
+
 const FILTERS: { label: string; value: GameStatus | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Backlog", value: "backlog" },
@@ -238,14 +248,22 @@ function FilterBar({ active, onChange, games }: Props) {
         const count = getCount(games, f.value);
         if (f.value !== "all" && count === 0) return null;
         const isActive = active === f.value;
+        const statusColor = f.value !== "all" ? STATUS_COLORS[f.value] : colors.primary;
+        const activeColor = f.value === "all" ? colors.primary : statusColor;
 
         return (
           <TouchableOpacity
             key={f.value}
-            style={[styles.chip, isActive && styles.chipActive]}
+            style={[
+              styles.chip,
+              isActive && { backgroundColor: activeColor, borderColor: activeColor },
+            ]}
             onPress={() => onChange(f.value)}
             activeOpacity={0.7}
           >
+            {f.value !== "all" && (
+              <View style={[styles.dot, { backgroundColor: isActive ? colors.foreground : statusColor }]} />
+            )}
             <Text style={[styles.label, isActive && styles.labelActive]}>
               {f.label}
             </Text>
@@ -313,5 +331,10 @@ const styles = StyleSheet.create({
   },
   badgeTextActive: {
     color: colors.foreground,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
 });
