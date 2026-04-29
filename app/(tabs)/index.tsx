@@ -691,10 +691,40 @@ export default function BacklogScreen() {
             ItemSeparatorComponent={() => (
               <View style={{ height: spacing.sm }} />
             )}
-            contentContainerStyle={[
-              styles.listContent,
-              { paddingBottom: listPaddingBottom },
-            ]}
+            contentContainerStyle={
+              listData.length === 0
+                ? styles.emptyContainer
+                : [styles.listContent, { paddingBottom: listPaddingBottom }]
+            }
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Ionicons
+                  name="game-controller-outline"
+                  size={64}
+                  color={colors.foregroundSubtle}
+                  style={{ marginBottom: spacing.lg }}
+                />
+                <Text style={styles.emptyTitle}>
+                  {activeFilter === "all"
+                    ? "Your backlog is quiet"
+                    : "Nothing here yet"}
+                </Text>
+                <Text style={styles.emptySub}>
+                  {activeFilter === "all"
+                    ? "Start tracking games you want to play, are playing, or have finished."
+                    : "You haven't added any games to this category."}
+                </Text>
+                {activeFilter === "all" && (
+                  <TouchableOpacity
+                    style={styles.emptyBtn}
+                    onPress={() => router.push("/(tabs)/discover")}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.emptyBtnText}>Find Games</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
           />
         </>
       )}
@@ -779,6 +809,47 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: spacing.md,
     paddingHorizontal: spacing.sm,
+  },
+
+  emptyContainer: {
+    flex: 1,
+  },
+
+  empty: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    paddingTop: 100,
+  },
+
+  emptyTitle: {
+    color: colors.foreground,
+    fontSize: 20,
+    fontFamily: fontFamily.displayBold,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+
+  emptySub: {
+    color: colors.foregroundMuted,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+
+  emptyBtn: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+  },
+
+  emptyBtnText: {
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
+    fontSize: 15,
   },
 
   fab: {

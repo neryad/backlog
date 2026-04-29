@@ -48,9 +48,9 @@ export default function FriendsScreen() {
   );
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
-  const [searching, setSearching] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ✅ hooks siempre se llaman — el check de sesión va al final
@@ -122,6 +122,27 @@ export default function FriendsScreen() {
         setPendingRequests([]);
         setPendingFriendRequests(0);
       }
+
+      // Solicitudes enviadas por mí
+      const { data: sentData } = await supabase
+        .from("friend_requests")
+        .select("id, sender_id, receiver_id, status, created_at")
+        .eq("sender_id", userId)
+        .eq("status", "pending");
+
+      if (sentData && sentData.length > 0) {
+        const receiverIds = sentData.map((r) => r.receiver_id);
+        const { data: receiverProfiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", receiverIds);
+        const profileMap = new Map(receiverProfiles?.map((p) => [p.id, p]));
+        setSentRequests(
+          sentData.map((r) => ({ ...r, receiver: profileMap.get(r.receiver_id) })),
+        );
+      } else {
+        setSentRequests([]);
+      }
     } catch (err) {
       if (__DEV__) console.error("loadFriends error:", err);
     } finally {
@@ -131,7 +152,6 @@ export default function FriendsScreen() {
 
   async function handleSearch() {
     if (search.trim().length < 2) return;
-    setSearching(true);
     setSearchResults([]);
 
     // Strip PostgREST filter-syntax characters to prevent query injection.
@@ -148,8 +168,6 @@ export default function FriendsScreen() {
       setSearchResults(data ?? []);
     } catch (err) {
       if (__DEV__) console.error("Search error:", err);
-    } finally {
-      setSearching(false);
     }
   }
 
@@ -166,9 +184,27 @@ export default function FriendsScreen() {
         Alert.alert("Error", error.message);
       }
     } else {
-      Alert.alert("Request sent", "Friend request sent successfully.");
-      setSearch("");
-      setSearchResults([]);
+      const profile = searchResults.find((p) => p.id === receiverId);
+      setSentRequests((prev) => [
+        ...prev,
+        {
+          id: `tmp-${receiverId}`,
+          sender_id: session!.user.id,
+          receiver_id: receiverId,
+          status: "pending",
+          created_at: new Date().toISOString(),
+          receiver: profile,
+        },
+      ]);
+    }
+  }
+
+  async function cancelRequest(requestId: string) {
+    try {
+      await supabase.from("friend_requests").delete().eq("id", requestId);
+      setSentRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err) {
+      if (__DEV__) console.error("cancelRequest error:", err);
     }
   }
 
@@ -524,6 +560,8 @@ return (
 
               {isFriend(profile.id) ? (
                 <Text style={styles.friendTag}>Friends</Text>
+              ) : sentRequests.some((r) => r.receiver_id === profile.id) ? (
+                <Text style={styles.pendingTag}>Pending</Text>
               ) : (
                 <TouchableOpacity
                   style={styles.addBtn}
@@ -590,6 +628,38 @@ return (
               </View>
             )}
 
+            {/* 📤 SENT REQUESTS */}
+            {sentRequests.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>
+                  Sent ({sentRequests.length})
+                </Text>
+
+                {sentRequests.map((req, index) => (
+                  <View key={req.id}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <View style={styles.userRow}>
+                      <View style={styles.avatar} />
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {req.receiver?.username}
+                        </Text>
+                        <Text style={styles.displayName}>Pending...</Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.rejectBtn}
+                        onPress={() => cancelRequest(req.id)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons name="close" size={16} color={colors.foregroundMuted} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
             {/* 👥 FRIENDS */}
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>
@@ -604,7 +674,14 @@ return (
                 friends.map((f, index) => (
                   <View key={`${f.user_id}-${f.friend_id}`}>
                     {index > 0 && <View style={styles.separator} />}
-                    <TouchableOpacity style={styles.userRow}>
+                    <TouchableOpacity
+                      style={styles.userRow}
+                      onPress={() => {
+                        if (!f.profile?.username) return;
+                        router.navigate(`/profile/${f.profile.username}`);
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <View style={styles.avatar} />
                       <View style={styles.userInfo}>
                         <Text style={styles.username}>
@@ -617,7 +694,17 @@ return (
                         )}
                       </View>
 
-                      <TouchableOpacity style={styles.removeBtn}>
+                      <TouchableOpacity
+                        style={styles.removeBtn}
+                        onPress={() => {
+                          const friendId =
+                            f.user_id === session.user.id
+                              ? f.friend_id
+                              : f.user_id;
+                          removeFriend(friendId);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
                         <Ionicons
                           name="person-remove-outline"
                           size={18}
@@ -845,6 +932,11 @@ const styles = StyleSheet.create({
 
   friendTag: {
     color: colors.primary,
+    fontSize: 13,
+  },
+
+  pendingTag: {
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
 
