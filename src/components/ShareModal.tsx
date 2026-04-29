@@ -48,8 +48,6 @@ export function ShareModal({
       setIsSharing(true);
       await shareViewAsImage(shareCardRef, {
         dialogTitle: "Share your top card",
-        width: 1080,
-        height: 1920,
       });
     } finally {
       setIsSharing(false);

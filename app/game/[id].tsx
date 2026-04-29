@@ -670,8 +670,6 @@ export default function GameDetailScreen() {
       setIsSharing(true);
       await shareViewAsImage(shareCardRef, {
         dialogTitle: "Share your game",
-        width: 1080,
-        height: 1920,
       });
     } finally {
       setIsSharing(false);

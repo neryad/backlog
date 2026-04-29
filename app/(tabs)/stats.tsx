@@ -854,7 +854,7 @@
 //     fontSize: 12,
 //   },
 // });
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -930,8 +930,6 @@ export default function StatsScreen() {
       setIsSharing(true);
       await shareViewAsImage(shareCardRef, {
         dialogTitle: "Share your stats",
-        width: 1080,
-        height: 1920,
       });
     } finally {
       setIsSharing(false);
