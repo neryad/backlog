@@ -569,7 +569,7 @@ import {
   Switch,
 } from "react-native";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useGameDetail } from "../../src/features/game-detail/useGameDetail";
 import { GameStatus } from "../../src/types/game";
 import { colors, spacing, radius } from "../../src/constants/theme";
@@ -678,6 +678,7 @@ export default function GameDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Stack.Screen options={{ title: game?.title ?? "Game" }} />
       {/* HERO */}
       <View style={styles.hero}>
         {game?.coverUrl ? (

@@ -37,6 +37,12 @@ export const GAME_STATUS_THEMES: Record<
     gradientTop: "#3b1f25",
     gradientBottom: "#211218",
   },
+  paused: {
+    label: "Paused",
+    accent: "#f5a623",
+    gradientTop: "#3a2b1a",
+    gradientBottom: "#211911",
+  },
   wishlist: {
     label: "Wishlist",
     accent: "#f5a623",
