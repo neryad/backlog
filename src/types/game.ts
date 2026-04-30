@@ -2,6 +2,7 @@ export type GameStatus =
   | "backlog"
   | "playing"
   | "playing-social"
+  | "paused"
   | "completed"
   | "dropped"
   | "wishlist";
@@ -33,6 +34,7 @@ export type GameEntry = {
   completedAt: number | null;
   createdAt: number;
   updatedAt: number;
+  isPublic: boolean;
   // joined fields
   game?: Game;
   platform?: Platform;

@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,46 +9,54 @@ import {
   Linking,
   ScrollView,
   Platform,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import Constants from "expo-constants";
 import { colors, spacing, radius } from "../../constants/theme";
 import { Image as ExpoImage } from "expo-image";
+import { useAuthStore } from "../../store/auth.store";
+import { supabase } from "../../lib/supabase";
+import { fontFamily } from "../../constants/typography";
+
 const DONATION_LABELS = ["Ko-fi", "PayPal"];
+
 const LINKS = [
   {
     label: "Twitter / X",
     handle: "@NeryadG",
     url: "https://x.com/NeryadG",
     icon: "logo-twitter" as const,
-    color: "#1DA1F2",
+    color: colors.socialTwitter,
   },
   {
     label: "Instagram",
     handle: "@neryad_dev",
     url: "https://www.instagram.com/neryad_dev",
     icon: "logo-instagram" as const,
-    color: "#E1306C",
+    color: colors.socialInstagram,
   },
   {
     label: "GitHub",
     handle: "neryad",
     url: "https://github.com/neryad",
     icon: "logo-github" as const,
-    color: colors.text,
+    color: colors.foreground,
   },
   {
     label: "Ko-fi",
     handle: "Buy me a coffee",
     url: "https://ko-fi.com/neryad",
     icon: "cafe" as const,
-    color: "#FF5E5B",
+    color: colors.socialKofi,
   },
   {
     label: "PayPal",
     handle: "Donate via PayPal",
     url: "https://paypal.me/neryad",
     icon: "card" as const,
-    color: "#003087",
+    color: colors.socialPaypal,
   },
 ];
 
@@ -57,83 +66,199 @@ type Props = {
 };
 
 export default function AboutModal({ visible, onClose }: Props) {
+  const { session } = useAuthStore();
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const visibleLinks =
+    Platform.OS === "ios"
+      ? LINKS.filter((l) => !DONATION_LABELS.includes(l.label))
+      : LINKS;
+
   function openLink(url: string) {
     Linking.openURL(url).catch(() => null);
   }
-  const visibleLinks =
-    Platform.OS === "ios"
-      ? LINKS.filter((link) => !DONATION_LABELS.includes(link.label))
-      : LINKS;
+
+  async function handleLogout() {
+    Alert.alert("Sign Out", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.auth.signOut();
+          onClose();
+        },
+      },
+    ]);
+  }
+
+  async function confirmDeleteAccount() {
+    if (!session || deletingAccount) return;
+
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
+      await supabase.auth.signOut({ scope: "local" });
+      onClose();
+      router.replace("/auth/login");
+
+      Alert.alert("Account deleted", "Your account was removed.");
+    } catch (e) {
+      Alert.alert("Error", String(e));
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
+  function handleDeleteAccount() {
+    Alert.alert(
+      "Delete account",
+      "This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: confirmDeleteAccount,
+        },
+      ],
+    );
+  }
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
+
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={22} color={colors.textMuted} />
+            <Ionicons name="close" size={22} color={colors.foregroundMuted} />
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.appInfo}>
-              <View style={styles.appIcon}>
-                <ExpoImage
-                  source={require("../../../assets/icons/ios-dark.jpg")}
-                  style={styles.appIconImage}
-                  contentFit="cover"
-                />
-              </View>
+            {/* HEADER */}
+            <View style={styles.header}>
+              <ExpoImage
+                source={require("../../../assets/icons/ios-dark.jpg")}
+                style={styles.appIcon}
+              />
               <Text style={styles.appName}>Playlogged</Text>
-              <Text style={styles.appVersion}>Version 1.0.0</Text>
-              <Text style={styles.appDesc}>
-                A minimal game backlog tracker built for gamers who want to
-                spend more time playing and less time managing lists.
+              <Text style={styles.version}>
+                v{Constants.expoConfig?.version ?? "1.0.0"}
+              </Text>
+              <Text style={styles.description}>
+                Track your backlog. Play more, manage less.
               </Text>
             </View>
 
-            <View style={styles.divider} />
+            {/* ACCOUNT */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Account</Text>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Developer</Text>
-              <Text style={styles.devName}>Neryad</Text>
-              <Text style={styles.devBio}>
-                Building tools for gamers. If you enjoy the app, consider
-                supporting the project.
-              </Text>
+              {session ? (
+                <>
+                  <View style={styles.accountRow}>
+                    <Ionicons
+                      name="person-circle"
+                      size={36}
+                      color={colors.primary}
+                    />
+                    <Text style={styles.email} numberOfLines={1}>
+                      {session.user.email}
+                    </Text>
+                  </View>
+
+                  <View style={styles.actionsRow}>
+                    <TouchableOpacity
+                      style={styles.primaryBtn}
+                      onPress={() => {
+                        onClose();
+                        router.push("/profile/edit-platforms");
+                      }}
+                    >
+                      <Text style={styles.primaryBtnText}>Gaming IDs</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.secondaryBtn}
+                      onPress={handleLogout}
+                    >
+                      <Text style={styles.secondaryBtnText}>Sign Out</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.dangerBtn}
+                    onPress={handleDeleteAccount}
+                  >
+                    <Text style={styles.dangerText}>
+                      {deletingAccount ? "Deleting..." : "Delete Account"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.helper}>
+                    Create an account to sync and add friends
+                  </Text>
+
+                  <TouchableOpacity
+                    style={styles.primaryBtn}
+                    onPress={() => {
+                      onClose();
+                      router.push("/auth/login");
+                    }}
+                  >
+                    <Text style={styles.primaryBtnText}>Sign In</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.secondaryBtn}
+                    onPress={() => {
+                      onClose();
+                      router.push("/auth/register");
+                    }}
+                  >
+                    <Text style={styles.secondaryBtnText}>
+                      Create Account
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Find me online</Text>
+            {/* LINKS */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Links</Text>
+
               {visibleLinks.map((link) => (
                 <TouchableOpacity
                   key={link.label}
                   style={styles.linkRow}
                   onPress={() => openLink(link.url)}
-                  activeOpacity={0.7}
                 >
-                  <View
-                    style={[
-                      styles.linkIcon,
-                      { backgroundColor: link.color + "22" },
-                    ]}
-                  >
-                    <Ionicons name={link.icon} size={18} color={link.color} />
-                  </View>
-                  <View style={styles.linkInfo}>
+                  <Ionicons name={link.icon} size={18} color={link.color} />
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.linkLabel}>{link.label}</Text>
                     <Text style={styles.linkHandle}>{link.handle}</Text>
                   </View>
                   <Ionicons
                     name="chevron-forward"
                     size={16}
-                    color={colors.textMuted}
+                    color={colors.foregroundMuted}
                   />
                 </TouchableOpacity>
               ))}
             </View>
 
             <Text style={styles.footer}>
-              Made with ❤️ for gamers everywhere
+              Made for gamers 🎮
             </Text>
           </ScrollView>
         </View>
@@ -141,129 +266,152 @@ export default function AboutModal({ visible, onClose }: Props) {
     </Modal>
   );
 }
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    backgroundColor: colors.overlay,
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing.lg,
-    paddingBottom: spacing.xl * 2,
     maxHeight: "90%",
   },
   handle: {
     width: 40,
     height: 4,
     backgroundColor: colors.border,
-    borderRadius: 2,
     alignSelf: "center",
     marginBottom: spacing.md,
+    borderRadius: 2,
   },
   closeBtn: {
     position: "absolute",
-    top: spacing.lg,
     right: spacing.lg,
-    zIndex: 1,
+    top: spacing.lg,
   },
-  appInfo: {
+
+  header: {
     alignItems: "center",
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   appIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceHigh,
-    justifyContent: "center",
-    alignItems: "center",
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     marginBottom: spacing.sm,
   },
   appName: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontSize: 22,
+    fontFamily: fontFamily.displayBold,
   },
-  appVersion: {
-    color: colors.textMuted,
+  version: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+  },
+  description: {
+    color: colors.foregroundMuted,
     fontSize: 13,
-  },
-  appDesc: {
-    color: colors.textMuted,
-    fontSize: 14,
     textAlign: "center",
-    lineHeight: 21,
-    paddingHorizontal: spacing.md,
+    marginTop: spacing.xs,
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    color: colors.textMuted,
+
+  sectionTitle: {
+    color: colors.foregroundMuted,
     fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.8,
     textTransform: "uppercase",
+    marginBottom: spacing.sm,
+  },
+
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  devName: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: spacing.xs,
+
+  email: {
+    color: colors.foreground,
+    flex: 1,
   },
-  devBio: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 21,
+
+  actionsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
+
+  primaryBtn: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+  primaryBtnText: {
+    color: colors.foreground,
+    fontFamily: fontFamily.sansSemibold,
+  },
+
+  secondaryBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+  secondaryBtnText: {
+    color: colors.foreground,
+  },
+
+  dangerBtn: {
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.danger + "22",
+    alignItems: "center",
+  },
+  dangerText: {
+    color: colors.danger,
+  },
+
+  helper: {
+    color: colors.foregroundMuted,
+    marginBottom: spacing.sm,
+  },
+
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  linkIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  linkInfo: {
-    flex: 1,
-  },
-  linkLabel: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  linkHandle: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  footer: {
-    color: colors.textMuted,
-    fontSize: 13,
-    textAlign: "center",
-    marginTop: spacing.lg,
   },
 
-  // Borra appIcon y agrega:
-  appIconImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 18,
+  linkLabel: {
+    color: colors.foreground,
+  },
+  linkHandle: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+  },
+
+  footer: {
+    textAlign: "center",
+    color: colors.foregroundMuted,
+    marginTop: spacing.lg,
   },
 });

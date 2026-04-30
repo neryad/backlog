@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GameStatus } from "../types/game";
 import { BacklogShareTemplate } from "../constants/shareCardThemes";
 
-export type SortOption = "recently-added" | "title-az";
+export type SortOption = "recently-added" | "title-az" | "top-rated" | "most-played";
 
 type UIStore = {
   activeFilter: GameStatus | "all";
@@ -13,6 +13,8 @@ type UIStore = {
   setFilter: (filter: GameStatus | "all") => void;
   setSortBy: (sortBy: SortOption) => void;
   setShareTemplate: (template: BacklogShareTemplate) => void;
+  pendingFriendRequests: number;
+  setPendingFriendRequests: (count: number) => void;
 };
 
 export const useUIStore = create<UIStore>()(
@@ -24,6 +26,8 @@ export const useUIStore = create<UIStore>()(
       setFilter: (filter) => set({ activeFilter: filter }),
       setSortBy: (sortBy) => set({ sortBy }),
       setShareTemplate: (shareTemplate) => set({ shareTemplate }),
+      pendingFriendRequests: 0,
+      setPendingFriendRequests: (count) => set({ pendingFriendRequests: count }),
     }),
     {
       name: "playlogged-ui-store",

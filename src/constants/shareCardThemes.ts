@@ -37,6 +37,12 @@ export const GAME_STATUS_THEMES: Record<
     gradientTop: "#3b1f25",
     gradientBottom: "#211218",
   },
+  paused: {
+    label: "Paused",
+    accent: "#f5a623",
+    gradientTop: "#3a2b1a",
+    gradientBottom: "#211911",
+  },
   wishlist: {
     label: "Wishlist",
     accent: "#f5a623",
@@ -48,7 +54,7 @@ export const GAME_STATUS_THEMES: Record<
 export const STATS_STATUS_ORDER = [
   { key: "completed", label: "Completed", color: colors.success },
   { key: "playing", label: "Playing", color: colors.primary },
-  { key: "backlog", label: "Backlog", color: colors.textMuted },
+  { key: "backlog", label: "Backlog", color: colors.foregroundMuted },
   { key: "wishlist", label: "Wishlist", color: colors.warning },
   { key: "dropped", label: "Dropped", color: colors.danger },
 ];

@@ -3,12 +3,32 @@ import { Game, GameEntry } from "../../types/game";
 import { v4 as uuidv4 } from "uuid";
 import { GameSearchResult } from "../../types/igdb.types";
 
-function mapEntry(row: any): GameEntry {
+type GameRow = {
+  id: string;
+  game_id: string;
+  platform_id: number;
+  status: string;
+  hours_played: number;
+  personal_rating: number | null;
+  notes: string | null;
+  started_at: number | null;
+  completed_at: number | null;
+  created_at: number;
+  updated_at: number;
+  is_public: number;
+  title: string | null;
+  cover_url: string | null;
+  summary: string | null;
+  release_year: number | null;
+  igdb_id: number | null;
+};
+
+function mapEntry(row: GameRow): GameEntry {
   return {
     id: row.id,
     gameId: row.game_id,
     platformId: row.platform_id,
-    status: row.status,
+    status: row.status as GameEntry["status"],
     hoursPlayed: row.hours_played,
     personalRating: row.personal_rating,
     notes: row.notes,
@@ -16,6 +36,7 @@ function mapEntry(row: any): GameEntry {
     completedAt: row.completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    isPublic: row.is_public !== 0,
     game: row.title
       ? ({
           id: row.game_id,
@@ -48,11 +69,10 @@ export function getGameEntries(status?: string): GameEntry[] {
          LIMIT 500`,
       );
 
-  return (rows as any[]).map(mapEntry);
+  return (rows as GameRow[]).map(mapEntry);
 }
 
 export function updateEntryStatus(id: string, status: string): void {
-  console.log("Updating entry status:", { id, status });
   db.runSync(
     `UPDATE game_entries SET status = ?, updated_at = ? WHERE id = ?`,
     [status, Date.now(), id],
@@ -90,8 +110,8 @@ export function insertGameEntry(
   const now = Date.now();
 
   db.runSync(
-    `INSERT INTO game_entries (id, game_id, platform_id, status, hours_played, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 0, ?, ?)`,
+    `INSERT INTO game_entries (id, game_id, platform_id, status, hours_played, is_public, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, 1, ?, ?)`,
     [id, gameId, platformId, status, now, now],
   );
 
@@ -112,7 +132,7 @@ export function getGameEntryById(id: string): GameEntry | null {
      JOIN games g ON g.id = ge.game_id
      WHERE ge.id = ?`,
     [id],
-  ) as any;
+  ) as GameRow | null;
 
   if (!row) return null;
   return mapEntry(row);
@@ -125,10 +145,11 @@ export function updateGameEntry(
     personalRating?: number | null;
     notes?: string | null;
     hoursPlayed?: number;
+    isPublic?: boolean;
   },
 ): void {
   const sets: string[] = [];
-  const values: any[] = [];
+  const values: (string | number | null)[] = [];
 
   if (fields.status !== undefined) {
     sets.push("status = ?");
@@ -145,6 +166,10 @@ export function updateGameEntry(
   if (fields.hoursPlayed !== undefined) {
     sets.push("hours_played = ?");
     values.push(fields.hoursPlayed);
+  }
+  if (fields.isPublic !== undefined) {
+    sets.push("is_public = ?");
+    values.push(fields.isPublic ? 1 : 0);
   }
 
   sets.push("updated_at = ?");

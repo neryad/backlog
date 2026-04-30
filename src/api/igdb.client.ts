@@ -1,7 +1,9 @@
 import { mapIGDBGame } from "../types/igdb.mapper";
 import { GameSearchResult, IGDBGame } from "../types/igdb.types";
 
-const PROXY_URL = "https://gamelog-proxy.vercel.app/api/games";
+const PROXY_URL =
+  process.env.EXPO_PUBLIC_IGDB_PROXY_URL ??
+  "https://gamelog-proxy.vercel.app/api/games";
 
 export async function searchGames(query: string): Promise<GameSearchResult[]> {
   const response = await fetch(PROXY_URL, {

@@ -6,6 +6,7 @@ import GameCard from "./GameCard";
 import { GameEntry } from "../types/game";
 import { colors, spacing, radius } from "../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { fontFamily } from "../constants/typography";
 
 type Props = {
   item: GameEntry;
@@ -26,8 +27,8 @@ function renderRightAction(progress: Animated.AnimatedInterpolation<number>) {
       <Animated.View
         style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
       >
-        <Ionicons name="checkmark-circle" size={28} color={colors.text} />
-        <Animated.Text style={styles.actionText}>Done</Animated.Text>
+        <Ionicons name="checkmark-circle" size={28} color={colors.foreground} />
+        <Text style={styles.actionText}>Done</Text>
       </Animated.View>
     </View>
   );
@@ -45,8 +46,8 @@ function renderLeftAction(progress: Animated.AnimatedInterpolation<number>) {
       <Animated.View
         style={{ transform: [{ scale }], alignItems: "center", gap: 4 }}
       >
-        <Ionicons name="game-controller" size={28} color={colors.text} />
-        <Animated.Text style={styles.actionText}>Playing</Animated.Text>
+        <Ionicons name="game-controller" size={28} color={colors.foreground} />
+        <Text style={styles.actionText}>Playing</Text>
       </Animated.View>
     </View>
   );
@@ -60,16 +61,19 @@ export default function SwipeableGameCard({
 }: Props) {
   const swipeableRef = useRef<Swipeable>(null);
 
-  function handleSwipeLeft() {
+  // Swipeable reporta la dirección del PANEL que se abrió, no del gesto:
+  // direction="left"  → panel izquierdo visible → gesto fue hacia la derecha → "Playing"
+  // direction="right" → panel derecho visible  → gesto fue hacia la izquierda → "Completed"
+  function handleLeftPanelOpen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     swipeableRef.current?.close();
-    onSwipeLeft(item);
+    onSwipeRight(item); // swipe derecha = "Playing"
   }
 
-  function handleSwipeRight() {
+  function handleRightPanelOpen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     swipeableRef.current?.close();
-    onSwipeRight(item);
+    onSwipeLeft(item); // swipe izquierda = "Completed"
   }
 
   return (
@@ -78,8 +82,8 @@ export default function SwipeableGameCard({
       renderRightActions={renderRightAction}
       renderLeftActions={renderLeftAction}
       onSwipeableOpen={(direction) => {
-        if (direction === "left") handleSwipeRight();
-        if (direction === "right") handleSwipeLeft();
+        if (direction === "left") handleLeftPanelOpen();
+        if (direction === "right") handleRightPanelOpen();
       }}
       overshootLeft={false}
       overshootRight={false}
@@ -110,8 +114,8 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
   actionText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 14,
   },
 });

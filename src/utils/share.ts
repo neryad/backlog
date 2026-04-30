@@ -4,8 +4,6 @@ import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 
 type ShareOptions = {
-  width?: number;
-  height?: number;
   dialogTitle: string;
   unavailableMessage?: string;
   errorMessage?: string;
@@ -15,7 +13,7 @@ export async function shareViewAsImage(
   ref: RefObject<View | null>,
   options: ShareOptions,
 ) {
-  const uri = await captureViewImageUri(ref, options.width, options.height);
+  const uri = await captureViewImageUri(ref);
   if (!uri) return false;
 
   try {
@@ -52,8 +50,6 @@ export async function shareViewAsImage(
 
 export async function captureViewImageUri(
   ref: RefObject<View | null>,
-  width = 1080,
-  height = 1920,
 ) {
   if (!ref.current) return null;
 
@@ -62,8 +58,6 @@ export async function captureViewImageUri(
       format: "png",
       quality: 1,
       result: "tmpfile",
-      width,
-      height,
     });
 
     return uri;

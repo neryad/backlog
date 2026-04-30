@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
-
 import { PLATFORMS } from "../../constants/platforms";
 import { colors, spacing, radius } from "../../constants/theme";
 import { GameSearchResult } from "../../types/igdb.types";
@@ -18,12 +17,17 @@ import {
   insertGame,
   insertGameEntry,
 } from "../../db/queries/game";
+import { useAuthStore } from "../../store/auth.store";
+import { syncSingleEntry } from "../../lib/sync";
+import { fontFamily } from "../../constants/typography";
 
 const STATUSES: { value: GameStatus; label: string }[] = [
   { value: "backlog", label: "Backlog" },
   { value: "playing", label: "Playing" },
   { value: "playing-social", label: "Playing (Social)" },
+  { value: "paused", label: "Paused" },
   { value: "completed", label: "Completed" },
+  { value: "dropped", label: "Dropped" },
   { value: "wishlist", label: "Wishlist" },
 ];
 
@@ -31,6 +35,7 @@ const ACTION_LABELS: Record<GameStatus, string> = {
   backlog: "Add to Backlog",
   playing: "Add as Playing",
   "playing-social": "Add as Playing (Social)",
+  paused: "Add as Paused",
   completed: "Add as Completed",
   dropped: "Add as Dropped",
   wishlist: "Add to Wishlist",
@@ -46,14 +51,21 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
   const [selectedPlatform, setSelectedPlatform] = useState<number>(1);
   const [selectedStatus, setSelectedStatus] = useState<GameStatus>("backlog");
   const [loading, setLoading] = useState(false);
+  const { session } = useAuthStore();
   const addActionLabel = ACTION_LABELS[selectedStatus];
 
-  function handleAdd() {
+  async function handleAdd() {
     setLoading(true);
     try {
       let gameId = gameExistsByIgdbId(game.igdbId);
       if (!gameId) gameId = insertGame(game);
-      insertGameEntry(gameId, selectedPlatform, selectedStatus);
+      const entryId = insertGameEntry(gameId, selectedPlatform, selectedStatus);
+
+      // Sync a Supabase en background si hay sesión
+      if (session?.user?.id) {
+        syncSingleEntry(entryId, session.user.id);
+      }
+
       onAdded();
     } finally {
       setLoading(false);
@@ -62,7 +74,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Game header */}
       <View style={styles.header}>
         {game.coverUrl ? (
           <Image
@@ -83,7 +94,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         </View>
       </View>
 
-      {/* Platform picker */}
       <Text style={styles.sectionLabel}>Platform</Text>
       <ScrollView
         horizontal
@@ -111,7 +121,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         ))}
       </ScrollView>
 
-      {/* Status picker */}
       <Text style={styles.sectionLabel}>Status</Text>
       <View style={styles.chips}>
         {STATUSES.map((s) => (
@@ -135,7 +144,6 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
         ))}
       </View>
 
-      {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
           <Text style={styles.cancelText}>Cancel</Text>
@@ -146,7 +154,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={colors.text} />
+            <ActivityIndicator color={colors.foreground} />
           ) : (
             <Text style={styles.addText}>{addActionLabel}</Text>
           )}
@@ -158,7 +166,7 @@ export default function AddGameSheet({ game, onAdded, onCancel }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: spacing.md,
     margin: spacing.md,
@@ -177,7 +185,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 80,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   headerInfo: {
     flex: 1,
@@ -185,18 +193,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: fontFamily.sansBold,
   },
   year: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   sectionLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fontFamily.sansSemibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
@@ -211,7 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.lg,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -220,12 +228,12 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   chipText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 13,
-    fontWeight: "500",
+    fontFamily: fontFamily.sansMedium,
   },
   chipTextActive: {
-    color: colors.text,
+    color: colors.foreground,
   },
   actions: {
     flexDirection: "row",
@@ -236,12 +244,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
     alignItems: "center",
   },
   cancelText: {
-    color: colors.textMuted,
-    fontWeight: "600",
+    color: colors.foregroundMuted,
+    fontFamily: fontFamily.sansSemibold,
   },
   addBtn: {
     flex: 2,
@@ -251,8 +259,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontFamily: fontFamily.sansBold,
     fontSize: 15,
   },
 });

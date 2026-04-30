@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 28,
     fontWeight: "800",
     lineHeight: 34,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   totalBadgeText: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     width: 54,
     height: 72,
     borderRadius: radius.sm,
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.cardElevated,
   },
   coverPlaceholder: {
     width: 54,
@@ -219,13 +219,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gameTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 2,
   },
   metaText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginBottom: spacing.xs,
   },
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   pill: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 11,
     fontWeight: "700",
     paddingHorizontal: spacing.sm,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: spacing.lg,
-    color: colors.text,
+    color: colors.foreground,
     opacity: 0.8,
     fontSize: 13,
   },

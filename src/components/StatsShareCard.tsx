@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 28,
     fontWeight: "800",
     lineHeight: 34,
@@ -203,12 +203,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   percentBadgeValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 24,
     fontWeight: "800",
   },
   percentBadgeLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 11,
     marginTop: 2,
   },
@@ -227,13 +227,13 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.08)",
   },
   statValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 26,
     fontWeight: "800",
     marginBottom: spacing.xs,
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 12,
   },
   breakdownCard: {
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.07)",
   },
   breakdownTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
     marginBottom: spacing.sm,
@@ -275,11 +275,11 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 13,
   },
   legendValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   monthlyTitle: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.08)",
   },
   monthPillText: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -338,18 +338,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(76,175,125,0.12)",
   },
   monthlyStatValue: {
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: "800",
   },
   monthlyStatLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 10,
     marginTop: 1,
   },
   monthlyTopText: {
     flex: 1,
-    color: colors.text,
+    color: colors.foreground,
     fontSize: 11,
     lineHeight: 15,
   },
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   monthlyTopLabel: {
-    color: colors.textMuted,
+    color: colors.foregroundMuted,
     fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",

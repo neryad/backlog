@@ -1,0 +1,947 @@
+import { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { colors, spacing, radius } from "../../src/constants/theme";
+import { useAuthStore } from "../../src/store/auth.store";
+import { useUIStore } from "../../src/store/ui.store";
+import { supabase } from "../../src/lib/supabase";
+import { fontFamily } from "../../src/constants/typography";
+
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+};
+
+type FriendRequest = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: string;
+  created_at: string;
+  sender?: Profile;
+  receiver?: Profile;
+};
+
+type Friend = {
+  user_id: string;
+  friend_id: string;
+  created_at: string;
+  profile?: Profile;
+};
+
+export default function FriendsScreen() {
+  const { session } = useAuthStore();
+  const setPendingFriendRequests = useUIStore(
+    (state) => state.setPendingFriendRequests,
+  );
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ hooks siempre se llaman — el check de sesión va al final
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) {
+        setPendingFriendRequests(0);
+        return;
+      }
+      loadFriends();
+      return () => {
+        setSearch("");
+        setSearchResults([]);
+      };
+    }, [session, setPendingFriendRequests]),
+  );
+
+  async function loadFriends() {
+    setLoading(true);
+    const userId = session!.user.id;
+
+    try {
+      // Amigos: 2 queries en total (friends + batch de perfiles) en vez de N+1.
+      const { data: friendsData } = await supabase
+        .from("friends")
+        .select("user_id, friend_id, created_at")
+        .eq("user_id", userId);
+
+      if (friendsData && friendsData.length > 0) {
+        const friendIds = friendsData.map((f) => f.friend_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", friendIds);
+
+        const profileMap = new Map(profiles?.map((p) => [p.id, p]));
+        setFriends(
+          friendsData.map((f) => ({
+            ...f,
+            profile: profileMap.get(f.friend_id) ?? undefined,
+          })),
+        );
+      } else {
+        setFriends([]);
+      }
+
+      // Solicitudes pendientes: 2 queries en total en vez de N+1.
+      const { data: requestsData } = await supabase
+        .from("friend_requests")
+        .select("id, sender_id, receiver_id, status, created_at")
+        .eq("receiver_id", userId)
+        .eq("status", "pending");
+
+      if (requestsData && requestsData.length > 0) {
+        const senderIds = requestsData.map((r) => r.sender_id);
+        const { data: senderProfiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", senderIds);
+
+        const senderMap = new Map(senderProfiles?.map((p) => [p.id, p]));
+        const enriched = requestsData.map((r) => ({
+          ...r,
+          sender: senderMap.get(r.sender_id) ?? undefined,
+        }));
+        setPendingRequests(enriched);
+        setPendingFriendRequests(enriched.length);
+      } else {
+        setPendingRequests([]);
+        setPendingFriendRequests(0);
+      }
+
+      // Solicitudes enviadas por mí
+      const { data: sentData } = await supabase
+        .from("friend_requests")
+        .select("id, sender_id, receiver_id, status, created_at")
+        .eq("sender_id", userId)
+        .eq("status", "pending");
+
+      if (sentData && sentData.length > 0) {
+        const receiverIds = sentData.map((r) => r.receiver_id);
+        const { data: receiverProfiles } = await supabase
+          .from("profiles")
+          .select("id, username, display_name")
+          .in("id", receiverIds);
+        const profileMap = new Map(receiverProfiles?.map((p) => [p.id, p]));
+        setSentRequests(
+          sentData.map((r) => ({ ...r, receiver: profileMap.get(r.receiver_id) })),
+        );
+      } else {
+        setSentRequests([]);
+      }
+    } catch (err) {
+      if (__DEV__) console.error("loadFriends error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSearch() {
+    if (search.trim().length < 2) return;
+    setSearchResults([]);
+
+    // Strip PostgREST filter-syntax characters to prevent query injection.
+    const safe = search.trim().replace(/[(),."']/g, "");
+
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, display_name")
+        .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+        .neq("id", session!.user.id)
+        .limit(10);
+
+      setSearchResults(data ?? []);
+    } catch (err) {
+      if (__DEV__) console.error("Search error:", err);
+    }
+  }
+
+  async function sendRequest(receiverId: string) {
+    const { error } = await supabase.from("friend_requests").insert({
+      sender_id: session!.user.id,
+      receiver_id: receiverId,
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        Alert.alert("Already sent", "You already sent a request to this user.");
+      } else {
+        Alert.alert("Error", error.message);
+      }
+    } else {
+      const profile = searchResults.find((p) => p.id === receiverId);
+      setSentRequests((prev) => [
+        ...prev,
+        {
+          id: `tmp-${receiverId}`,
+          sender_id: session!.user.id,
+          receiver_id: receiverId,
+          status: "pending",
+          created_at: new Date().toISOString(),
+          receiver: profile,
+        },
+      ]);
+    }
+  }
+
+  async function cancelRequest(requestId: string) {
+    try {
+      await supabase.from("friend_requests").delete().eq("id", requestId);
+      setSentRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err) {
+      if (__DEV__) console.error("cancelRequest error:", err);
+    }
+  }
+
+  async function acceptRequest(requestId: string, senderId: string) {
+    try {
+      // Eliminar la solicitud
+      const { error: deleteError } = await supabase
+        .from("friend_requests")
+        .delete()
+        .eq("id", requestId);
+
+      if (deleteError) {
+        if (__DEV__) console.error("Delete error:", deleteError);
+        Alert.alert(
+          "Error",
+          `Failed to delete request: ${deleteError.message}`,
+        );
+        return;
+      }
+
+      // Agregar amigos
+      const { error: insertError } = await supabase.from("friends").insert([
+        { user_id: session!.user.id, friend_id: senderId },
+        { user_id: senderId, friend_id: session!.user.id },
+      ]);
+
+      if (insertError) {
+        if (__DEV__) console.error("Insert error:", insertError);
+        Alert.alert("Error", `Failed to add friend: ${insertError.message}`);
+        return;
+      }
+
+      setPendingRequests((prev) => {
+        const next = prev.filter((r) => r.id !== requestId);
+        setPendingFriendRequests(next.length);
+        return next;
+      });
+
+      await loadFriends();
+      Alert.alert("Success", "Friend added!");
+    } catch (err) {
+      if (__DEV__) console.error("acceptRequest error:", err);
+      Alert.alert("Error", String(err));
+    }
+  }
+
+  async function rejectRequest(requestId: string) {
+    try {
+      const { error } = await supabase
+        .from("friend_requests")
+        .delete()
+        .eq("id", requestId);
+
+      if (error) {
+        if (__DEV__) console.error("Reject error:", error);
+        Alert.alert("Error", `Failed to reject: ${error.message}`);
+        return;
+      }
+
+      setPendingRequests((prev) => {
+        const next = prev.filter((r) => r.id !== requestId);
+        setPendingFriendRequests(next.length);
+        return next;
+      });
+
+      await loadFriends();
+    } catch (err) {
+      if (__DEV__) console.error("rejectRequest error:", err);
+      Alert.alert("Error", String(err));
+    }
+  }
+
+  async function removeFriend(friendId: string) {
+    Alert.alert("Remove Friend", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const me = session!.user.id;
+
+            // Always remove the current user's row first.
+            const { error: ownDeleteError } = await supabase
+              .from("friends")
+              .delete()
+              .eq("user_id", me)
+              .eq("friend_id", friendId);
+
+            if (ownDeleteError) {
+              Alert.alert(
+                "Error",
+                `Failed to remove friend: ${ownDeleteError.message}`,
+              );
+              return;
+            }
+
+            // Try to remove the mirrored row too (may be blocked by strict RLS).
+            const { error: mirrorDeleteError } = await supabase
+              .from("friends")
+              .delete()
+              .eq("user_id", friendId)
+              .eq("friend_id", me);
+
+            if (mirrorDeleteError) {
+              if (__DEV__) console.warn("Mirror row cleanup failed:", mirrorDeleteError.message);
+            }
+
+            await loadFriends();
+          } catch (err) {
+            Alert.alert("Error", String(err));
+          }
+        },
+      },
+    ]);
+  }
+
+  const isFriend = (profileId: string) =>
+    friends.some((f) => f.friend_id === profileId);
+
+  // ✅ check de sesión al final, después de todos los hooks
+  if (!session) {
+    return (
+      <View style={styles.guestContainer}>
+        <Ionicons name="people-outline" size={64} color={colors.foregroundMuted} />
+        <Text style={styles.guestTitle}>Connect with friends</Text>
+        <Text style={styles.guestDesc}>
+          Create an account to add friends and see their backlogs.
+        </Text>
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={() => router.push("/auth/login")}
+        >
+          <Text style={styles.guestBtnText}>Sign In</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/auth/register")}>
+          <Text style={styles.guestLink}>Create Account</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // return (
+  //   <View style={styles.container}>
+  //     {/* Search */}
+  //     <View style={styles.searchRow}>
+  //       <TextInput
+  //         style={styles.searchInput}
+  //         placeholder="Search by username..."
+  //         placeholderTextColor={colors.foregroundMuted}
+  //         value={search}
+  //         onChangeText={setSearch}
+  //         onSubmitEditing={handleSearch}
+  //         returnKeyType="search"
+  //         autoCapitalize="none"
+  //       />
+  //       <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+  //         {searching ? (
+  //           <ActivityIndicator size="small" color={colors.primary} />
+  //         ) : (
+  //           <Ionicons name="search" size={20} color={colors.primary} />
+  //         )}
+  //       </TouchableOpacity>
+  //     </View>
+
+  //     {/* Search results */}
+  //     {searchResults.length > 0 && (
+  //       <View style={styles.section}>
+  //         <Text style={styles.sectionLabel}>Search Results</Text>
+  //         {searchResults.map((profile) => (
+  //           <View key={profile.id} style={styles.userRow}>
+  //             <View style={styles.avatar}>
+  //               <Ionicons name="person" size={20} color={colors.primary} />
+  //             </View>
+  //             <View style={styles.userInfo}>
+  //               <Text style={styles.username}>{profile.username}</Text>
+  //               {profile.display_name && (
+  //                 <Text style={styles.displayName}>{profile.display_name}</Text>
+  //               )}
+  //             </View>
+  //             {isFriend(profile.id) ? (
+  //               <Text style={styles.alreadyFriend}>Friends</Text>
+  //             ) : (
+  //               <TouchableOpacity
+  //                 style={styles.addBtn}
+  //                 onPress={() => sendRequest(profile.id)}
+  //               >
+  //                 <Text style={styles.addBtnText}>Add</Text>
+  //               </TouchableOpacity>
+  //             )}
+  //           </View>
+  //         ))}
+  //       </View>
+  //     )}
+
+  //     {loading ? (
+  //       <ActivityIndicator
+  //         color={colors.primary}
+  //         style={{ marginTop: spacing.xl }}
+  //       />
+  //     ) : (
+  //       <FlatList
+  //         data={[]}
+  //         renderItem={null}
+  //         ListHeaderComponent={
+  //           <>
+  //             {/* Pending requests */}
+  //             {pendingRequests.length > 0 && (
+  //               <View style={styles.section}>
+  //                 <Text style={styles.sectionLabel}>
+  //                   Pending Requests ({pendingRequests.length})
+  //                 </Text>
+  //                 {pendingRequests.map((req) => (
+  //                   <View key={req.id} style={styles.userRow}>
+  //                     <View style={styles.avatar}>
+  //                       <Ionicons
+  //                         name="person"
+  //                         size={20}
+  //                         color={colors.primary}
+  //                       />
+  //                     </View>
+  //                     <View style={styles.userInfo}>
+  //                       <Text style={styles.username}>
+  //                         {req.sender?.username ?? "Unknown"}
+  //                       </Text>
+  //                       <Text style={styles.displayName}>
+  //                         wants to be your friend
+  //                       </Text>
+  //                     </View>
+  //                     <View style={styles.requestActions}>
+  //                       <TouchableOpacity
+  //                         style={styles.acceptBtn}
+  //                         onPress={() => acceptRequest(req.id, req.sender_id)}
+  //                       >
+  //                         <Ionicons name="checkmark" size={18} color={colors.primaryForeground} />
+  //                       </TouchableOpacity>
+  //                       <TouchableOpacity
+  //                         style={styles.rejectBtn}
+  //                         onPress={() => rejectRequest(req.id)}
+  //                       >
+  //                         <Ionicons
+  //                           name="close"
+  //                           size={18}
+  //                           color={colors.foregroundMuted}
+  //                         />
+  //                       </TouchableOpacity>
+  //                     </View>
+  //                   </View>
+  //                 ))}
+  //               </View>
+  //             )}
+
+  //             {/* Friends list */}
+  //             <View style={styles.section}>
+  //               <Text style={styles.sectionLabel}>
+  //                 Friends ({friends.length})
+  //               </Text>
+  //               {friends.length === 0 ? (
+  //                 <Text style={styles.emptyText}>
+  //                   No friends yet. Search for someone to add.
+  //                 </Text>
+  //               ) : (
+  //                 friends.map((f) => (
+  //                   <TouchableOpacity
+  //                     key={`${f.user_id}-${f.friend_id}`}
+  //                     style={styles.userRow}
+  //                     onPress={() => {
+  //                       if (!f.profile?.username) return;
+  //                       router.navigate(`/profile/${f.profile.username}`);
+  //                     }}
+  //                     activeOpacity={0.7}
+  //                   >
+  //                     <View style={styles.avatar}>
+  //                       <Ionicons
+  //                         name="person"
+  //                         size={20}
+  //                         color={colors.primary}
+  //                       />
+  //                     </View>
+  //                     <View style={styles.userInfo}>
+  //                       <Text style={styles.username}>
+  //                         {f.profile?.username ?? "Unknown"}
+  //                       </Text>
+  //                       {f.profile?.display_name && (
+  //                         <Text style={styles.displayName}>
+  //                           {f.profile.display_name}
+  //                         </Text>
+  //                       )}
+  //                     </View>
+  //                     {/* ✅ Botón remove friend */}
+  //                     <TouchableOpacity
+  //                       style={styles.removeBtn}
+  //                       onPress={() => {
+  //                         const friendId =
+  //                           f.user_id === session.user.id
+  //                             ? f.friend_id
+  //                             : f.user_id;
+  //                         removeFriend(friendId);
+  //                       }}
+  //                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+  //                     >
+  //                       <Ionicons
+  //                         name="person-remove-outline"
+  //                         size={18}
+  //                         color={colors.foregroundMuted}
+  //                       />
+  //                     </TouchableOpacity>
+  //                   </TouchableOpacity>
+  //                 ))
+  //               )}
+  //             </View>
+  //           </>
+  //         }
+  //       />
+  //     )}
+  //   </View>
+  // );
+
+
+return (
+  <View style={styles.container}>
+    
+    {/* 🔍 SEARCH (MEJORADO) */}
+    <View style={styles.searchContainer}>
+      <Ionicons name="search" size={18} color={colors.foregroundMuted} />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search friends..."
+        placeholderTextColor={colors.foregroundMuted}
+        value={search}
+        onChangeText={setSearch}
+        onSubmitEditing={handleSearch}
+      />
+    </View>
+
+    {/* 🔍 RESULTS (MÁS LIMPIO) */}
+    {searchResults.length > 0 && (
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Search Results</Text>
+        {searchResults.map((profile, index) => (
+          <View key={profile.id}>
+            {index > 0 && <View style={styles.separator} />}
+            <View style={styles.userRow}>
+              <View style={styles.avatar} />
+              <View style={styles.userInfo}>
+                <Text style={styles.username}>{profile.username}</Text>
+                {profile.display_name && (
+                  <Text style={styles.displayName}>
+                    {profile.display_name}
+                  </Text>
+                )}
+              </View>
+
+              {isFriend(profile.id) ? (
+                <Text style={styles.friendTag}>Friends</Text>
+              ) : sentRequests.some((r) => r.receiver_id === profile.id) ? (
+                <Text style={styles.pendingTag}>Pending</Text>
+              ) : (
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={() => sendRequest(profile.id)}
+                >
+                  <Text style={styles.addBtnText}>Add</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        ))}
+      </View>
+    )}
+
+    {loading ? (
+      <ActivityIndicator style={{ marginTop: spacing.xl }} />
+    ) : (
+      <FlatList
+        data={[]}
+        renderItem={null}
+        ListHeaderComponent={
+          <>
+            {/* 📨 REQUESTS */}
+            {pendingRequests.length > 0 && (
+              <View style={styles.cardHighlight}>
+                <Text style={styles.sectionTitle}>
+                  Requests ({pendingRequests.length})
+                </Text>
+
+                {pendingRequests.map((req, index) => (
+                  <View key={req.id}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <View style={styles.userRow}>
+                      <View style={styles.avatar} />
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {req.sender?.username}
+                        </Text>
+                        <Text style={styles.displayName}>
+                          wants to connect
+                        </Text>
+                      </View>
+
+                      <View style={styles.actions}>
+                        <TouchableOpacity
+                          style={styles.acceptBtn}
+                          onPress={() =>
+                            acceptRequest(req.id, req.sender_id)
+                          }
+                        >
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.rejectBtn}
+                          onPress={() => rejectRequest(req.id)}
+                        >
+                          <Ionicons name="close" size={16} color={colors.foregroundMuted} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* 📤 SENT REQUESTS */}
+            {sentRequests.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>
+                  Sent ({sentRequests.length})
+                </Text>
+
+                {sentRequests.map((req, index) => (
+                  <View key={req.id}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <View style={styles.userRow}>
+                      <View style={styles.avatar} />
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {req.receiver?.username}
+                        </Text>
+                        <Text style={styles.displayName}>Pending...</Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.rejectBtn}
+                        onPress={() => cancelRequest(req.id)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons name="close" size={16} color={colors.foregroundMuted} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* 👥 FRIENDS */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>
+                Friends ({friends.length})
+              </Text>
+
+              {friends.length === 0 ? (
+                <Text style={styles.emptyText}>
+                  No friends yet. Start adding people 👀
+                </Text>
+              ) : (
+                friends.map((f, index) => (
+                  <View key={`${f.user_id}-${f.friend_id}`}>
+                    {index > 0 && <View style={styles.separator} />}
+                    <TouchableOpacity
+                      style={styles.userRow}
+                      onPress={() => {
+                        if (!f.profile?.username) return;
+                        router.navigate(`/profile/${f.profile.username}`);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.avatar} />
+                      <View style={styles.userInfo}>
+                        <Text style={styles.username}>
+                          {f.profile?.username}
+                        </Text>
+                        {f.profile?.display_name && (
+                          <Text style={styles.displayName}>
+                            {f.profile.display_name}
+                          </Text>
+                        )}
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.removeBtn}
+                        onPress={() => {
+                          const friendId =
+                            f.user_id === session.user.id
+                              ? f.friend_id
+                              : f.user_id;
+                          removeFriend(friendId);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name="person-remove-outline"
+                          size={18}
+                          color={colors.foregroundMuted}
+                        />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+          </>
+        }
+      />
+    )}
+  </View>
+);
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: spacing.md,
+  },
+  guestContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  guestTitle: {
+    color: colors.foreground,
+    fontSize: 22,
+    fontFamily: fontFamily.displayBold,
+    textAlign: "center",
+  },
+  guestDesc: {
+    color: colors.foregroundMuted,
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+  guestBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.sm,
+  },
+  guestBtnText: {
+    color: colors.primaryForeground,
+    fontFamily: fontFamily.sansSemibold,
+    fontSize: 15,
+  },
+  guestLink: {
+    color: colors.primary,
+    fontSize: 14,
+    marginTop: spacing.sm,
+  },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: colors.card,
+    color: colors.foreground,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchBtn: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    width: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  section: {
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    color: colors.foregroundMuted,
+    fontSize: 11,
+    fontFamily: fontFamily.sansSemibold,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.md,
+  },
+  // userRow: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   gap: spacing.md,
+  //   paddingVertical: spacing.sm,
+  //   borderBottomWidth: 1,
+  //   borderBottomColor: colors.border,
+  // },
+  // avatar: {
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 20,
+  //   backgroundColor: colors.primary + "22",
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    color: colors.foreground,
+    fontSize: 15,
+    fontFamily: fontFamily.sansSemibold,
+  },
+  displayName: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+  },
+  alreadyFriend: {
+    color: colors.primary,
+    fontSize: 13,
+    fontFamily: fontFamily.sansMedium,
+  },
+  addBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  addBtnText: {
+    color: colors.primaryForeground,
+    fontSize: 13,
+    fontFamily: fontFamily.sansSemibold,
+  },
+  removeBtn: {
+    padding: spacing.xs,
+  },
+  requestActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  acceptBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    width: 34,
+    height: 34,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rejectBtn: {
+    backgroundColor: colors.card,
+    borderRadius: radius.sm,
+    width: 34,
+    height: 34,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  emptyText: {
+    color: colors.foregroundMuted,
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: spacing.lg,
+  },
+
+    searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.cardElevated,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  cardHighlight: {
+    backgroundColor: colors.cardElevated,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    color: colors.foreground,
+    marginBottom: spacing.md,
+    fontFamily: fontFamily.sansSemibold,
+  },
+
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+
+  separator: {
+    height: 1,
+    backgroundColor: colors.border,
+  },
+
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary + "22",
+  },
+
+  friendTag: {
+    color: colors.primary,
+    fontSize: 13,
+  },
+
+  pendingTag: {
+    color: colors.foregroundMuted,
+    fontSize: 13,
+  },
+
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+});
