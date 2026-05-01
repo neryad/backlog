@@ -9,12 +9,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Image } from "expo-image";
-import { useGlobalSearchParams } from "expo-router";
-import { Stack } from "expo-router";
+import { useGlobalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { supabase } from "../../src/lib/supabase";
 import { fontFamily } from "../../src/constants/typography";
+
+import { useAuthStore } from "../../src/store/auth.store";
 
 type Profile = {
   id: string;
@@ -50,15 +51,17 @@ const STATUS_COLORS: Record<string, string> = {
   "playing-social":  colors.statusPlayingSocial,
   completed:         colors.success,
   backlog:           colors.foregroundMuted,
+  paused:            colors.statusOnHold,
   dropped:           colors.danger,
   wishlist:          colors.warning,
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  playing:           "Playing",
+ playing:           "Playing",
   "playing-social":  "Playing (Social)",
   completed:         "Completed",
   backlog:           "Backlog",
+  paused:            "Paused",
   dropped:           "Dropped",
   wishlist:          "Wishlist",
 };
@@ -69,6 +72,8 @@ export default function ProfileScreen() {
   const [entries, setEntries] = useState<RemoteEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { session } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     loadProfile();
@@ -87,39 +92,36 @@ export default function ProfileScreen() {
 
     await Share.share({ message: lines.join("\n") });
   }, [profile]);
+async function loadProfile() {
+  setLoading(true);
+  try {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, psn_id, xbox_gamertag, switch_code, steam_id, epic_id")
+      .eq("username", username)
+      .single();
 
-  async function loadProfile() {
-    setLoading(true);
-    try {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, psn_id, xbox_gamertag, switch_code, steam_id, epic_id")
-        .eq("username", username)
-        .single();
-
-      if (!profileData) {
-        setNotFound(true);
-        return;
-      }
-
-      setProfile(profileData);
-
-      const { data: entriesData } = await supabase
-        .from("game_entries")
-        .select(
-          "id, title, cover_url, status, personal_rating, hours_played, platform_id",
-        )
-        .eq("user_id", profileData.id)
-        .eq("is_public", true)
-        .order("updated_at", { ascending: false });
-
-      setEntries(entriesData ?? []);
-    } catch (err) {
-      if (__DEV__) console.error("loadProfile error:", err);
-    } finally {
-      setLoading(false);
+    if (!profileData) {
+      setNotFound(true);
+      return;
     }
+
+    setProfile(profileData);
+
+    const { data: entriesData } = await supabase
+      .from("game_entries")
+      .select("id, title, cover_url, status, personal_rating, hours_played, platform_id")
+      .eq("user_id", profileData.id)
+      .eq("is_public", true)
+      .order("updated_at", { ascending: false });
+
+    setEntries(entriesData ?? []);
+  } catch (err) {
+    if (__DEV__) console.error("loadProfile error:", err);
+  } finally {
+    setLoading(false);
   }
+}
 
   if (loading) {
     return (
@@ -128,6 +130,8 @@ export default function ProfileScreen() {
       </View>
     );
   }
+
+  const isOwnProfile = !!session?.user?.id && profile?.id === session.user.id;
 
   if (notFound) {
     return (
@@ -226,6 +230,17 @@ export default function ProfileScreen() {
             </>
           )}
 
+          {!isOwnProfile && session && (
+            <TouchableOpacity
+              style={styles.commonButton}
+              onPress={() => router.push(`/compare/${profile?.username}`)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="people-outline" size={18} color={colors.primary} />
+              <Text style={styles.commonButtonText}>Ver juegos en común</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.foregroundMuted} />
+            </TouchableOpacity>
+          )}
           <Text style={styles.sectionLabel}>Public backlog</Text>
         </>
       }
@@ -469,5 +484,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fontFamily.sansMedium,
     maxWidth: 120,
+  },
+  commonButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  commonButtonText: {
+    flex: 1,
+    color: colors.foreground,
+    fontSize: 14,
+    fontFamily: fontFamily.sansMedium,
   },
 });
