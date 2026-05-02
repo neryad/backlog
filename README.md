@@ -230,7 +230,7 @@ create table public.profiles (
   username text unique not null,
   display_name text,
   psn_id text,
-  xbox_gamertag text,
+  Xbox_gamertag text,
   switch_code text,
   steam_id text,
   epic_id text,

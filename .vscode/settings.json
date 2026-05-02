@@ -1,8 +1,14 @@
 {
   "cSpell.words": [
+    "cooldown",
+    "COOLDOWN",
+    "gamertag",
+    "Gamertag",
+    "Grotesk",
     "igdb",
     "neryad",
     "Neryad",
+    "Optimised",
     "playlogged",
     "Playlogged",
     "Subviews",
@@ -10,6 +16,7 @@
     "Supabase",
     "swipeable",
     "Swipeable",
+    "timestamptz",
     "TIMESTAMPTZ",
     "uuidv",
     "yourhandle"
