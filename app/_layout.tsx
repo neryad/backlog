@@ -1,6 +1,6 @@
 import "react-native-get-random-values";
 import { useEffect, useState } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Text } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initializeDatabase } from "../src/db/schema";
@@ -9,6 +9,7 @@ import { fontFamily } from "../src/constants/typography";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { isSupabaseConfigured, supabase } from "../src/lib/supabase";
 import { useAuthStore } from "../src/store/auth.store";
+import { useUIStore } from "../src/store/ui.store";
 import { syncBacklogToSupabase } from "../src/lib/sync";
 import { useAppFonts } from "../src/constants/useAppFonts";
 
@@ -24,6 +25,8 @@ export default function RootLayout() {
   const fontsLoaded = useAppFonts();
   const [dbReady, setDbReady] = useState(false);
   const { setSession } = useAuthStore();
+  const { hasSeenOnboarding, _hasHydrated } = useUIStore();
+  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -87,7 +90,13 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (!dbReady || !fontsLoaded) return null;
+  useEffect(() => {
+    if (dbReady && fontsLoaded && _hasHydrated && !hasSeenOnboarding) {
+      router.replace("/onboarding");
+    }
+  }, [dbReady, fontsLoaded, _hasHydrated, hasSeenOnboarding]);
+
+  if (!dbReady || !fontsLoaded || !_hasHydrated) return null;
 
   return (
     <SafeAreaProvider>
@@ -102,6 +111,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/login" options={{ headerShown: false }} />
           <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen
             name="profile/[username]"
             options={{ headerShown: true }}
