@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/images/icon.png" alt="Playlogged Logo" width="120" height="120" style="border-radius: 24px;" />
+<img src="./assets/icons/ios-dark.jpg" alt="Playlogged Logo" width="120" height="120" style="border-radius: 24px;" />
 
 # Playlogged
 
