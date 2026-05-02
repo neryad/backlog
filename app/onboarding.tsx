@@ -20,36 +20,36 @@ const SLIDES = [
   {
     key: "1",
     image: require("../assets/onboarding/slide-1-welcome.jpeg"),
-    title: "Bienvenido a Playlogged",
-    description: "Tu biblioteca personal para nunca perder un juego de vista.",
+    title: "Welcome to Playlogged",
+    description: "Your personal library to never lose track of a game again.",
   },
   {
     key: "2",
     image: require("../assets/onboarding/slide-2-orfer-yout-blacklog.png"),
-    title: "Organiza tu backlog",
+    title: "Organize your backlog",
     description:
-      "Agrega cualquier juego y clasifícalo: Jugando, Completado, En espera y más.",
+      "Add any game and classify it: Playing, Completed, On Hold, and more.",
   },
   {
     key: "3",
     image: require("../assets/onboarding/slide-4-swipe-gestures.png"),
-    title: "Actualiza con un swipe",
+    title: "Update with a swipe",
     description:
-      "Desliza la carta a la derecha para empezar a jugar, a la izquierda para completar.",
+      "Swipe a card right to start playing, left to mark it as completed.",
   },
   {
     key: "4",
     image: require("../assets/onboarding/slide-4-what-to-play.png"),
-    title: "Elige qué jugar hoy",
+    title: "Pick what to play",
     description:
-      'El botón "Siguiente a jugar" te sugiere opciones: al azar, el más antiguo o el mejor valorado.',
+      'Use "Next to Play" to get a suggestion: random, oldest added, or top rated.',
   },
   {
     key: "5",
     image: require("../assets/onboarding/slide-5-shared-conect.png"),
-    title: "Comparte y conecta",
+    title: "Share & connect",
     description:
-      "Agrega amigos, compara backlogs y comparte tus stats en redes sociales.",
+      "Add friends, compare backlogs, and share your stats on social media.",
   },
 ];
 
@@ -93,7 +93,7 @@ export default function OnboardingScreen() {
           onPress={finish}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={styles.skipText}>Omitir</Text>
+          <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       )}
 
@@ -135,7 +135,7 @@ export default function OnboardingScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.buttonText}>
-            {isLast ? "Empezar" : "Siguiente"}
+            {isLast ? "Get Started" : "Next"}
           </Text>
         </TouchableOpacity>
       </View>
