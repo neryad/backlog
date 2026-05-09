@@ -11,7 +11,7 @@ const IOS_APP_ID = "6760157713";
 
 const FALLBACK_STORE_URL =
   Platform.OS === "ios"
-    ? `https://apps.apple.com/us/app/playlogged/id${IOS_APP_ID}`
+    ? `https://apps.apple.com/app/id${IOS_APP_ID}`
     : "https://play.google.com/store/apps/details?id=com.neryad.playlogged";
 
 function getMajor(version: string): number {
@@ -83,7 +83,7 @@ export function useAppUpdateCheck(): UpdateCheckResult {
 
         if (!updateAvailable) return;
 
-        const resolvedUrl = typeof url === "string" && url ? url : FALLBACK_STORE_URL;
+        const resolvedUrl = FALLBACK_STORE_URL;
         const forceMajor = getMajor(latest) > getMajor(current);
 
         setIsUpdateAvailable(true);

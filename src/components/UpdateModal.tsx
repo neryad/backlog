@@ -47,9 +47,7 @@ export function UpdateModal({ storeUrl, isForceUpdate, shouldShowModal, dismissM
   async function handleUpdate() {
     if (!storeUrl) return;
     try {
-      if (await Linking.canOpenURL(storeUrl)) {
-        await Linking.openURL(storeUrl);
-      }
+      await Linking.openURL(storeUrl);
     } catch {
       // ignore
     }
