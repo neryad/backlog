@@ -854,7 +854,7 @@
 //     fontSize: 12,
 //   },
 // });
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -863,6 +863,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import {
   getMonthlyRecap,
   getStats,
@@ -874,6 +875,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatsShareCard } from "../../src/components/StatsShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
 import { fontFamily } from "../../src/constants/typography";
+import AboutModal from "../../src/features/about/AboutModal";
 
 const STATUS_META: Record<
   string,
@@ -911,11 +913,30 @@ function ProgressBar({ value, color }: any) {
 }
 
 export default function StatsScreen() {
+  const navigation = useNavigation();
+  const [showAbout, setShowAbout] = useState(false);
   const [stats, setStats] = useState<BacklogStats | null>(null);
   const [monthlyRecap, setMonthlyRecap] = useState<MonthlyRecap | null>(null);
 
   const shareCardRef = useRef<View>(null);
   const [isSharing, setIsSharing] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setShowAbout(true)}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color={colors.foregroundMuted}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -941,7 +962,8 @@ export default function StatsScreen() {
   const total = Math.max(stats.total, 1);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       
       {/* 🔥 TOP STATS */}
       <View style={styles.topCards}>
@@ -1015,6 +1037,8 @@ export default function StatsScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    <AboutModal visible={showAbout} onClose={() => setShowAbout(false)} />
+    </>
   );
 }
 

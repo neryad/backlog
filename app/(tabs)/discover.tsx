@@ -223,7 +223,7 @@
 //     textAlign: "center",
 //   },
 // });
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -241,16 +241,37 @@ import { Ionicons } from "@expo/vector-icons";
 import { GameSearchResult } from "../../src/types/igdb.types";
 import { useDebounce } from "../../src/hooks/useDebounce";
 import { useGameSearch } from "../../src/features/search/useGameSearch";
+import { useNavigation } from "@react-navigation/native";
 import { colors, radius, spacing } from "../../src/constants/theme";
 import AddGameSheet from "../../src/features/search/AddGameSheet";
 import { fontFamily } from "../../src/constants/typography";
+import AboutModal from "../../src/features/about/AboutModal";
 
 export default function DiscoverScreen() {
+  const navigation = useNavigation();
+  const [showAbout, setShowAbout] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<GameSearchResult | null>(null);
 
   const debouncedQuery = useDebounce(query, 400);
   const { data, isFetching, error } = useGameSearch(debouncedQuery);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setShowAbout(true)}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color={colors.foregroundMuted}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const handleAdded = useCallback(() => setSelected(null), []);
 
@@ -380,6 +401,7 @@ export default function DiscoverScreen() {
           )}
         </View>
       </Modal>
+      <AboutModal visible={showAbout} onClose={() => setShowAbout(false)} />
     </View>
   );
 }
