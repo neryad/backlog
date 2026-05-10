@@ -69,13 +69,19 @@ export function useAppUpdateCheck(): UpdateCheckResult {
             : { packageName: "com.neryad.playlogged" };
 
         let current: string | null = null;
-        try { current = VersionCheck.getCurrentVersion(); } catch { /* native not ready */ }
+        try {
+          current = VersionCheck.getCurrentVersion();
+        } catch {
+          /* native not ready */
+        }
 
         const [latest, url] = await Promise.all([
           VersionCheck.getLatestVersion(platformOptions).catch(() => null),
-          VersionCheck.getStoreUrl(platformOptions).catch(() => FALLBACK_STORE_URL),
+          VersionCheck.getStoreUrl(platformOptions).catch(
+            () => FALLBACK_STORE_URL,
+          ),
         ]);
-        console.log("Version check", { current, latest, url });
+
         if (cancelled) return;
         if (!isValidVersion(current) || !isValidVersion(latest)) return;
 
@@ -83,7 +89,8 @@ export function useAppUpdateCheck(): UpdateCheckResult {
 
         if (!updateAvailable) return;
 
-        const resolvedUrl = FALLBACK_STORE_URL;
+        const resolvedUrl =
+          typeof url === "string" && url ? url : FALLBACK_STORE_URL;
         const forceMajor = getMajor(latest) > getMajor(current);
 
         setIsUpdateAvailable(true);
@@ -112,5 +119,11 @@ export function useAppUpdateCheck(): UpdateCheckResult {
     };
   }, []);
 
-  return { isUpdateAvailable, isForceUpdate, storeUrl, shouldShowModal, dismissModal };
+  return {
+    isUpdateAvailable,
+    isForceUpdate,
+    storeUrl,
+    shouldShowModal,
+    dismissModal,
+  };
 }
