@@ -12,6 +12,8 @@ import { useAuthStore } from "../src/store/auth.store";
 import { useUIStore } from "../src/store/ui.store";
 import { syncBacklogToSupabase } from "../src/lib/sync";
 import { useAppFonts } from "../src/constants/useAppFonts";
+import { useAppUpdateCheck } from "../src/hooks/useAppUpdateCheck";
+import { UpdateModal } from "../src/components/UpdateModal";
 
 // React Native has no global font setting (unlike CSS).
 // This sets Inter as the default font for every <Text> in the app.
@@ -27,6 +29,7 @@ export default function RootLayout() {
   const { setSession } = useAuthStore();
   const { hasSeenOnboarding, _hasHydrated } = useUIStore();
   const router = useRouter();
+  const update = useAppUpdateCheck();
 
   useEffect(() => {
     try {
@@ -101,6 +104,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
+        <UpdateModal
+          shouldShowModal={update.shouldShowModal}
+          storeUrl={update.storeUrl}
+          isForceUpdate={update.isForceUpdate}
+          dismissModal={update.dismissModal}
+        />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.background },

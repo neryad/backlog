@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,14 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, spacing, radius } from "../../src/constants/theme";
 import { useAuthStore } from "../../src/store/auth.store";
 import { useUIStore } from "../../src/store/ui.store";
 import { supabase } from "../../src/lib/supabase";
 import { fontFamily } from "../../src/constants/typography";
+import AboutModal from "../../src/features/about/AboutModal";
 
 type Profile = {
   id: string;
@@ -43,6 +44,8 @@ type Friend = {
 
 export default function FriendsScreen() {
   const { session } = useAuthStore();
+  const navigation = useNavigation();
+  const [showAbout, setShowAbout] = useState(false);
   const setPendingFriendRequests = useUIStore(
     (state) => state.setPendingFriendRequests,
   );
@@ -52,6 +55,23 @@ export default function FriendsScreen() {
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => setShowAbout(true)}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color={colors.foregroundMuted}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   // ✅ hooks siempre se llaman — el check de sesión va al final
   useFocusEffect(
@@ -720,6 +740,7 @@ return (
         }
       />
     )}
+    <AboutModal visible={showAbout} onClose={() => setShowAbout(false)} />
   </View>
 );
 }
