@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,6 +18,12 @@ import { Image as ExpoImage } from "expo-image";
 import { useAuthStore } from "../../store/auth.store";
 import { supabase } from "../../lib/supabase";
 import { fontFamily } from "../../constants/typography";
+import { Avatar } from "../../components/Avatar";
+
+type UserProfile = {
+  avatar_url: string | null;
+  username: string | null;
+};
 
 const DONATION_LABELS = ["Ko-fi", "PayPal"];
 
@@ -68,6 +73,30 @@ type Props = {
 export default function AboutModal({ visible, onClose }: Props) {
   const { session } = useAuthStore();
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (visible && session?.user.id) {
+      fetchProfile();
+    }
+  }, [visible, session?.user.id]);
+
+  async function fetchProfile() {
+    if (!session?.user.id) return;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url, username")
+        .eq("id", session.user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+      }
+    } catch (e) {
+      console.error("Error fetching profile:", e);
+    }
+  }
 
   const visibleLinks =
     Platform.OS === "ios"
@@ -117,18 +146,14 @@ export default function AboutModal({ visible, onClose }: Props) {
   }
 
   function handleDeleteAccount() {
-    Alert.alert(
-      "Delete account",
-      "This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: confirmDeleteAccount,
-        },
-      ],
-    );
+    Alert.alert("Delete account", "This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: confirmDeleteAccount,
+      },
+    ]);
   }
 
   return (
@@ -164,10 +189,10 @@ export default function AboutModal({ visible, onClose }: Props) {
               {session ? (
                 <>
                   <View style={styles.accountRow}>
-                    <Ionicons
-                      name="person-circle"
+                    <Avatar
+                      avatarUrl={profile?.avatar_url}
+                      username={profile?.username}
                       size={36}
-                      color={colors.primary}
                     />
                     <Text style={styles.email} numberOfLines={1}>
                       {session.user.email}
@@ -225,9 +250,7 @@ export default function AboutModal({ visible, onClose }: Props) {
                       router.push("/auth/register");
                     }}
                   >
-                    <Text style={styles.secondaryBtnText}>
-                      Create Account
-                    </Text>
+                    <Text style={styles.secondaryBtnText}>Create Account</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -257,9 +280,7 @@ export default function AboutModal({ visible, onClose }: Props) {
               ))}
             </View>
 
-            <Text style={styles.footer}>
-              Made for gamers 🎮
-            </Text>
+            <Text style={styles.footer}>Made for gamers 🎮</Text>
           </ScrollView>
         </View>
       </View>
