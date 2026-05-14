@@ -577,6 +577,7 @@ import { PLATFORMS } from "../../src/constants/platforms";
 import { GameShareCard } from "../../src/components/GameShareCard";
 import { shareViewAsImage } from "../../src/utils/share";
 import { fontFamily } from "../../src/constants/typography";
+import { useDeviceSize } from "../../src/hooks/useDeviceSize";
 
 const STATUSES: { value: GameStatus; label: string; color: string }[] = [
   { value: "backlog", label: "Backlog", color: colors.foregroundMuted },
@@ -591,6 +592,7 @@ const STATUSES: { value: GameStatus; label: string; color: string }[] = [
 export default function GameDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isTablet } = useDeviceSize();
   const {
     entry,
     setStatus,
@@ -680,21 +682,40 @@ export default function GameDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: game?.title ?? "Game" }} />
       {/* HERO */}
-      <View style={styles.hero}>
-        {game?.coverUrl ? (
-          <Image source={{ uri: game.coverUrl }} style={styles.cover} />
-        ) : (
-          <View style={styles.coverPlaceholder} />
-        )}
-
-        <View style={styles.heroInfo}>
-          <Text style={styles.title}>{game?.title}</Text>
-          {game?.releaseYear && (
-            <Text style={styles.meta}>{game.releaseYear}</Text>
-          )}
-          {platform && <Text style={styles.meta}>{platform.name}</Text>}
+      {isTablet ? (
+        <View style={styles.heroTablet}>
+          <View style={styles.heroCoverSection}>
+            {game?.coverUrl ? (
+              <Image source={{ uri: game.coverUrl }} style={styles.coverLarge} />
+            ) : (
+              <View style={styles.coverPlaceholderLarge} />
+            )}
+          </View>
+          <View style={styles.heroInfoSection}>
+            <Text style={styles.titleLarge}>{game?.title}</Text>
+            {game?.releaseYear && (
+              <Text style={styles.metaLarge}>{game.releaseYear}</Text>
+            )}
+            {platform && <Text style={styles.metaLarge}>{platform.name}</Text>}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.hero}>
+          {game?.coverUrl ? (
+            <Image source={{ uri: game.coverUrl }} style={styles.cover} />
+          ) : (
+            <View style={styles.coverPlaceholder} />
+          )}
+
+          <View style={styles.heroInfo}>
+            <Text style={styles.title}>{game?.title}</Text>
+            {game?.releaseYear && (
+              <Text style={styles.meta}>{game.releaseYear}</Text>
+            )}
+            {platform && <Text style={styles.meta}>{platform.name}</Text>}
+          </View>
+        </View>
+      )}
 
       {/* SUMMARY */}
       {game?.summary && (
@@ -904,6 +925,46 @@ const styles = StyleSheet.create({
   },
 
   heroInfo: { flex: 1, justifyContent: "center" },
+
+  heroTablet: {
+    flexDirection: "row",
+    padding: spacing.lg,
+    gap: spacing.lg,
+  },
+
+  heroCoverSection: {
+    flex: 0,
+  },
+
+  heroInfoSection: {
+    flex: 1,
+    justifyContent: "center",
+  },
+
+  coverLarge: {
+    width: 180,
+    height: 250,
+    borderRadius: radius.lg,
+  },
+
+  coverPlaceholderLarge: {
+    width: 180,
+    height: 250,
+    borderRadius: radius.lg,
+    backgroundColor: colors.cardElevated,
+  },
+
+  titleLarge: {
+    fontSize: 28,
+    color: colors.foreground,
+    fontFamily: fontFamily.displayBold,
+  },
+
+  metaLarge: {
+    fontSize: 16,
+    color: colors.foregroundMuted,
+    marginTop: spacing.xs,
+  },
 
   title: {
     fontSize: 20,

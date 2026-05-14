@@ -237,11 +237,12 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
 import { GameSearchResult } from "../../src/types/igdb.types";
 import { useDebounce } from "../../src/hooks/useDebounce";
+import { useDeviceSize } from "../../src/hooks/useDeviceSize";
 import { useGameSearch } from "../../src/features/search/useGameSearch";
-import { useNavigation } from "@react-navigation/native";
 import { colors, radius, spacing } from "../../src/constants/theme";
 import AddGameSheet from "../../src/features/search/AddGameSheet";
 import { fontFamily } from "../../src/constants/typography";
@@ -249,6 +250,7 @@ import AboutModal from "../../src/features/about/AboutModal";
 
 export default function DiscoverScreen() {
   const navigation = useNavigation();
+  const { isTablet } = useDeviceSize();
   const [showAbout, setShowAbout] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<GameSearchResult | null>(null);
@@ -378,6 +380,8 @@ export default function DiscoverScreen() {
         data={data ?? []}
         keyExtractor={(item) => String(item.igdbId)}
         renderItem={renderItem}
+        numColumns={isTablet ? 2 : 1}
+        columnWrapperStyle={isTablet ? styles.listRow : undefined}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
@@ -435,6 +439,10 @@ const styles = StyleSheet.create({
   /* LIST */
   list: {
     paddingBottom: spacing.xl,
+  },
+
+  listRow: {
+    paddingHorizontal: spacing.md,
   },
 
   /* CARD */

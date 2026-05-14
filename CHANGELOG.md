@@ -4,6 +4,42 @@ All notable changes to Playlogged are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Tablet/iPad support with responsive layout
+  - Sidebar navigation replaces bottom tab bar on tablets (width ≥ 768 pt)
+  - `useDeviceSize` hook with `isTablet`, `isLandscape`, and `isLargeTablet` flags
+  - `ResponsiveContainer` and `TwoColumnContainer` components for adaptive layouts
+  - Game detail screen adapted for tablet with wider content and improved spacing
+
+### Fixed
+- Crash on screen rotation caused by a hook called after a conditional return in `TabsLayout`
+
+## [1.3.1] - 2026-05-10
+### Added
+- Profile avatar via URL — shown across all profile views
+
+### Changed
+- App update notifications improved:
+  - Minor/patch updates show a dismissible modal with 24-hour cooldown
+  - Major version updates (e.g. 1.x → 2.x) show a required update modal with no dismiss option
+  - Fails silently if network or store lookup is unavailable
+
+### Fixed
+- "Update Now" button not opening the App Store on device
+- App Store URL region mismatch for users outside the US
+- `@babel/runtime` peer dependency flag in package-lock.json
+
+## [1.3.0] - 2026-05-10
+### Added
+- App update detection: users are notified when a new version is available on the App Store/Play Store
+  - Major version bumps force the update modal without a dismiss option
+- `useAppUpdateCheck` hook (`src/hooks/useAppUpdateCheck.ts`)
+- `UpdateModal` component (`src/components/UpdateModal.tsx`)
+- TypeScript type declarations for `react-native-version-check`
+- Profile info button accessible from every main tab (Home, Discover, Friends, Stats)
+
+### Changed
+- `UpdateModal` integrated in root layout (`app/_layout.tsx`)
 
 ## [1.2.0] - 2026-05-01
 ### Added
