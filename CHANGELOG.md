@@ -4,15 +4,26 @@ All notable changes to Playlogged are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-05-28
 ### Added
 - Tablet/iPad support with responsive layout
   - Sidebar navigation replaces bottom tab bar on tablets (width ≥ 768 pt)
   - `useDeviceSize` hook with `isTablet`, `isLandscape`, and `isLargeTablet` flags
   - `ResponsiveContainer` and `TwoColumnContainer` components for adaptive layouts
   - Game detail screen adapted for tablet with wider content and improved spacing
+- Restore from Cloud: signed-in users can pull their data from Supabase to a new device or after reinstall (About bottom sheet → Data → Restore from Cloud)
+- `src/lib/backup.ts` — cloud restore engine that fetches game entries from Supabase and rebuilds the local SQLite database
+- `restoreVersion` counter in UI store — triggers automatic refresh on all screens after restore
+
+### Changed
+- Game detail screen: notes TextInput now properly scrolls into view when keyboard opens on Android
+  - Removed `KeyboardAvoidingView` to prevent layout jumps
+  - `keyboardDidShow` listener + `scrollTo` with measured position for reliable scroll
 
 ### Fixed
 - Crash on screen rotation caused by a hook called after a conditional return in `TabsLayout`
+- Home screen not refreshing after cloud restore — `useBacklog` now watches `restoreVersion` to reload data immediately
 
 ## [1.3.1] - 2026-05-10
 ### Added
