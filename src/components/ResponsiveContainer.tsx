@@ -28,9 +28,19 @@ export function ResponsiveContainer({
     }),
   };
 
+  if (!isTablet) {
+    return (
+      <View style={[containerStyle, style]}>
+        {children}
+      </View>
+    );
+  }
+
   return (
     <View style={[containerStyle, style]}>
-      {children}
+      <View style={{ width: contentWidth, alignSelf: "center", flex: 1 }}>
+        {children}
+      </View>
     </View>
   );
 }

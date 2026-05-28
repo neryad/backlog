@@ -50,17 +50,24 @@ async function restoreFromSupabase(userId: string): Promise<{
     const now = Date.now();
     let gamesInserted = 0;
     let entriesInserted = 0;
+    const gameDedupMap = new Map<number, string>();
 
     for (const entry of entries) {
       let gameId: string | null = null;
 
       if (entry.igdb_id != null) {
-        const existing = db.getFirstSync(
-          "SELECT id FROM games WHERE igdb_id = ?",
-          [entry.igdb_id],
-        ) as { id: string } | null;
-        if (existing) {
-          gameId = existing.id;
+        const cachedId = gameDedupMap.get(entry.igdb_id);
+        if (cachedId) {
+          gameId = cachedId;
+        } else {
+          const existing = db.getFirstSync(
+            "SELECT id FROM games WHERE igdb_id = ?",
+            [entry.igdb_id],
+          ) as { id: string } | null;
+          if (existing) {
+            gameId = existing.id;
+            gameDedupMap.set(entry.igdb_id, existing.id);
+          }
         }
       }
 
@@ -80,6 +87,9 @@ async function restoreFromSupabase(userId: string): Promise<{
             now,
           ],
         );
+        if (entry.igdb_id != null) {
+          gameDedupMap.set(entry.igdb_id, gameId);
+        }
         gamesInserted++;
       }
 
