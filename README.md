@@ -12,7 +12,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?style=flat)](https://expo.dev)
-[![Version](https://img.shields.io/badge/Version-1.2.0-brightgreen?style=flat)](./app.json)
+[![Version](https://img.shields.io/badge/Version-1.4.0-brightgreen?style=flat)](./app.json)
 
 </div>
 
@@ -46,6 +46,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 ### Social & Cloud (optional account)
 - 🔐 **Account system** — Optional sign-up/login powered by Supabase Auth
 - ☁️ **Cloud sync** — Automatically back up your backlog to Supabase when logged in
+- 🔄 **Restore from Cloud** — Pull your cloud data to a new device with one tap
 - 👥 **Friends** — Search users, send and accept friend requests, manage your friends list
 - 🌐 **Public profiles** — View any user's public backlog at `@username`
 - 🎮 **Gaming IDs** — Save and display your PSN, Xbox Gamertag, Nintendo Switch code, Steam, and Epic Games IDs on your profile
@@ -315,6 +316,7 @@ playlogged/
 │   │   ├── StatsShareCard.tsx    # Share card — stats + monthly recap
 │   │   ├── FilterBar.tsx
 │   │   ├── GameCard.tsx
+│   │   ├── ResponsiveContainer.tsx # Tablet-aware layout wrapper
 │   │   ├── SwipeableGameCard.tsx
 │   │   ├── SectionLabel.tsx
 │   │   └── ui/Text.tsx
@@ -338,7 +340,8 @@ playlogged/
 │   │   └── about/
 │   ├── lib/
 │   │   ├── supabase.ts           # Supabase client
-│   │   └── sync.ts               # Backlog → Supabase sync helpers
+│   │   ├── sync.ts               # Backlog → Supabase sync helpers
+│   │   └── backup.ts             # Cloud restore logic
 │   ├── store/
 │   │   ├── auth.store.ts         # Supabase session store
 │   │   └── ui.store.ts           # UI state (filters, sort, share template)
@@ -347,7 +350,8 @@ playlogged/
 │   │   ├── igdb.types.ts
 │   │   └── igdb.mapper.ts
 │   ├── hooks/
-│   │   └── useDebounce.ts
+│   │   ├── useDebounce.ts
+│   │   └── useDeviceSize.ts
 │   └── utils/
 │       └── share.ts              # View-shot + expo-sharing helpers
 │
