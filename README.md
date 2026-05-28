@@ -376,7 +376,7 @@ playlogged/
 - [ ] **Import / Export** — Migrate from other trackers via CSV or JSON
 - [ ] **Widgets** — iOS and Android home screen widgets for current game
 - [ ] **Completion achievements** — Milestone badges (10 games, 50 hours, etc.)
-- [ ] **iPad / tablet layout** — Optimised split-view for larger screens
+- [x] **iPad / tablet layout** — Optimised split-view for larger screens
 - [ ] **Notifications** — Reminders to pick up a game you haven't touched in weeks
 
 ---

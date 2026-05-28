@@ -19,6 +19,8 @@ type UIStore = {
   setHasSeenOnboarding: (seen: boolean) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
+  restoreVersion: number;
+  bumpRestoreVersion: () => void;
 };
 
 export const useUIStore = create<UIStore>()(
@@ -36,6 +38,8 @@ export const useUIStore = create<UIStore>()(
       setHasSeenOnboarding: (seen) => set({ hasSeenOnboarding: seen }),
       _hasHydrated: false,
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
+      restoreVersion: 0,
+      bumpRestoreVersion: () => set((s) => ({ restoreVersion: s.restoreVersion + 1 })),
     }),
     {
       name: "playlogged-ui-store",

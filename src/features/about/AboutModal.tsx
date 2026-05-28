@@ -19,6 +19,7 @@ import { useAuthStore } from "../../store/auth.store";
 import { supabase } from "../../lib/supabase";
 import { fontFamily } from "../../constants/typography";
 import { Avatar } from "../../components/Avatar";
+import { confirmRestoreFromCloud } from "../../lib/backup";
 
 type UserProfile = {
   avatar_url: string | null;
@@ -255,6 +256,24 @@ export default function AboutModal({ visible, onClose }: Props) {
                 </>
               )}
             </View>
+
+            {/* DATA */}
+            {session && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Data</Text>
+
+                <TouchableOpacity
+                  style={styles.primaryBtn}
+                  onPress={() =>
+                    confirmRestoreFromCloud(session.user.id, onClose)
+                  }
+                >
+                  <Text style={styles.primaryBtnText}>
+                    Restore from Cloud
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* LINKS */}
             <View style={styles.card}>

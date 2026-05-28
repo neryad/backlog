@@ -469,6 +469,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AboutModal from "../../src/features/about/AboutModal";
 import { useNavigation } from "expo-router";
 import { fontFamily } from "../../src/constants/typography";
+import { useDeviceSize } from "../../src/hooks/useDeviceSize";
 
 const FAB_SIZE = 48;
 
@@ -485,6 +486,7 @@ type FeedItem =
 
 export default function BacklogScreen() {
   const router = useRouter();
+  const { isTablet } = useDeviceSize();
   const {
     activeFilter,
     sortBy,
@@ -496,6 +498,8 @@ export default function BacklogScreen() {
   const navigation = useNavigation();
   const { bottom: safeBottom } = useSafeAreaInsets();
   const { games: allGames, loading, reload } = useBacklog("all");
+
+  const numColumns = isTablet ? 2 : 1;
 
   const [showAbout, setShowAbout] = useState(false);
   const [showNextToPlay, setShowNextToPlay] = useState(false);
@@ -688,6 +692,8 @@ export default function BacklogScreen() {
               item.kind === "game" ? item.entry.id : "__share__"
             }
             renderItem={renderItem}
+            numColumns={numColumns}
+            columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
             ItemSeparatorComponent={() => (
               <View style={{ height: spacing.sm }} />
             )}
@@ -808,6 +814,10 @@ const styles = StyleSheet.create({
 
   listContent: {
     paddingTop: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+
+  columnWrapper: {
     paddingHorizontal: spacing.sm,
   },
 

@@ -5,6 +5,53 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-28
+### Added
+- Tablet/iPad support with responsive layout
+  - Sidebar navigation replaces bottom tab bar on tablets (width ≥ 768 pt)
+  - `useDeviceSize` hook with `isTablet`, `isLandscape`, and `isLargeTablet` flags
+  - `ResponsiveContainer` and `TwoColumnContainer` components for adaptive layouts
+  - Game detail screen adapted for tablet with wider content and improved spacing
+- Restore from Cloud: signed-in users can pull their data from Supabase to a new device or after reinstall (About bottom sheet → Data → Restore from Cloud)
+- `src/lib/backup.ts` — cloud restore engine that fetches game entries from Supabase and rebuilds the local SQLite database
+- `restoreVersion` counter in UI store — triggers automatic refresh on all screens after restore
+
+### Changed
+- Game detail screen: notes TextInput now properly scrolls into view when keyboard opens on Android
+  - Removed `KeyboardAvoidingView` to prevent layout jumps
+  - `keyboardDidShow` listener + `scrollTo` with measured position for reliable scroll
+
+### Fixed
+- Crash on screen rotation caused by a hook called after a conditional return in `TabsLayout`
+- Home screen not refreshing after cloud restore — `useBacklog` now watches `restoreVersion` to reload data immediately
+
+## [1.3.1] - 2026-05-10
+### Added
+- Profile avatar via URL — shown across all profile views
+
+### Changed
+- App update notifications improved:
+  - Minor/patch updates show a dismissible modal with 24-hour cooldown
+  - Major version updates (e.g. 1.x → 2.x) show a required update modal with no dismiss option
+  - Fails silently if network or store lookup is unavailable
+
+### Fixed
+- "Update Now" button not opening the App Store on device
+- App Store URL region mismatch for users outside the US
+- `@babel/runtime` peer dependency flag in package-lock.json
+
+## [1.3.0] - 2026-05-10
+### Added
+- App update detection: users are notified when a new version is available on the App Store/Play Store
+  - Major version bumps force the update modal without a dismiss option
+- `useAppUpdateCheck` hook (`src/hooks/useAppUpdateCheck.ts`)
+- `UpdateModal` component (`src/components/UpdateModal.tsx`)
+- TypeScript type declarations for `react-native-version-check`
+- Profile info button accessible from every main tab (Home, Discover, Friends, Stats)
+
+### Changed
+- `UpdateModal` integrated in root layout (`app/_layout.tsx`)
+
 ## [1.2.0] - 2026-05-01
 ### Added
 - First-launch onboarding screen with 5 illustrated slides
