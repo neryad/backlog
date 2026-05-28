@@ -567,6 +567,7 @@ import {
   Alert,
   ActivityIndicator,
   Switch,
+  Keyboard,
 } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -603,7 +604,11 @@ export default function GameDetailScreen() {
     remove,
   } = useGameDetail(id);
 
+  const scrollRef = useRef<ScrollView>(null);
+  const notesRef = useRef<TextInput>(null);
+  const notesSectionRef = useRef<View>(null);
   const shareCardRef = useRef<View>(null);
+  const notesSectionY = useRef(0);
 
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
@@ -623,6 +628,28 @@ export default function GameDetailScreen() {
       setHoursValue(String(entry.hoursPlayed ?? 0));
     }
   }, [entry]);
+
+  // Scroll to notes when keyboard opens while editing
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidShow", () => {
+      if (editingNotes) {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollTo({
+            y: Math.max(0, notesSectionY.current - 20),
+            animated: true,
+          });
+        });
+      }
+    });
+    return () => sub.remove();
+  }, [editingNotes]);
+
+  function handleFocusNotes() {
+    setEditingNotes(true);
+    requestAnimationFrame(() => {
+      notesRef.current?.focus();
+    });
+  }
 
   if (!entry) {
     return (
@@ -679,7 +706,13 @@ export default function GameDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      ref={scrollRef}
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
       <Stack.Screen options={{ title: game?.title ?? "Game" }} />
       {/* HERO */}
       {isTablet ? (
@@ -815,12 +848,23 @@ export default function GameDetailScreen() {
       </View>
 
       {/* NOTES */}
-      <View style={styles.section}>
+      <View
+        ref={notesSectionRef}
+        onLayout={(e) => {
+          notesSectionY.current = e.nativeEvent.layout.y;
+        }}
+        style={styles.section}
+      >
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>Notes</Text>
 
           {!editingNotes && (
-            <TouchableOpacity onPress={() => setEditingNotes(true)}>
+            <TouchableOpacity
+              onPress={() => {
+                setEditingNotes(true);
+                handleFocusNotes();
+              }}
+            >
               <Text style={styles.editBtn}>Edit</Text>
             </TouchableOpacity>
           )}
@@ -829,6 +873,7 @@ export default function GameDetailScreen() {
         {editingNotes ? (
           <>
             <TextInput
+              ref={notesRef}
               style={styles.notesInput}
               value={notesValue}
               onChangeText={setNotesValue}
@@ -843,7 +888,12 @@ export default function GameDetailScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <TouchableOpacity onPress={() => setEditingNotes(true)}>
+          <TouchableOpacity
+            onPress={() => {
+              setEditingNotes(true);
+              handleFocusNotes();
+            }}
+          >
             <Text style={entry.notes ? styles.notes : styles.notesEmpty}>
               {entry.notes || "Tap to add notes..."}
             </Text>
