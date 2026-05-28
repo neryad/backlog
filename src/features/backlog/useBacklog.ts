@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { GameEntry } from "../../types/game";
 import { getGameEntries } from "../../db/queries/game";
 import { useFocusEffect } from "expo-router";
+import { useUIStore } from "../../store/ui.store";
 
 export function useBacklog(filter: string) {
   // Lazy initializer: carga síncrona en el primer render, evita el ciclo
@@ -21,6 +22,12 @@ export function useBacklog(filter: string) {
   useEffect(() => {
     load();
   }, [filter]);
+
+  const restoreVersion = useUIStore((s) => s.restoreVersion);
+
+  useEffect(() => {
+    load();
+  }, [restoreVersion]);
 
   // Re-carga al volver a la pantalla (ej: después de editar un juego).
   useFocusEffect(
