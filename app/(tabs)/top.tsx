@@ -48,9 +48,9 @@ export default function TopScreen() {
           size={48}
           color={colors.foregroundMuted}
         />
-        <Text style={styles.errorTitle}>Sin conexión</Text>
+        <Text style={styles.errorTitle}>No connection</Text>
         <Text style={styles.errorSub}>
-          El ranking requiere internet. Revisa tu conexión e intenta de nuevo.
+          The ranking requires internet. Check your connection and try again.
         </Text>
       </View>
     );
@@ -59,9 +59,9 @@ export default function TopScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Lo mejor de la comunidad</Text>
+        <Text style={styles.title}>Community Top</Text>
         <Text style={styles.subtitle}>
-          Juegos con 3+ calificaciones públicas
+          Games with 3+ public ratings
         </Text>
       </View>
       <FlatList
@@ -84,11 +84,11 @@ export default function TopScreen() {
               color={colors.foregroundMuted}
             />
             <Text style={styles.emptyTitle}>
-              Aún no hay ranking disponible
+              No ranking available yet
             </Text>
             <Text style={styles.emptySub}>
-              Necesitamos al menos 3 calificaciones públicas para un juego.
-              ¡Sé el primero en calificar uno!
+              We need at least 3 public ratings for a game to appear here.
+              Be the first to rate one!
             </Text>
           </View>
         }

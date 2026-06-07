@@ -26,12 +26,12 @@ function formatRelativeDate(iso: string): string {
   const now = Date.now();
   const diffMs = now - then;
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (days < 1) return "hoy";
-  if (days === 1) return "ayer";
-  if (days < 7) return `hace ${days} días`;
-  if (days < 30) return `hace ${Math.floor(days / 7)} sem`;
-  if (days < 365) return `hace ${Math.floor(days / 30)} meses`;
-  return `hace ${Math.floor(days / 365)} años`;
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
 }
 
 export default function CommunityGameScreen() {
@@ -113,7 +113,7 @@ export default function CommunityGameScreen() {
           size={48}
           color={colors.foregroundMuted}
         />
-        <Text style={styles.errorTitle}>No se pudo cargar el juego</Text>
+        <Text style={styles.errorTitle}>Could not load game</Text>
       </View>
     );
   }
@@ -157,7 +157,7 @@ export default function CommunityGameScreen() {
                   </Text>
                 </View>
                 <Text style={styles.ratingCount}>
-                  ({ranking.rating_count} calificaciones)
+                  ({ranking.rating_count} ratings)
                 </Text>
               </View>
             )}
@@ -166,7 +166,7 @@ export default function CommunityGameScreen() {
 
         {ranking && (
           <View style={styles.rankRow}>
-            <Text style={styles.rankLabel}>Rank actual</Text>
+            <Text style={styles.rankLabel}>Current rank</Text>
             <Text style={styles.rankNumber}>#{ranking.rank}</Text>
             <RankBadge change={change} />
           </View>
@@ -188,7 +188,7 @@ export default function CommunityGameScreen() {
                 sortMode === "recent" && styles.sortTextActive,
               ]}
             >
-              Más recientes
+              Most recent
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -204,7 +204,7 @@ export default function CommunityGameScreen() {
                 sortMode === "highest" && styles.sortTextActive,
               ]}
             >
-              Mejor valoradas
+              Highest rated
             </Text>
           </TouchableOpacity>
         </View>
@@ -223,9 +223,9 @@ export default function CommunityGameScreen() {
             size={40}
             color={colors.foregroundMuted}
           />
-          <Text style={styles.emptyTitle}>Aún no hay reviews con notas</Text>
+          <Text style={styles.emptyTitle}>No written reviews yet</Text>
           <Text style={styles.emptySub}>
-            Sé el primero en compartir tu opinión sobre este juego.
+            Be the first to share your thoughts on this game.
           </Text>
         </View>
       )}
