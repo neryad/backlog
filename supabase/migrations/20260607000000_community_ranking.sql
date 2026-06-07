@@ -1,26 +1,39 @@
 -- =========================================================
 -- Community ranking: vista + tabla de snapshots + reviews
 -- =========================================================
+-- IMPORTANTE: la nube es DENORMALIZADA — game_entries tiene igdb_id,
+-- title y cover_url directamente. No hay tabla `games` en Supabase
+-- (solo en SQLite local), ni columna `game_id`, ni `release_year`
+-- (no se sincroniza). Las vistas trabajan sobre `game_entries` y
+-- de-duplican title/cover con DISTINCT ON (una fila por (user, game, platform)).
 
 -- Vista: ranking actual de la comunidad
 CREATE OR REPLACE VIEW community_ranking AS
+WITH latest_metadata AS (
+  SELECT DISTINCT ON (igdb_id)
+    igdb_id,
+    title,
+    cover_url
+  FROM game_entries
+  WHERE igdb_id IS NOT NULL
+  ORDER BY igdb_id, updated_at DESC
+)
 SELECT
-  g.igdb_id,
-  g.title,
-  g.cover_url,
-  g.release_year,
+  m.igdb_id,
+  m.title,
+  m.cover_url,
   ROUND(AVG(ge.personal_rating)::numeric, 1) AS avg_rating,
   COUNT(*) AS rating_count,
   RANK() OVER (
     ORDER BY AVG(ge.personal_rating) DESC,
              COUNT(*) DESC,
-             g.igdb_id ASC
+             m.igdb_id ASC
   ) AS rank
-FROM games g
-JOIN game_entries ge ON ge.game_id = g.id
+FROM game_entries ge
+JOIN latest_metadata m ON m.igdb_id = ge.igdb_id
 WHERE ge.is_public = true
   AND ge.personal_rating IS NOT NULL
-GROUP BY g.igdb_id, g.title, g.cover_url, g.release_year
+GROUP BY m.igdb_id, m.title, m.cover_url
 HAVING COUNT(*) >= 3;
 
 -- Tabla: snapshots semanales
@@ -53,7 +66,7 @@ CREATE POLICY "Public read snapshots"
 -- Vista: reviews públicas
 CREATE OR REPLACE VIEW community_reviews AS
 SELECT
-  ge.game_id,
+  ge.igdb_id,
   ge.personal_rating,
   ge.notes,
   ge.updated_at,

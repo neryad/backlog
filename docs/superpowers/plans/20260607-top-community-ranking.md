@@ -61,24 +61,37 @@ Escribir el contenido completo en `supabase/migrations/20260607000000_community_
 -- =========================================================
 -- Community ranking: vista + tabla de snapshots + reviews
 -- =========================================================
+-- NOTA: la nube es denormalizada — game_entries tiene igdb_id, title
+-- y cover_url directamente. No hay tabla `games` en Supabase.
+-- De-duplicamos title/cover con DISTINCT ON.
 
 -- Vista: ranking actual de la comunidad
 CREATE OR REPLACE VIEW community_ranking AS
+WITH latest_metadata AS (
+  SELECT DISTINCT ON (igdb_id)
+    igdb_id,
+    title,
+    cover_url
+  FROM game_entries
+  WHERE igdb_id IS NOT NULL
+  ORDER BY igdb_id, updated_at DESC
+)
 SELECT
-  g.igdb_id,
-  g.title,
-  g.cover_url,
-  g.release_year,
+  m.igdb_id,
+  m.title,
+  m.cover_url,
   ROUND(AVG(ge.personal_rating)::numeric, 1) AS avg_rating,
   COUNT(*) AS rating_count,
   RANK() OVER (
-    ORDER BY AVG(ge.personal_rating) DESC, COUNT(*) DESC
+    ORDER BY AVG(ge.personal_rating) DESC,
+             COUNT(*) DESC,
+             m.igdb_id ASC
   ) AS rank
-FROM games g
-JOIN game_entries ge ON ge.game_id = g.id
+FROM game_entries ge
+JOIN latest_metadata m ON m.igdb_id = ge.igdb_id
 WHERE ge.is_public = true
   AND ge.personal_rating IS NOT NULL
-GROUP BY g.igdb_id, g.title, g.cover_url, g.release_year
+GROUP BY m.igdb_id, m.title, m.cover_url
 HAVING COUNT(*) >= 3;
 
 -- Tabla: snapshots semanales
@@ -111,7 +124,7 @@ CREATE POLICY "Public read snapshots"
 -- Vista: reviews públicas
 CREATE OR REPLACE VIEW community_reviews AS
 SELECT
-  ge.game_id,
+  ge.igdb_id,
   ge.personal_rating,
   ge.notes,
   ge.updated_at,
@@ -195,24 +208,22 @@ Esperado: `count = 0` (o N si ya hay datos). La segunda query devuelve 5 columna
 En el SQL editor:
 
 ```sql
--- ⚠️ SOLO PARA DESARROLLO: inserta 2 juegos con ratings
--- Reemplaza <tu-user-id> con tu ID de auth.users (Profiles)
-WITH g1 AS (
-  SELECT id FROM games WHERE title = 'Hades' LIMIT 1
-),
-g2 AS (
-  SELECT id FROM games WHERE title = 'Stardew Valley' LIMIT 1
-)
-INSERT INTO game_entries (id, game_id, user_id, platform_id, status, personal_rating, is_public, created_at, updated_at)
+-- ⚠️ SOLO PARA DESARROLLO: inserta 2 juegos con ratings en game_entries
+-- Reemplaza los placeholders:
+--   <igdb-hades>, <igdb-stardew>  → IGDB IDs reales (búscalos en
+--                                    https://www.igdb.com o usa los que
+--                                    ya tengas en tu backlog)
+--   <user-1>, <user-2>, <user-3>  → UUIDs reales de auth.users
+INSERT INTO game_entries (id, user_id, igdb_id, title, cover_url, platform_id, status, personal_rating, is_public, created_at, updated_at)
 VALUES
   -- 3 ratings para Hades (todos 10/10 → debería liderar)
-  ('test-hades-1', (SELECT id FROM g1), '<tu-user-id>', 6, 'completed', 10, true, NOW(), NOW()),
-  ('test-hades-2', (SELECT id FROM g1), '<otro-user-id>', 6, 'completed', 10, true, NOW(), NOW()),
-  ('test-hades-3', (SELECT id FROM g1), '<otro-user-id-2>', 6, 'completed', 9, true, NOW(), NOW()),
+  ('test-hades-1', '<user-1>', <igdb-hades>, 'Hades', NULL, 6, 'completed', 10, true, NOW(), NOW()),
+  ('test-hades-2', '<user-2>', <igdb-hades>, 'Hades', NULL, 6, 'completed', 10, true, NOW(), NOW()),
+  ('test-hades-3', '<user-3>', <igdb-hades>, 'Hades', NULL, 6, 'completed', 9, true, NOW(), NOW()),
   -- 3 ratings para Stardew (8.7 promedio)
-  ('test-sv-1', (SELECT id FROM g2), '<tu-user-id>', 6, 'completed', 9, true, NOW(), NOW()),
-  ('test-sv-2', (SELECT id FROM g2), '<otro-user-id>', 6, 'completed', 9, true, NOW(), NOW()),
-  ('test-sv-3', (SELECT id FROM g2), '<otro-user-id-2>', 6, 'completed', 8, true, NOW(), NOW())
+  ('test-sv-1', '<user-1>', <igdb-stardew>, 'Stardew Valley', NULL, 6, 'completed', 9, true, NOW(), NOW()),
+  ('test-sv-2', '<user-2>', <igdb-stardew>, 'Stardew Valley', NULL, 6, 'completed', 9, true, NOW(), NOW()),
+  ('test-sv-3', '<user-3>', <igdb-stardew>, 'Stardew Valley', NULL, 6, 'completed', 8, true, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 ```
 
@@ -624,7 +635,6 @@ export type CommunityRankingRow = {
   igdb_id: number;
   title: string;
   cover_url: string | null;
-  release_year: number | null;
   avg_rating: number;
   rating_count: number;
   rank: number;
@@ -637,10 +647,11 @@ export function useCommunityRanking() {
     queryKey: ["community-ranking"],
     queryFn: async () => {
       // 1. Ranking actual (top 100)
+      //    (release_year no se incluye — no se sincroniza a Supabase)
       const { data: current, error: e1 } = await supabase
         .from("community_ranking")
         .select(
-          "igdb_id, title, cover_url, release_year, avg_rating, rating_count, rank",
+          "igdb_id, title, cover_url, avg_rating, rating_count, rank",
         )
         .order("rank", { ascending: true })
         .limit(100);
@@ -709,7 +720,7 @@ import { supabase } from "../../lib/supabase";
 import { getWeekStartISO } from "../../utils/week";
 
 export type CommunityReview = {
-  game_id: string;
+  igdb_id: number;
   personal_rating: number;
   notes: string;
   updated_at: string;
@@ -721,12 +732,14 @@ export type CommunityReview = {
 
 export type CommunityGameDetail = {
   game: {
-    id: string;
+    igdb_id: number;
     title: string;
     cover_url: string | null;
-    release_year: number | null;
   } | null;
   ranking: {
+    igdb_id: number;
+    title: string;
+    cover_url: string | null;
     avg_rating: number;
     rating_count: number;
     rank: number;
@@ -740,36 +753,29 @@ export function useCommunityGameDetail(igdbId: number) {
   return useQuery<CommunityGameDetail | null>({
     queryKey: ["community-game", igdbId],
     queryFn: async () => {
-      // 1. Get game metadata by igdb_id
-      const { data: game, error: gErr } = await supabase
-        .from("games")
-        .select("id, title, cover_url, release_year")
-        .eq("igdb_id", igdbId)
-        .single();
-
-      if (gErr || !game) return null;
-
-      // 2. Get ranking row for this igdb_id
+      // 1. Get ranking row for this igdb_id (incluye title, cover_url).
+      //    (No hay tabla `games` en la nube — la vista ya tiene la metadata.)
       const { data: ranking, error: rErr } = await supabase
         .from("community_ranking")
-        .select("avg_rating, rating_count, rank")
+        .select("igdb_id, title, cover_url, avg_rating, rating_count, rank")
         .eq("igdb_id", igdbId)
-        .single();
+        .maybeSingle();
 
-      if (rErr && rErr.code !== "PGRST116") throw rErr;
+      if (rErr) throw rErr;
+      if (!ranking) return null;
 
-      // 3. Get reviews
+      // 2. Get reviews
       const { data: reviews, error: revErr } = await supabase
         .from("community_reviews")
         .select(
-          "game_id, personal_rating, notes, updated_at, user_id, username, display_name, avatar_url",
+          "igdb_id, personal_rating, notes, updated_at, user_id, username, display_name, avatar_url",
         )
-        .eq("game_id", game.id)
+        .eq("igdb_id", igdbId)
         .order("updated_at", { ascending: false });
 
       if (revErr) throw revErr;
 
-      // 4. Get previous week rank
+      // 3. Get previous week rank
       const lastWeekStart = getWeekStartISO(
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       );
@@ -783,13 +789,15 @@ export function useCommunityGameDetail(igdbId: number) {
 
       const previousRank = prev?.rank ?? null;
       const change =
-        previousRank !== null && ranking
-          ? previousRank - ranking.rank
-          : null;
+        previousRank !== null ? previousRank - ranking.rank : null;
 
       return {
-        game,
-        ranking: ranking ?? null,
+        game: {
+          igdb_id: ranking.igdb_id,
+          title: ranking.title,
+          cover_url: ranking.cover_url,
+        },
+        ranking,
         reviews: (reviews ?? []) as CommunityReview[],
         previousRank,
         change,
@@ -980,9 +988,6 @@ export function RankingListItem({ row, onPress }: Props) {
             {row.avg_rating.toFixed(1)}
           </Text>
           <Text style={styles.count}>({row.rating_count})</Text>
-          {row.release_year && (
-            <Text style={styles.year}>· {row.release_year}</Text>
-          )}
         </View>
       </View>
 
@@ -1046,12 +1051,6 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   count: {
-    color: colors.foregroundMuted,
-    fontSize: fontSize.xs,
-    fontFamily: fontFamily.mono,
-    fontVariant: ["tabular-nums"],
-  },
-  year: {
     color: colors.foregroundMuted,
     fontSize: fontSize.xs,
     fontFamily: fontFamily.mono,
@@ -1431,9 +1430,6 @@ export default function CommunityGameScreen() {
             <Text style={styles.title} numberOfLines={3}>
               {game.title}
             </Text>
-            {game.release_year && (
-              <Text style={styles.year}>{game.release_year}</Text>
-            )}
             {ranking && (
               <View style={styles.statsRow}>
                 <View style={styles.ratingBadge}>
@@ -1577,10 +1573,6 @@ const styles = StyleSheet.create({
     color: colors.foreground,
     fontFamily: fontFamily.displayBold,
     fontSize: fontSize["2xl"],
-  },
-  year: {
-    color: colors.foregroundMuted,
-    fontSize: fontSize.sm,
   },
   statsRow: {
     flexDirection: "row",

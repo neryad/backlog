@@ -51,7 +51,7 @@ Los datos ya existen en Supabase (`game_entries` con `is_public = true` y `perso
 
 1. **Ranking actual:** la app consulta la vista `community_ranking` (top 100 ordenado por `avg_rating` desc).
 2. **Cambio de posición:** la app hace un JOIN con `community_rank_snapshots` buscando la fila del `igdb_id` con `week_start` de la semana anterior, y compara `rank`.
-3. **Reviews:** la app consulta la vista `community_reviews` filtrando por `game_id`.
+3. **Reviews:** la app consulta la vista `community_reviews` filtrando por `igdb_id` (ya que la nube es denormalizada, no hay `game_id`).
 4. **Snapshot semanal:** pg_cron dispara la Edge Function `weekly-snapshot` cada lunes 00:00 UTC, que inserta el top 100 actual en `community_rank_snapshots` con `week_start = date_trunc('week', now())`.
 
 ---
@@ -62,24 +62,41 @@ Los datos ya existen en Supabase (`game_entries` con `is_public = true` y `perso
 
 Archivo: `supabase/migrations/20260607000000_community_ranking.sql`
 
+> **⚠️ Schema real de Supabase (corrección 2026-06-07):** La tabla `game_entries` en Supabase es **denormalizada** — contiene `igdb_id`, `title`, `cover_url` directamente (ver `src/lib/sync.ts:5-21`). **No existe tabla `games` en la nube** (solo en SQLite local) y la columna `release_year` **no se sincroniza** a Supabase. La columna `game_id` tampoco existe (es un id local de SQLite). Las vistas deben trabajar sobre `game_entries` directamente, de-duplicando title/cover por `igdb_id` con `DISTINCT ON` (ya que hay múltiples filas por juego, una por usuario).
+
 ```sql
 -- =========================================================
 -- Vista: ranking actual
 -- =========================================================
 CREATE OR REPLACE VIEW community_ranking AS
+WITH latest_metadata AS (
+  -- Toma el title/cover_url más reciente por igdb_id.
+  -- Como game_entries tiene una fila por (user_id, igdb_id, platform_id),
+  -- necesitamos de-duplicar para mostrar una sola fila por juego.
+  SELECT DISTINCT ON (igdb_id)
+    igdb_id,
+    title,
+    cover_url
+  FROM game_entries
+  WHERE igdb_id IS NOT NULL
+  ORDER BY igdb_id, updated_at DESC
+)
 SELECT
-  g.igdb_id,
-  g.title,
-  g.cover_url,
-  g.release_year,
+  m.igdb_id,
+  m.title,
+  m.cover_url,
   ROUND(AVG(ge.personal_rating)::numeric, 1) AS avg_rating,
   COUNT(*) AS rating_count,
-  RANK() OVER (ORDER BY AVG(ge.personal_rating) DESC, COUNT(*) DESC) AS rank
-FROM games g
-JOIN game_entries ge ON ge.game_id = g.id
+  RANK() OVER (
+    ORDER BY AVG(ge.personal_rating) DESC,
+             COUNT(*) DESC,
+             m.igdb_id ASC
+  ) AS rank
+FROM game_entries ge
+JOIN latest_metadata m ON m.igdb_id = ge.igdb_id
 WHERE ge.is_public = true
   AND ge.personal_rating IS NOT NULL
-GROUP BY g.igdb_id, g.title, g.cover_url, g.release_year
+GROUP BY m.igdb_id, m.title, m.cover_url
 HAVING COUNT(*) >= 3;
 
 -- =========================================================
@@ -116,7 +133,7 @@ CREATE POLICY "Public read snapshots"
 -- =========================================================
 CREATE OR REPLACE VIEW community_reviews AS
 SELECT
-  ge.game_id,
+  ge.igdb_id,
   ge.personal_rating,
   ge.notes,
   ge.updated_at,
@@ -274,11 +291,11 @@ export function useCommunityRanking() {
 
 - Recibe `igdbId` como param.
 - Carga en paralelo:
-  - Fila de `community_ranking` filtrando por `igdb_id` (header: rating, count, rank, change).
-  - Filas de `community_reviews` filtrando por `game_id` (join manual: primero `games.igdb_id = X` → `games.id` → `community_reviews.game_id`).
-  - Como la vista no expone `igdb_id` directamente, hay que resolverlo: query a `games(igdb_id)` para obtener `id`, luego query a `community_reviews(game_id)`.
+  - Fila de `community_ranking` filtrando por `igdb_id` (header: rating, count, rank, change, title, cover_url — la vista ya tiene todo).
+  - Filas de `community_reviews` filtrando por `igdb_id`.
+  - Snapshot anterior de `community_rank_snapshots` para el `week_start` de la semana pasada.
 - Render:
-  - **Header:** cover grande, título, año, `X.X ★ (N calificaciones)`, `#N` con badge de cambio.
+  - **Header:** cover grande, título, `X.X ★ (N calificaciones)`, `#N` con badge de cambio. (**Nota:** `release_year` no se muestra porque la nube no lo sincroniza — solo está en SQLite local.)
   - **Toggle de orden:** "Más recientes" / "Mejor valoradas" (estado local, no persistido).
   - **Lista de reviews:** cada item: avatar (componente `Avatar`), @username (tap → `/profile/[username]`), rating en grande, fecha relativa ("hace 3 días" — usar `Intl.RelativeTimeFormat('es')`), nota completa.
   - **Empty state diferenciado:** "Aún no hay reviews con notas para este juego."
@@ -290,44 +307,45 @@ export function useCommunityGameDetail(igdbId: number) {
   return useQuery({
     queryKey: ["community-game", igdbId],
     queryFn: async () => {
-      // 1. Get game metadata
-      const { data: game } = await supabase
-        .from("games")
-        .select("id, title, cover_url, release_year")
-        .eq("igdb_id", igdbId)
-        .single();
-
-      if (!game) return null;
-
-      // 2. Get ranking row for this game
+      // 1. Get ranking row for this igdb_id (incluye title, cover_url)
       const { data: ranking } = await supabase
         .from("community_ranking")
-        .select("*")
+        .select("igdb_id, title, cover_url, avg_rating, rating_count, rank")
         .eq("igdb_id", igdbId)
         .single();
+
+      if (!ranking) return null;
 
       // 3. Get reviews
       const { data: reviews } = await supabase
         .from("community_reviews")
-        .select("*")
-        .eq("game_id", game.id)
+        .select(
+          "igdb_id, personal_rating, notes, updated_at, user_id, username, display_name, avatar_url",
+        )
+        .eq("igdb_id", igdbId)
         .order("updated_at", { ascending: false });
 
-      // 4. Get previous week rank
+      // 3. Get previous week rank
       const weekStartISO = getWeekStartISO(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
       const { data: prev } = await supabase
         .from("community_rank_snapshots")
         .select("rank")
         .eq("igdb_id", igdbId)
         .eq("week_start", weekStartISO)
-        .single();
+        .maybeSingle();
+
+      const previousRank = prev?.rank ?? null;
+      const change =
+        previousRank !== null && ranking
+          ? previousRank - ranking.rank
+          : null;
 
       return {
-        game,
+        game: { igdb_id: ranking.igdb_id, title: ranking.title, cover_url: ranking.cover_url },
         ranking,
         reviews: reviews ?? [],
-        previousRank: prev?.rank ?? null,
-        change: prev ? prev.rank - (ranking?.rank ?? 0) : null,
+        previousRank,
+        change,
       };
     },
     staleTime: 5 * 60 * 1000,
