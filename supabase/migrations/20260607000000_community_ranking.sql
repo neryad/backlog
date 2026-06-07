@@ -12,7 +12,9 @@ SELECT
   ROUND(AVG(ge.personal_rating)::numeric, 1) AS avg_rating,
   COUNT(*) AS rating_count,
   RANK() OVER (
-    ORDER BY AVG(ge.personal_rating) DESC, COUNT(*) DESC
+    ORDER BY AVG(ge.personal_rating) DESC,
+             COUNT(*) DESC,
+             g.igdb_id ASC
   ) AS rank
 FROM games g
 JOIN game_entries ge ON ge.game_id = g.id
