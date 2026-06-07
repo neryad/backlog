@@ -131,7 +131,14 @@ WHERE ge.is_public = true
   AND ge.notes IS NOT NULL
   AND LENGTH(TRIM(ge.notes)) > 0;
 
--- Grants explícitos (Supabase requiere esto para el cliente)
+-- Grants explícitos (Supabase requiere esto para el cliente).
+-- Las vistas corren como SECURITY DEFINER por defecto en Supabase
+-- (postgres role), así que NO se ven afectadas por las RLS de las
+-- tablas subyacentes — el filtro WHERE is_public = true es la
+-- garantía de privacidad. Si en el futuro quieres invertir a
+-- SECURITY INVOKER, descomenta la línea siguiente:
+-- ALTER VIEW community_ranking  SET (security_invoker = on);
+-- ALTER VIEW community_reviews  SET (security_invoker = on);
 GRANT SELECT ON community_ranking  TO anon, authenticated;
 GRANT SELECT ON community_reviews  TO anon, authenticated;
 GRANT SELECT ON community_rank_snapshots TO anon, authenticated;
@@ -205,6 +212,21 @@ Y en Supabase Dashboard → Edge Function secrets: el mismo valor.
 - Empty state: "Aún no hay juegos con 3+ calificaciones. ¡Sé el primero en calificar uno!"
 - Tap en item → `router.push(\`/community/game/${item.igdb_id}\`)`.
 
+**Helper compartido:** `src/utils/week.ts`
+
+```ts
+// Devuelve la fecha (YYYY-MM-DD) del lunes de la semana de la fecha dada.
+// Usado para alinear el cliente con la Edge Function que usa
+// date_trunc('week', now())::date.
+export function getWeekStartISO(date: Date): string {
+  const d = new Date(date);
+  const day = d.getUTCDay(); // 0 = domingo, 1 = lunes, ...
+  const diff = day === 0 ? -6 : 1 - day; // distancia al lunes
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().split("T")[0];
+}
+```
+
 **Hook:** `src/features/top/useCommunityRanking.ts`
 
 ```ts
@@ -222,11 +244,8 @@ export function useCommunityRanking() {
       if (e1) throw e1;
 
       // 2. Get last week's snapshot
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const weekStart = new Date(lastWeek);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-      const weekStartISO = weekStart.toISOString().split("T")[0];
+      //    week_start = lunes de la semana pasada, formato 'YYYY-MM-DD'
+      const weekStartISO = getWeekStartISO(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
       const { data: prev, error: e2 } = await supabase
         .from("community_rank_snapshots")
@@ -259,9 +278,9 @@ export function useCommunityRanking() {
   - Filas de `community_reviews` filtrando por `game_id` (join manual: primero `games.igdb_id = X` → `games.id` → `community_reviews.game_id`).
   - Como la vista no expone `igdb_id` directamente, hay que resolverlo: query a `games(igdb_id)` para obtener `id`, luego query a `community_reviews(game_id)`.
 - Render:
-  - **Header:** cover grande, título, año, `X.X ★ (N calificaciones)`, `#N` con badge de cambio, plataforma más frecuente (opcional en v1, ver §6).
-  - **Toggle de orden:** "Más recientes" / "Mejor valoradas".
-  - **Lista de reviews:** cada item: avatar (componente `Avatar`), @username (linkable a `/profile/[username]`), rating en grande, fecha relativa ("hace 3 días"), nota completa.
+  - **Header:** cover grande, título, año, `X.X ★ (N calificaciones)`, `#N` con badge de cambio.
+  - **Toggle de orden:** "Más recientes" / "Mejor valoradas" (estado local, no persistido).
+  - **Lista de reviews:** cada item: avatar (componente `Avatar`), @username (tap → `/profile/[username]`), rating en grande, fecha relativa ("hace 3 días" — usar `Intl.RelativeTimeFormat('es')`), nota completa.
   - **Empty state diferenciado:** "Aún no hay reviews con notas para este juego."
 
 **Hook:** `src/features/top/useCommunityGameDetail.ts`
@@ -295,7 +314,7 @@ export function useCommunityGameDetail(igdbId: number) {
         .order("updated_at", { ascending: false });
 
       // 4. Get previous week rank
-      const weekStartISO = getLastWeekStartISO();
+      const weekStartISO = getWeekStartISO(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
       const { data: prev } = await supabase
         .from("community_rank_snapshots")
         .select("rank")
@@ -339,6 +358,7 @@ El `TabletLayout` lee de `TAB_ROUTES` automáticamente y se actualiza solo.
 | `app/community/game/[igdbId].tsx` | Nuevo | Pantalla de detalle |
 | `src/features/top/useCommunityRanking.ts` | Nuevo | Hook TanStack Query |
 | `src/features/top/useCommunityGameDetail.ts` | Nuevo | Hook TanStack Query |
+| `src/utils/week.ts` | Nuevo | Helper `getWeekStartISO` |
 | `src/features/top/RankBadge.tsx` | Nuevo | Componente badge ▲▼—NEW |
 | `src/features/top/RankingListItem.tsx` | Nuevo | Componente item de la lista |
 | `app/(tabs)/_layout.tsx` | Modificar | Agregar tab Top |
@@ -379,6 +399,7 @@ Migración hacia atrás es trivial: `DROP VIEW` + `DROP TABLE`.
 ## 7. Fuera de scope (v1)
 
 - Filtros por plataforma, género o año.
+- "Plataforma más frecuente" en el header de detalle (ver §5.2 — removido de v1, queda en backlog).
 - Top semanal / mensual / yearly (solo all-time con cambio semanal).
 - "Trending" o "Most played this month".
 - CTA de "escribir tu review" desde la pantalla de comunidad (ya se hace desde `/game/[id]`).
