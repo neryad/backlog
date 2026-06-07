@@ -6,6 +6,10 @@
 -- (solo en SQLite local), ni columna `game_id`, ni `release_year`
 -- (no se sincroniza). Las vistas trabajan sobre `game_entries` y
 -- de-duplican title/cover con DISTINCT ON (una fila por (user, game, platform)).
+--
+-- NOTA: community_ranking usa TODOS los ratings (is_public ignorado) porque
+-- el score agregado no expone datos individuales. community_reviews sí filtra
+-- por is_public ya que expone contenido escrito de cada usuario.
 
 -- Vista: ranking actual de la comunidad
 CREATE OR REPLACE VIEW community_ranking AS
@@ -31,8 +35,7 @@ SELECT
   ) AS rank
 FROM game_entries ge
 JOIN latest_metadata m ON m.igdb_id = ge.igdb_id
-WHERE ge.is_public = true
-  AND ge.personal_rating IS NOT NULL
+WHERE ge.personal_rating IS NOT NULL
 GROUP BY m.igdb_id, m.title, m.cover_url
 HAVING COUNT(*) >= 3;
 
@@ -83,8 +86,9 @@ WHERE ge.is_public = true
 
 -- Grants (Supabase requiere estos para que el cliente lea las vistas)
 -- Las vistas corren SECURITY DEFINER (default), por lo que NO heredan
--- las RLS de las tablas subyacentes. El WHERE is_public = true es la
--- garantía de privacidad.
+-- las RLS de las tablas subyacentes.
+-- El ranking usa todos los ratings (is_public ignorado — solo promedios).
+-- Las reviews escritas sí filtran por is_public.
 GRANT SELECT ON community_ranking       TO anon, authenticated;
 GRANT SELECT ON community_reviews       TO anon, authenticated;
 GRANT SELECT ON community_rank_snapshots TO anon, authenticated;
