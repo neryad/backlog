@@ -5,6 +5,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-07
+### Added
+- **Community Top ranking tab** — Global game ranking aggregated from all user ratings
+  - New "Top" tab (5th position) with FlatList showing top 100 games
+  - Rank change indicators: ▲ N (up), ▼ N (down), — (same), NEW (no previous data)
+  - Weekly snapshots via Edge Function + pg_cron for rank change calculation
+  - Pull-to-refresh and loading/error/empty states
+- **Community game detail screen** — View any game's rank, average rating, rating count, and sortable public reviews
+  - Browse public written reviews sorted by Most Recent or Highest Rated
+  - Tap a reviewer to visit their public profile
+- Backend: `community_ranking` view (aggregated ratings with 3-rating minimum), `community_rank_snapshots` table (weekly persistence), `community_reviews` view (public notes with profile data)
+- New Edge Function `weekly-snapshot` for automated weekly rank persistence
+- `RankBadge` component (▲/▼/—/NEW with semantic colors)
+- `RankingListItem` component with cover, rank, title, rating, and change badge
+- `useCommunityRanking` and `useCommunityGameDetail` TanStack Query hooks
+- `getWeekStartISO` utility for UTC Monday alignment between client and server
+- `CRON_SECRET` documented in `.env.example`
+
+### Changed
+- App version 1.4.0 → **1.5.0**
+
 ## [1.4.0] - 2026-05-28
 ### Added
 - Tablet/iPad support with responsive layout
