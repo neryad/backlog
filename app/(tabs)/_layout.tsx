@@ -18,6 +18,7 @@ const TAB_ROUTES: { name: string; title: string; icon: IoniconsName }[] = [
   { name: "discover", title: "Discover", icon: "search" },
   { name: "friends", title: "Friends", icon: "people" },
   { name: "stats", title: "Stats", icon: "bar-chart" },
+  { name: "top", title: "Top", icon: "podium" },
 ];
 
 function TabIcon({ name, color, size = 22 }: { name: IoniconsName; color: string; size?: number }) {
@@ -103,6 +104,7 @@ function TabletLayout() {
           <Tabs.Screen name="discover" />
           <Tabs.Screen name="friends" />
           <Tabs.Screen name="stats" />
+          <Tabs.Screen name="top" />
         </Tabs>
       </View>
     </View>
@@ -211,6 +213,13 @@ export default function TabsLayout() {
         options={{
           title: "Stats",
           tabBarIcon: ({ color }) => <TabIcon name="bar-chart" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="top"
+        options={{
+          title: "Top",
+          tabBarIcon: ({ color }) => <TabIcon name="podium" color={color} />,
         }}
       />
     </Tabs>

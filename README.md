@@ -12,7 +12,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?style=flat)](https://expo.dev)
-[![Version](https://img.shields.io/badge/Version-1.4.0-brightgreen?style=flat)](./app.json)
+[![Version](https://img.shields.io/badge/Version-1.5.0-brightgreen?style=flat)](./app.json)
 
 </div>
 
@@ -51,6 +51,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 - 🌐 **Public profiles** — View any user's public backlog at `@username`
 - 🎮 **Gaming IDs** — Save and display your PSN, Xbox Gamertag, Nintendo Switch code, Steam, and Epic Games IDs on your profile
 - ⚔️ **Game comparison** — Tap "See games in common" on a friend's profile to compare status, hours, and ratings side by side
+- 🏆 **Community Top** — Global game ranking aggregated from all user ratings, with weekly rank changes and public reviews
 
 ### Share Cards
 - 📤 **Shareable image cards** — Export polished cards as PNG images to share anywhere
@@ -274,7 +275,23 @@ create table public.friendships (
 );
 ```
 
-### Step 3 — Connect the app
+### Step 3 — Community Ranking migrations
+
+The community ranking feature requires additional database objects:
+
+```sql
+-- Run supabase/migrations/20260607000000_community_ranking.sql
+-- Creates: community_ranking view, community_rank_snapshots table,
+--          community_reviews view, plus RLS and grants.
+```
+
+To enable automatic weekly snapshots (rank change tracking):
+1. Enable `pg_cron` and `pg_net` extensions in Supabase Dashboard → Database → Extensions
+2. Deploy the Edge Function: `supabase functions deploy weekly-snapshot --no-verify-jwt`
+3. Set the `CRON_SECRET` secret in Supabase Dashboard → Edge Functions → Secrets
+4. Run the cron schedule: see `supabase/migrations/20260607000001_schedule_weekly_snapshot.sql`
+
+### Step 4 — Connect the app
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -292,7 +309,11 @@ playlogged/
 │   │   ├── index.tsx             # Home / Backlog screen
 │   │   ├── discover.tsx          # Game search / discovery screen
 │   │   ├── stats.tsx             # Stats screen (with share card)
-│   │   └── friends.tsx           # Friends & social screen
+│   │   ├── friends.tsx           # Friends & social screen
+│   │   └── top.tsx               # Community Top ranking screen
+│   ├── community/
+│   │   └── game/
+│   │       └── [igdbId].tsx      # Community game detail with reviews
 │   ├── auth/
 │   │   ├── login.tsx             # Login screen
 │   │   └── register.tsx          # Register screen
@@ -310,6 +331,7 @@ playlogged/
 │   ├── api/                      # IGDB API layer
 │   │   └── igdb.client.ts
 │   ├── components/               # Shared UI components
+│   │   ├── Avatar.tsx
 │   │   ├── BacklogShareCard.tsx  # Share card — top games
 │   │   ├── GameShareCard.tsx     # Share card — single game
 │   │   ├── GamingIdsShareCard.tsx# Share card — platform IDs
@@ -337,7 +359,12 @@ playlogged/
 │   │   ├── search/
 │   │   ├── stats/
 │   │   ├── next-to-play/
-│   │   └── about/
+│   │   ├── about/
+│   │   └── top/                  # Community Top ranking feature
+│   │       ├── useCommunityRanking.ts
+│   │       ├── useCommunityGameDetail.ts
+│   │       ├── RankBadge.tsx
+│   │       └── RankingListItem.tsx
 │   ├── lib/
 │   │   ├── supabase.ts           # Supabase client
 │   │   ├── sync.ts               # Backlog → Supabase sync helpers
@@ -353,13 +380,16 @@ playlogged/
 │   │   ├── useDebounce.ts
 │   │   └── useDeviceSize.ts
 │   └── utils/
+│       ├── week.ts               # Week helper for community ranking
 │       └── share.ts              # View-shot + expo-sharing helpers
 │
 ├── assets/                       # Images, fonts, icons
 ├── proxy/                        # Vercel IGDB proxy (serverless)
 ├── supabase/
-│   └── functions/
-│       └── delete-account/       # Edge function for account deletion
+│   ├── functions/
+│   │   ├── delete-account/       # Edge function for account deletion
+│   │   └── weekly-snapshot/      # Edge function for community ranking snapshots
+│   └── migrations/               # Database migrations
 ├── app.json
 ├── eas.json
 ├── CHANGELOG.md
