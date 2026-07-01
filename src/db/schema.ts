@@ -47,4 +47,13 @@ export function initializeDatabase() {
   } catch {
     // Column already exists — safe to ignore.
   }
+
+  // Migration: add synced_at so we can delta-sync only changed rows.
+  try {
+    db.execSync(
+      `ALTER TABLE game_entries ADD COLUMN synced_at INTEGER`,
+    );
+  } catch {
+    // Column already exists — safe to ignore.
+  }
 }

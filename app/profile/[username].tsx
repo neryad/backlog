@@ -146,7 +146,8 @@ export default function ProfileScreen() {
         )
         .eq("user_id", profileData.id)
         .eq("is_public", true)
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .limit(50);
 
       setEntries(entriesData ?? []);
     } catch (err) {

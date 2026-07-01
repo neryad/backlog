@@ -1,4 +1,4 @@
-import { getGameEntries } from "../db/queries/game";
+import { getUnsyncedEntries, getGameEntryById, markEntriesSynced } from "../db/queries/game";
 import type { GameEntry } from "../types/game";
 import { supabase } from "./supabase";
 
@@ -22,7 +22,7 @@ function entryToRow(entry: GameEntry, userId: string) {
 
 export async function syncBacklogToSupabase(userId: string): Promise<void> {
   try {
-    const entries = getGameEntries();
+    const entries = getUnsyncedEntries();
     if (entries.length === 0) return;
 
     const rows = entries.map((entry) => entryToRow(entry, userId));
@@ -31,10 +31,16 @@ export async function syncBacklogToSupabase(userId: string): Promise<void> {
       .from("game_entries")
       .upsert(rows, { onConflict: "user_id,id" });
 
-    if (__DEV__) {
-      if (error) console.error("Sync error:", error.message);
-      else console.log(`Synced ${rows.length} entries to Supabase`);
+    if (error) {
+      if (__DEV__) console.error("Sync error:", error.message);
+      return;
     }
+
+    if (__DEV__) console.log(`Synced ${rows.length} entries to Supabase`);
+    markEntriesSynced(
+      entries.map((e) => e.id),
+      Date.now(),
+    );
   } catch (err) {
     if (__DEV__) console.error("Sync failed:", err);
   }
@@ -45,15 +51,19 @@ export async function syncSingleEntry(
   userId: string,
 ): Promise<void> {
   try {
-    const entries = getGameEntries();
-    const entry = entries.find((e) => e.id === entryId);
+    const entry = getGameEntryById(entryId);
     if (!entry) return;
 
     const { error } = await supabase
       .from("game_entries")
       .upsert(entryToRow(entry, userId), { onConflict: "user_id,id" });
 
-    if (__DEV__ && error) console.error("Single sync error:", error.message);
+    if (error) {
+      if (__DEV__) console.error("Single sync error:", error.message);
+      return;
+    }
+
+    markEntriesSynced([entryId], Date.now());
   } catch (err) {
     if (__DEV__) console.error("Single sync failed:", err);
   }
@@ -75,3 +85,4 @@ export async function deleteSingleEntry(
     if (__DEV__) console.error("Delete sync failed:", err);
   }
 }
+

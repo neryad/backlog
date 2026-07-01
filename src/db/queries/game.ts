@@ -182,3 +182,23 @@ export function updateGameEntry(
 export function deleteGameEntry(id: string): void {
   db.runSync(`DELETE FROM game_entries WHERE id = ?`, [id]);
 }
+
+export function getUnsyncedEntries(): GameEntry[] {
+  const rows = db.getAllSync(
+    `SELECT ge.*, g.title, g.cover_url, g.release_year, g.igdb_id, g.summary
+     FROM game_entries ge
+     JOIN games g ON g.id = ge.game_id
+     WHERE ge.synced_at IS NULL OR ge.updated_at > ge.synced_at`,
+  ) as GameRow[];
+
+  return (rows as GameRow[]).map(mapEntry);
+}
+
+export function markEntriesSynced(ids: string[], syncedAt: number): void {
+  if (ids.length === 0) return;
+  const placeholders = ids.map(() => "?").join(",");
+  db.runSync(
+    `UPDATE game_entries SET synced_at = ? WHERE id IN (${placeholders})`,
+    [syncedAt, ...ids],
+  );
+}
