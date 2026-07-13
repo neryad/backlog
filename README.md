@@ -12,7 +12,7 @@ A mobile-first game backlog tracker built for gamers who actually want to play t
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?style=flat)](https://expo.dev)
-[![Version](https://img.shields.io/badge/Version-1.5.1-brightgreen?style=flat)](./app.json)
+[![Version](https://img.shields.io/badge/Version-1.6.0-brightgreen?style=flat)](./app.json)
 
 </div>
 

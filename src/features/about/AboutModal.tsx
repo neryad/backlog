@@ -20,6 +20,9 @@ import { supabase } from "../../lib/supabase";
 import { fontFamily } from "../../constants/typography";
 import { Avatar } from "../../components/Avatar";
 import { confirmRestoreFromCloud } from "../../lib/backup";
+import { getGameEntries } from "../../db/queries/game";
+import { Paths, File } from "expo-file-system";
+import * as Sharing from "expo-sharing";
 
 type UserProfile = {
   avatar_url: string | null;
@@ -157,6 +160,53 @@ export default function AboutModal({ visible, onClose }: Props) {
     ]);
   }
 
+  async function handleExportData() {
+    try {
+      const entries = getGameEntries();
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        app: "Playlogged",
+        version: Constants.expoConfig?.version ?? "1.0.0",
+        user: session?.user
+          ? {
+              email: session.user.email,
+              id: session.user.id,
+            }
+          : null,
+        gameEntries: entries.map((e) => ({
+          title: e.game?.title ?? "Unknown",
+          igdbId: e.game?.igdbId,
+          platformId: e.platformId,
+          status: e.status,
+          personalRating: e.personalRating,
+          hoursPlayed: e.hoursPlayed,
+          notes: e.notes,
+          isPublic: e.isPublic,
+          createdAt: e.createdAt,
+          updatedAt: e.updatedAt,
+        })),
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      const file = Paths.document.createFile("playlogged-export.json", "application/json");
+      file.write(json);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: "application/json",
+          dialogTitle: "Export Playlogged Data",
+        });
+      } else {
+        Alert.alert(
+          "Export ready",
+          "Your data has been saved. Sharing is not available on this device."
+        );
+      }
+    } catch (e) {
+      Alert.alert("Export failed", String(e));
+    }
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
@@ -262,16 +312,27 @@ export default function AboutModal({ visible, onClose }: Props) {
               <View style={styles.card}>
                 <Text style={styles.sectionTitle}>Data</Text>
 
-                <TouchableOpacity
-                  style={styles.primaryBtn}
-                  onPress={() =>
-                    confirmRestoreFromCloud(session.user.id, onClose)
-                  }
-                >
-                  <Text style={styles.primaryBtnText}>
-                    Restore from Cloud
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ gap: spacing.sm }}>
+                  <TouchableOpacity
+                    style={styles.primaryBtn}
+                    onPress={() =>
+                      confirmRestoreFromCloud(session.user.id, onClose)
+                    }
+                  >
+                    <Text style={styles.primaryBtnText}>
+                      Restore from Cloud
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.secondaryBtn}
+                    onPress={handleExportData}
+                  >
+                    <Text style={styles.secondaryBtnText}>
+                      Export My Data
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 

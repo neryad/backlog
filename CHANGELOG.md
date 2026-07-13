@@ -3,7 +3,20 @@
 All notable changes to Playlogged are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.6.0] - 2026-07-12
+### Added
+- **Informed consent screen** — New collapsible "Data & Privacy" section in the registration form explaining exactly what data is synced to the cloud, with a mandatory consent checkbox before account creation
+- **GDPR data export** — New "Export My Data" button in the About screen that exports your entire game library as JSON via the share sheet
+- **Arbitration clause & class action waiver** — Added to Terms of Service to reduce litigation risk
+- **DMCA takedown policy** — Added to Terms of Service with repeat infringer policy for user-generated reviews
+- **Governing law** — Terms now governed by Dominican Republic law
+- **CCPA privacy rights** — Added California Privacy Rights section to Privacy Policy
+- **GDPR compliance** — Added Data Subject Rights and legal basis for processing (Art. 6) to Privacy Policy
+
+### Changed
+- **Privacy Policy rewritten** — Now accurately describes cloud sync via Supabase, data inventory (email, username, game library, notes, ratings), and third-party services (Supabase, DiceBear)
+- **Terms of Service updated** — Placeholder `[DEVELOPER NAME]` replaced with Neryad; sections renumbered; last updated date refreshed
+- **Registration subtitle** — Now clearly states that creating an account enables cloud sync and community features
 
 ## [1.5.1] - 2026-07-01
 ### Changed

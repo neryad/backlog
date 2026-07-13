@@ -10,13 +10,15 @@
 
 ## Resumen Ejecutivo
 
-| Punto                           | Estado                     | Urgencia    |
-| ------------------------------- | -------------------------- | ----------- |
-| 1. Claims de IA                 | ✅ No aplica               | Baja        |
-| 2. Cláusula de arbitraje        | ❌ No existe               | **ALTA**    |
-| 3. Privacidad y etiquetas       | ⚠️ Política desactualizada | **CRÍTICA** |
-| 4. DMCA                         | ❌ No implementado         | **ALTA**    |
-| Placeholders `[DEVELOPER NAME]` | ❌ 3 ocurrencias           | Media       |
+| Punto                              | Estado                              | Urgencia    |
+| ---------------------------------- | ----------------------------------- | ----------- |
+| 1. Claims de IA                    | ✅ No aplica                        | Baja        |
+| 2. Cláusula de arbitraje           | ✅ Implementada en branch           | **ALTA**    |
+| 3. Privacidad y etiquetas          | ⚠️ Policy reescrita; falta Play    | **CRÍTICA** |
+| 4. DMCA                            | ⚠️ Policy en ToS; falta registro   | **ALTA**    |
+| 5. Google Play Data Safety         | ❌ "No data collected" incorrecto   | **CRÍTICA** |
+| 6. Privacy/Terms en web            | ❌ Devuelven vacío (SPA sin SSR)    | **ALTA**    |
+| 7. Placeholders `[DEVELOPER NAME]` | ✅ Corregidos                      | Media       |
 
 ---
 
@@ -69,7 +71,7 @@ You may opt out of this arbitration clause by emailing neryadg@gmail.com within 
 
 ## 9. Governing Law
 
-These Terms shall be governed by the laws of **Spain**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
+These Terms shall be governed by the laws of **Dominican Republic**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
 ```
 
 ### Renumerar secciones existentes
@@ -325,7 +327,7 @@ Actualmente la app permite marcar entries como `is_public`. Considera agregar ta
 
 ### 6.1 Sin jurisdicción definida en ToS
 
-Los ToS actuales no especifican qué leyes aplican. El desarrollador está en España. Se recomienda **ley española** como governing law (ya incluido en la sección de arbitraje propuesta arriba).
+Los ToS actuales no especifican qué leyes aplican. El desarrollador está en República Dominicana. Se recomienda **ley dominicana** como governing law (ya incluido en la sección de arbitraje propuesta arriba).
 
 ### 6.2 GDPR Compliance (usuario en España / UE)
 
@@ -344,38 +346,59 @@ Actualmente no se declara la base legal en la Privacy Policy. Para usuarios de l
 - **Ejecución de un contrato** (Art. 6(1)(b)) — para el funcionamiento del servicio de sincronización
 - **Consentimiento** (Art. 6(1)(a)) — para reviews públicas
 
+### 6.4 Landing page y App Store listings — Hallazgos
+
+Se revisaron:
+
+- Landing page en https://playlogged.neryad.dev/ (SPA con React, contenido idéntico al App Store)
+- Google Play Store: https://play.google.com/store/apps/details?id=com.neryad.playlogged
+- App Store: https://apps.apple.com/us/app/playlogged/id6760157713
+
+| Hallazgo | Detalle | Urgencia |
+|----------|---------|----------|
+| **Claims de IA** | ✅ No hay afirmaciones de IA/ML. La palabra "smart" aparece ("smart strategies", "smarter cloud sync") pero refiere a algoritmos determinísticos (Random, Oldest, Top Rated). Riesgo mínimo. | Baja |
+| **Google Play Data Safety** | ❌ Declara **"No data collected"**. Esto es **incorrecto** desde que existe cloud sync (v1.1+). Se recolectan: email, username, game entries, notas, ratings, platform IDs. Debe actualizarse urgente. | **CRÍTICA** |
+| **App Store App Privacy** | ⚠️ No se pudo verificar desde el exterior, pero debe coincidir con lo que realmente se recolecta. | **ALTA** |
+| **Ocultación del cloud sync** | ⚠️ El description dice: *"No account, no login, and no cloud sync required. Your data stays on your phone."* Es cierto para offline mode, pero omite que el cloud sync **existe** y que si el usuario crea cuenta, sus datos ya no están solo en su teléfono. Riesgo de que un usuario molesto lo interprete como publicidad engañosa. | Media |
+| **Privacy/Terms en website** | ❌ La Google Play Store enlaza a `https://playlogged.netlify.app/privacy` para la política de privacidad. Esa ruta **devuelve vacío** (la web es SPA sin server-side rendering para esas rutas). Los usuarios no pueden leer los documentos legales desde la web. | **ALTA** |
+| **Testimonios falsos / IA** | ✅ No hay testimonios ni reseñas generados por IA en ninguna plataforma. | Baja |
+
 ---
 
 ## Plan de Acción Priorizado
 
 ### 🔴 DÍAS 1-7 (Crítico)
 
-| #   | Acción                                                                            | Archivo                                     |
-| --- | --------------------------------------------------------------------------------- | ------------------------------------------- |
-| 1   | Reescribir Privacy Policy para reflejar Supabase sync y datos reales recolectados | `PRIVACY_POLICY.md`                         |
-| 2   | Reemplazar `[DEVELOPER NAME]` por "Neryad" en ambos documentos legales            | `TERMS_OF_SERVICE.md` y `PRIVACY_POLICY.md` |
-| 3   | Agregar cláusula de arbitraje + class action waiver + governing law a ToS         | `TERMS_OF_SERVICE.md`                       |
-| 4   | Completar formulario App Privacy en App Store Connect                             | App Store Connect                           |
-| 5   | Completar formulario Data Safety en Google Play Console                           | Google Play Console                         |
+| #   | Acción                                                                                  | Archivo / Plataforma                           |
+| --- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | Reescribir Privacy Policy para reflejar Supabase sync y datos reales recolectados       | `PRIVACY_POLICY.md` ✅ **LISTO**                |
+| 2   | Reemplazar `[DEVELOPER NAME]` por "Neryad" en ambos documentos legales                  | `TERMS_OF_SERVICE.md` y `PRIVACY_POLICY.md` ✅ |
+| 3   | Agregar cláusula de arbitraje + class action waiver + governing law a ToS               | `TERMS_OF_SERVICE.md` ✅ **LISTO**              |
+| 4   | Corregir Google Play Data Safety — actualmente dice "No data collected" (incorrecto)    | Google Play Console                            |
+| 5   | Completar formulario App Privacy en App Store Connect                                   | App Store Connect                              |
 
 ### 🟡 DÍAS 8-14 (Alta)
 
 | #   | Acción                                                                     | Archivo / Plataforma  |
 | --- | -------------------------------------------------------------------------- | --------------------- |
 | 6   | Registrar DMCA Agent en copyright.gov                                      | copyright.gov (~$6)   |
-| 7   | Agregar sección DMCA + datos de contacto del agente a ToS                  | `TERMS_OF_SERVICE.md` |
-| 8   | Agregar sección CCPA a Privacy Policy                                      | `PRIVACY_POLICY.md`   |
-| 9   | Agregar sección GDPR (base legal, derechos, portabilidad) a Privacy Policy | `PRIVACY_POLICY.md`   |
+| 7   | Agregar sección DMCA + datos de contacto del agente a ToS                  | `TERMS_OF_SERVICE.md` ✅ **LISTO** |
+| 8   | Agregar sección CCPA a Privacy Policy                                      | `PRIVACY_POLICY.md` ✅ **LISTO**   |
+| 9   | Agregar sección GDPR (base legal, derechos, portabilidad) a Privacy Policy | `PRIVACY_POLICY.md` ✅ **LISTO**   |
+| 10  | Publicar los documentos legales en la web (SSR o rutas estáticas) en       | Repositorio del landing page       |
+|     | `playlogged.neryad.dev/privacy` y `playlogged.neryad.dev/terms`            |                                    |
+|     | (actualmente devuelven vacío)                                              |                                    |
 
 ### 🟢 DÍAS 15-21 (Media)
 
 | #   | Acción                                                                                      | Archivo / Plataforma                                         |
 | --- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 10  | Implementar pantalla de consentimiento informado al crear cuenta (qué datos se sincronizan) | `app/auth/` (nueva pantalla o modificación del flujo actual) |
-| 11  | Implementar exportación de datos (JSON) para portabilidad GDPR                              | `src/lib/backup.ts` o nueva función                          |
-| 12  | Agregar mecanismo de moderación DMCA (flag `is_flagged` en Supabase)                        | Base de datos Supabase + migración                           |
-| 13  | Crear alias dmca@playlogged.app o designar email para DMCA                                  | Configuración de email                                       |
-| 14  | Actualizar "Last updated" en ambos documentos legales                                       | `TERMS_OF_SERVICE.md` y `PRIVACY_POLICY.md`                  |
+| 11  | Actualizar description en App Store/Play Store para mencionar cloud sync opcional           | App Store Connect / Google Play Console                      |
+| 12  | Implementar pantalla de consentimiento informado al crear cuenta (qué datos se sincronizan) | `app/auth/` (nueva pantalla o modificación del flujo actual) |
+| 13  | Implementar exportación de datos (JSON) para portabilidad GDPR                              | `src/lib/backup.ts` o nueva función                          |
+| 14  | Agregar mecanismo de moderación DMCA (flag `is_flagged` en Supabase)                        | Base de datos Supabase + migración                           |
+| 15  | Crear alias dmca@playlogged.app o designar email para DMCA                                  | Configuración de email                                       |
+| 16  | Actualizar "Last updated" en ambos documentos legales                                       | `TERMS_OF_SERVICE.md` y `PRIVACY_POLICY.md` ✅ **LISTO**     |
 
 ---
 
