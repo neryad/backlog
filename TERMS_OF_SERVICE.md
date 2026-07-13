@@ -113,7 +113,7 @@ You may opt out of this arbitration clause by emailing neryadg@gmail.com within 
 
 ## 9. Governing Law
 
-These Terms shall be governed by the laws of **Spain**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
+These Terms shall be governed by the laws of the **Dominican Republic**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
 
 ---
 

@@ -69,7 +69,7 @@ You may opt out of this arbitration clause by emailing neryadg@gmail.com within 
 
 ## 9. Governing Law
 
-These Terms shall be governed by the laws of **Spain**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
+These Terms shall be governed by the laws of **Dominican Republic**, without regard to its conflict of law principles. This does not affect your statutory rights as a consumer in your country of residence.
 ```
 
 ### Renumerar secciones existentes
@@ -325,7 +325,7 @@ Actualmente la app permite marcar entries como `is_public`. Considera agregar ta
 
 ### 6.1 Sin jurisdicción definida en ToS
 
-Los ToS actuales no especifican qué leyes aplican. El desarrollador está en España. Se recomienda **ley española** como governing law (ya incluido en la sección de arbitraje propuesta arriba).
+Los ToS actuales no especifican qué leyes aplican. El desarrollador está en República Dominicana. Se recomienda **ley dominicana** como governing law (ya incluido en la sección de arbitraje propuesta arriba).
 
 ### 6.2 GDPR Compliance (usuario en España / UE)
 
