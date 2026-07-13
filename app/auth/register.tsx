@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +26,8 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [dataExpanded, setDataExpanded] = useState(false);
 
   const usernameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -118,7 +121,7 @@ export default function RegisterScreen() {
       >
         <Text style={styles.title}>Create account</Text>
         <Text style={styles.subtitle}>
-          Sync your backlog and connect with friends
+          Create an account to enable cloud sync, backups, and community features
         </Text>
 
         {error && <Text style={styles.error}>{error}</Text>}
@@ -203,10 +206,87 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.consentSection}>
+          <TouchableOpacity
+            style={styles.consentHeader}
+            onPress={() => setDataExpanded((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={dataExpanded ? "chevron-down" : "chevron-forward"}
+              size={16}
+              color={colors.foregroundMuted}
+            />
+            <Text style={styles.consentHeaderText}>Data & Privacy</Text>
+          </TouchableOpacity>
+
+          {dataExpanded && (
+            <View style={styles.consentBody}>
+              <Text style={styles.consentBodyText}>
+                When you create an account, the following data will be synced to
+                the cloud to enable cross-device backup and community features:
+              </Text>
+              <View style={styles.dataList}>
+                <Text style={styles.dataItem}>
+                  • Email address (authentication only)
+                </Text>
+                <Text style={styles.dataItem}>
+                  • Username and display name (visible in public reviews)
+                </Text>
+                <Text style={styles.dataItem}>
+                  • Game library: titles, statuses, ratings, notes, hours played
+                </Text>
+                <Text style={styles.dataItem}>
+                  • Platform IDs (PSN, Xbox, Steam, etc.)
+                </Text>
+              </View>
+              <Text style={styles.consentBodyText}>
+                Public reviews are optional — you control which entries are
+                visible per-game.
+              </Text>
+              <Text style={styles.consentBodyText}>
+                You can delete your account and all associated data at any time.
+              </Text>
+            </View>
+          )}
+        </View>
+
         <TouchableOpacity
-          style={styles.btn}
+          style={styles.checkboxRow}
+          onPress={() => setConsentChecked((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={consentChecked ? "checkbox" : "square-outline"}
+            size={20}
+            color={consentChecked ? colors.primary : colors.foregroundMuted}
+          />
+          <Text style={styles.checkboxLabel}>
+            I agree to the{" "}
+            <Text
+              style={styles.linkAccent}
+              onPress={() =>
+                Linking.openURL("https://playlogged.neryad.dev/terms")
+              }
+            >
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text
+              style={styles.linkAccent}
+              onPress={() =>
+                Linking.openURL("https://playlogged.neryad.dev/privacy")
+              }
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, !consentChecked && styles.btnDisabled]}
           onPress={handleRegister}
-          disabled={loading}
+          disabled={loading || !consentChecked}
           activeOpacity={0.8}
         >
           {loading ? (
@@ -312,5 +392,60 @@ const styles = StyleSheet.create({
   linkAccent: {
     color: colors.primary,
     fontFamily: fontFamily.sansSemibold,
+  },
+  consentSection: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden",
+  },
+  consentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  consentHeaderText: {
+    color: colors.foregroundMuted,
+    fontSize: 13,
+    fontFamily: fontFamily.sansSemibold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  consentBody: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  consentBodyText: {
+    color: colors.foregroundMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  dataList: {
+    backgroundColor: colors.background,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    gap: 2,
+  },
+  dataItem: {
+    color: colors.foregroundMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+  },
+  checkboxLabel: {
+    color: colors.foregroundMuted,
+    fontSize: 13,
+    lineHeight: 20,
+    flex: 1,
+  },
+  btnDisabled: {
+    opacity: 0.4,
   },
 });
