@@ -5,6 +5,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-07-01
+### Changed
+- **Sync delta optimisation** — Backlog is no longer fully re-uploaded on every app start. Only entries modified since the last sync are sent, drastically reducing Supabase Disk I/O.
+- **syncSingleEntry now uses getGameEntryById** — Replaced `getGameEntries().find()` with a direct ID lookup, eliminating an unnecessary full-table scan.
+- **Profile and Compare screens** — Supabase queries now capped at 50 entries to limit Disk I/O on read-heavy public views.
+- **Community reviews limited to 20** — Prevents unbounded reads on games with many reviews.
+- **Friend request polling reduced** — Interval changed from 15s to 60s, cutting polling queries by 75%.
+
+### Added
+- `synced_at` column on `game_entries` (SQLite) to track sync state per entry
+- `getUnsyncedEntries()` and `markEntriesSynced()` query helpers for delta sync
+- Restored entries from cloud are immediately marked as synced to avoid redundant upload
+
 ## [1.5.0] - 2026-06-07
 ### Added
 - **Community Top ranking tab** — Global game ranking aggregated from all user ratings

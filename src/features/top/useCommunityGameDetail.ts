@@ -51,7 +51,8 @@ export function useCommunityGameDetail(igdbId: number) {
           "igdb_id, personal_rating, notes, updated_at, user_id, username, display_name, avatar_url",
         )
         .eq("igdb_id", igdbId)
-        .order("updated_at", { ascending: false });
+        .order("updated_at", { ascending: false })
+        .limit(20);
 
       if (revErr) throw revErr;
 

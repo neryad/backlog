@@ -143,7 +143,7 @@ export default function TabsLayout() {
 
     refreshPendingRequestsCount();
 
-    const intervalId = setInterval(refreshPendingRequestsCount, 15000);
+    const intervalId = setInterval(refreshPendingRequestsCount, 60000);
     const appStateSubscription = AppState.addEventListener(
       "change",
       (nextState) => {

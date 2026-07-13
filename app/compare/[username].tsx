@@ -195,7 +195,8 @@ export default function CompareScreen() {
         .from("game_entries")
         .select("id, igdb_id, title, cover_url, status, personal_rating, hours_played, notes")
         .eq("user_id", profile.id)
-        .eq("is_public", true);
+        .eq("is_public", true)
+        .limit(50);
 
       setTheirEntries(data ?? []);
     } catch (err) {

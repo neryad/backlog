@@ -1,5 +1,6 @@
 import { Alert } from "react-native";
 import { db } from "../db/schema";
+import { markEntriesSynced } from "../db/queries/game";
 import { supabase } from "./supabase";
 import { useUIStore } from "../store/ui.store";
 import { v4 as uuidv4 } from "uuid";
@@ -50,6 +51,7 @@ async function restoreFromSupabase(userId: string): Promise<{
     const now = Date.now();
     let gamesInserted = 0;
     let entriesInserted = 0;
+    const restoredIds: string[] = [];
     const gameDedupMap = new Map<number, string>();
 
     for (const entry of entries) {
@@ -111,10 +113,12 @@ async function restoreFromSupabase(userId: string): Promise<{
           entry.is_public ? 1 : 0,
         ],
       );
+      restoredIds.push(entry.id);
       entriesInserted++;
     }
 
     db.execSync("COMMIT");
+    markEntriesSynced(restoredIds, Date.now());
     useUIStore.getState().bumpRestoreVersion();
     return {
       success: true,
